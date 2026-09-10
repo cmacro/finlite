@@ -78,6 +78,16 @@ Applies to every new document under `docs/` — enough on their own for a plain 
 
 ---
 
+## Git Commit Rules
+
+- Every `git commit` MUST first generate the summary log file, then commit. Order is mandatory: log first, commit second. A commit without its log file is a failure.
+- Log path: `docs/changelogs/YYYYMMDD_feature_name.md` (`YYYYMMDD` = commit date, `feature_name` = lowercase English with underscores, matching the commit scope).
+- Naming is exempt from the `NN-type-topic.md` rule; frontmatter (`title`, `description`) is still required.
+- Log content: what changed (`Added`/`Fixed`/`Changed`/`Docs` sections), scope/impact, verification results (`gofmt`, `go vet`, `go build`, `npm run check` where applicable). Anonymization rules apply to log content.
+- The log file MUST be staged and committed together with the code change in the same commit.
+
+---
+
 ## Anonymization Rules
 
 - Applies to all files except `docs/raw/anonymization_mapping.tsv`.
