@@ -20,19 +20,19 @@ TODO: 接 VoucherService.List / Get / Create / Audit / UnAudit（bindings 生成
   }
 </script>
 
-<section class="page">
-  <h2>凭证管理</h2>
+<section>
+  <h2 class="page-title">凭证管理</h2>
   <div class="toolbar">
     <button class="btn" disabled title="bindings 生成后启用">查询</button>
   </div>
-  <table class="dense">
+  <table class="data-table">
     <thead><tr><th>凭证号</th><th>日期</th><th>摘要</th><th>状态</th><th>操作</th></tr></thead>
     <tbody>
       {#each items as v}
         <tr>
           <td>{v.voucherNo}</td><td>{v.voucherDate}</td><td>{v.summaryText}</td>
           <td>{voucherStatusText(v.status)}</td>
-          <td>{#if v.status === 'draft'}<button class="btn btn-small" onclick={() => askAudit(v.id)}>审核</button>{/if}</td>
+          <td>{#if v.status === 'draft'}<button class="btn btn-sm" onclick={() => askAudit(v.id)}>审核</button>{/if}</td>
         </tr>
       {:else}
         <tr><td colspan="5" class="empty">暂无凭证，请先审核汇总后生成</td></tr>

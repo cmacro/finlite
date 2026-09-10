@@ -1,5 +1,6 @@
 <!-- finlite 主框架：左侧导航 + 8 个业务页面（Svelte 5 runes）。
-页面数据一律经 Wails Service 绑定获取（bindings 生成后接线），本文件只做路由切换。 -->
+页面数据一律经 Wails Service 绑定获取（bindings 生成后接线），本文件只做路由切换。
+布局样式为 Tailwind utilities（token 见 styles/tokens.css），无 <style> 块。 -->
 <script lang="ts">
   import type { RouteKey } from './lib/types';
   import Icon, { type IconName } from './lib/Icon.svelte';
@@ -30,19 +31,25 @@
   }
 </script>
 
-<main class="layout">
-  <aside class="sidebar">
-    <h1 class="app-title">finlite 财务助手</h1>
+<main class="flex min-h-screen">
+  <aside class="w-[180px] shrink-0 border-r border-sider px-2 py-4">
+    <h1 class="mx-2 mb-4 text-base font-bold">finlite 财务助手</h1>
     <nav>
       {#each nav as item}
-        <button class="nav-item" class:active={route === item.key} onclick={() => go(item.key)}>
+        <button
+          class="flex w-full cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent px-3 py-2 text-left text-sm text-inherit {route ===
+          item.key
+            ? 'bg-navactive font-semibold'
+            : ''}"
+          onclick={() => go(item.key)}
+        >
           <Icon name={item.icon} size={16} />
           <span>{item.label}</span>
         </button>
       {/each}
     </nav>
   </aside>
-  <div class="content">
+  <div class="min-w-0 flex-1 px-5 py-4">
     {#if route === 'import'}
       <ImportPage />
     {:else if route === 'bank-flow'}
@@ -62,43 +69,3 @@
     {/if}
   </div>
 </main>
-
-<style>
-  .layout {
-    display: flex;
-    min-height: 100vh;
-  }
-  .sidebar {
-    width: 180px;
-    flex-shrink: 0;
-    border-right: 1px solid var(--border-side);
-    padding: 16px 8px;
-  }
-  .app-title {
-    font-size: 16px;
-    margin: 0 8px 16px;
-  }
-  .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    text-align: left;
-    padding: 8px 12px;
-    border: 0;
-    background: transparent;
-    cursor: pointer;
-    font-size: 14px;
-    border-radius: 6px;
-    color: inherit;
-  }
-  .nav-item.active {
-    background: var(--nav-active-bg);
-    font-weight: 600;
-  }
-  .content {
-    flex: 1;
-    padding: 16px 20px;
-    min-width: 0;
-  }
-</style>

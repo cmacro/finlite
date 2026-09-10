@@ -9,22 +9,22 @@ TODO: 接 ReconService.ReconcileByDate / ListDiffs（bindings 生成后）。 --
   let diffs = $state<ReconDiff[]>([]);
 </script>
 
-<section class="page">
-  <h2>对账中心</h2>
+<section>
+  <h2 class="page-title">对账中心</h2>
   <div class="toolbar">
     <input class="input" type="date" bind:value={date} />
     <button class="btn" disabled title="bindings 生成后启用">对账</button>
   </div>
   {#if result}
-    <div class="recon-cards">
+    <div class="my-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
       <div>订单实收 <b>{formatMoney(result.orderNet)}</b></div>
       <div>银行POS转入 <b>{formatMoney(result.bankPOSIn)}</b></div>
       <div>汇总实际收入 <b>{formatMoney(result.summaryActual)}</b></div>
       <div>{result.matched ? '三方一致' : `差异 ${formatMoney(result.diff)}`}</div>
     </div>
   {/if}
-  <h3>待处理差异</h3>
-  <table class="dense">
+  <h3 class="section-title">待处理差异</h3>
+  <table class="data-table">
     <thead><tr><th>日期</th><th>字段</th><th class="num">预期</th><th class="num">实际</th><th>说明</th></tr></thead>
     <tbody>
       {#each diffs as d}

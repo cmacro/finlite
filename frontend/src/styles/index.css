@@ -1,0 +1,10 @@
+/* finlite 样式入口（由 main.ts 导入，全局生效一次）。
+ * 分层：tokens（@theme，唯一颜色来源）→ base → components（按域拆分）。
+ * 新增样式按域归档到本目录对应文件，不要在 Svelte 里写 <style>。 */
+@import 'tailwindcss';
+
+@import './tokens.css';
+@import './base.css';
+@import './table.css';
+@import './controls.css';
+@import './modal.css';

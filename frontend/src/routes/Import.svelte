@@ -7,16 +7,16 @@ TODO: 接 ImportService.ImportBankFile / ImportOrderFile / ListBatches（binding
   let notice = $state('');
 </script>
 
-<section class="page">
-  <h2>导入中心</h2>
+<section>
+  <h2 class="page-title">导入中心</h2>
   <div class="toolbar">
     <button class="btn" disabled title="bindings 生成后启用">导入银行流水 TSV</button>
     <button class="btn" disabled title="bindings 生成后启用">导入订单流水 TSV</button>
   </div>
-  {#if notice}<p class="notice">{notice}</p>{/if}
-  <table class="dense">
+  {#if notice}<p class="my-2 text-sm text-muted">{notice}</p>{/if}
+  <table class="data-table">
     <thead>
-      <tr><th>文件名</th><th>总行数</th><th>成功</th><th>跳过</th><th>余额警告</th></tr>
+      <tr><th>文件名</th><th class="num">总行数</th><th class="num">成功</th><th class="num">跳过</th><th>余额警告</th></tr>
     </thead>
     <tbody>
       {#each batches as b}

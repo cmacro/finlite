@@ -9,14 +9,14 @@ TODO: 接 OrderFlowService.List（bindings 生成后）。 -->
   let onlyFeeAdj = $state(false);
 </script>
 
-<section class="page">
-  <h2>订单流水</h2>
+<section>
+  <h2 class="page-title">订单流水</h2>
   <div class="toolbar">
     <input class="input" type="date" bind:value={settleDate} />
-    <label><input type="checkbox" bind:checked={onlyFeeAdj} /> 仅看费率差异</label>
+    <label class="flex items-center gap-1 text-sm"><input type="checkbox" bind:checked={onlyFeeAdj} /> 仅看费率差异</label>
     <button class="btn" disabled title="bindings 生成后启用">查询</button>
   </div>
-  <table class="dense">
+  <table class="data-table">
     <thead>
       <tr><th>工行订单号</th><th>结算日期</th><th class="num">订单金额</th><th class="num">手续费</th><th class="num">实收</th><th>支付方式</th><th>费率检查</th></tr>
     </thead>
@@ -26,7 +26,7 @@ TODO: 接 OrderFlowService.List（bindings 生成后）。 -->
           <td>{o.icbcOrderNo}</td><td>{o.settleDate}</td>
           <td class="num">{formatMoney(o.orderAmount)}</td><td class="num">{formatMoney(o.feeAmount)}</td><td class="num">{formatMoney(o.netAmount)}</td>
           <td>{o.payMethod || o.debitCreditFlag}</td>
-          <td>{#if o.feeFlag}<span class="fee-flag">{feeFlagText(o.feeFlag)}</span>{/if}</td>
+          <td>{#if o.feeFlag}<span class="ml-1 font-semibold text-warn">{feeFlagText(o.feeFlag)}</span>{/if}</td>
         </tr>
       {:else}
         <tr><td colspan="7" class="empty">暂无数据，请先在导入中心导入订单流水</td></tr>

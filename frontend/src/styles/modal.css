@@ -1,0 +1,15 @@
+/* 确认对话框（对齐 ForgeFin modal 命名，finlite 尺寸）。 */
+@layer components {
+  .modal-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-mask;
+  }
+  .modal-box {
+    @apply min-w-[320px] max-w-[480px] rounded-lg bg-surface px-6 py-5;
+  }
+  .modal-msg {
+    @apply mb-4 text-sm;
+  }
+  .modal-actions {
+    @apply flex justify-end gap-2;
+  }
+}

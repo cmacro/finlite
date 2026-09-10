@@ -53,7 +53,8 @@ func Run(assets embed.FS) error {
 			Backdrop:                application.MacBackdropTranslucent,
 			TitleBar:                application.MacTitleBarHiddenInset,
 		},
-		BackgroundColour: application.NewRGB(6, 7, 15),
+		// 窗口底色：WebView 加载完成前的首屏颜色，需与 styles/tokens.css --color-surface 一致。
+		BackgroundColour: application.NewRGB(255, 255, 255),
 		URL:              "/",
 	})
 

@@ -1,0 +1,19 @@
+/* finlite 设计 token（全站唯一颜色来源）。
+ * 规则：Svelte/TS 内禁止直接用色（bg-white / bg-black / text-[#xxx] / 十六进制等），
+ * 一律用此处定义的语义 token（如 bg-surface / bg-mask / text-danger）。
+ * 换主题只改此处。 */
+@theme {
+  --color-ink: #222;
+  --color-surface: #fff;
+  --color-mask: rgb(0 0 0 / 0.45);
+  --color-muted: #999;
+  --color-danger: #c00;
+  --color-ok: #090;
+  --color-warn: #b60;
+  --color-edge: #ccc;
+  --color-edge-strong: #ddd;
+  --color-edge-soft: #eee;
+  --color-sider: #e5e5e5;
+  --color-thead: #f7f7f7;
+  --color-navactive: #eef4ff;
+}

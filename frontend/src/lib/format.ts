@@ -20,13 +20,13 @@ export function statusText(s: string): string {
   }
 }
 
-/** 余额校验状态 → 样式类（mismatch 红 / ok+confirmed 绿 / skip 灰）。 */
+/** 余额校验状态 → Tailwind 样式类（mismatch 红 / ok+confirmed 绿 / skip 灰，色值见 styles/tokens.css）。 */
 export function statusClass(s: string): string {
   switch (s) {
-    case 'mismatch': return 'st-mismatch';
+    case 'mismatch': return 'font-semibold text-danger';
     case 'ok':
-    case 'confirmed': return 'st-ok';
-    case 'skip': return 'st-skip';
+    case 'confirmed': return 'text-ok';
+    case 'skip': return 'text-muted';
     default: return '';
   }
 }

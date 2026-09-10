@@ -18,17 +18,17 @@ TODO: 接 AccountService / FeeRateService / BackupService（bindings 生成后�
   }
 </script>
 
-<section class="page">
-  <h2>系统设置</h2>
-  <h3>备份与恢复</h3>
+<section>
+  <h2 class="page-title">系统设置</h2>
+  <h3 class="section-title">备份与恢复</h3>
   <div class="toolbar">
     <button class="btn" disabled title="bindings 生成后启用">立即备份</button>
   </div>
-  <table class="dense">
+  <table class="data-table">
     <thead><tr><th>备份文件</th><th>操作</th></tr></thead>
     <tbody>
       {#each backups as b}
-        <tr><td>{b}</td><td><button class="btn btn-small btn-danger" onclick={() => askRestore(b)}>恢复</button></td></tr>
+        <tr><td>{b}</td><td><button class="btn btn-sm btn-danger" onclick={() => askRestore(b)}>恢复</button></td></tr>
       {:else}
         <tr><td colspan="2" class="empty">暂无备份</td></tr>
       {/each}

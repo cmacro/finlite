@@ -1,0 +1,28 @@
+/* 标题 / 工具栏 / 按钮 / 输入框。颜色只引用 tokens.css token。 */
+@layer components {
+  .page-title {
+    @apply mb-3 text-xl font-semibold;
+  }
+  .section-title {
+    @apply mt-4 mb-2 text-base font-semibold;
+  }
+
+  .toolbar {
+    @apply mb-3 flex flex-wrap items-center gap-2;
+  }
+
+  /* .btn-sm / .btn-danger 须与 .btn 叠加使用 */
+  .btn {
+    @apply cursor-pointer rounded-md border border-edge bg-surface px-3 py-1.5 text-[13px] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn.btn-sm {
+    @apply px-2 py-0.5 text-xs;
+  }
+  .btn-danger {
+    @apply border-danger text-danger;
+  }
+
+  .input {
+    @apply rounded-md border border-edge bg-surface px-2 py-1.5 text-[13px];
+  }
+}

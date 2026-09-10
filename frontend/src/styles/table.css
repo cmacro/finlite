@@ -1,0 +1,19 @@
+/* 密集表格（对齐 ForgeFin data-table 命名，finlite 浅色 13px 视觉）。
+ * 数字列标记 class="num"，空态行标记 class="empty"。 */
+@layer components {
+  .data-table {
+    @apply w-full border-collapse text-[13px];
+  }
+  .data-table th {
+    @apply sticky top-0 border-b border-edge-strong bg-thead px-2 py-1.5 text-left;
+  }
+  .data-table td {
+    @apply border-b border-edge-soft px-2 py-1.5;
+  }
+  .data-table .num {
+    @apply text-right tabular-nums;
+  }
+  .data-table .empty {
+    @apply p-5 text-center text-muted;
+  }
+}

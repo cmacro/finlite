@@ -21,14 +21,14 @@ TODO: 接 BankFlowService.List / ConfirmBatch / UnconfirmBatch（bindings 生成
   }
 </script>
 
-<section class="page">
-  <h2>银行流水</h2>
+<section>
+  <h2 class="page-title">银行流水</h2>
   <div class="toolbar">
     <input class="input" placeholder="对方/摘要/附言关键字" bind:value={keyword} />
     <button class="btn" disabled title="bindings 生成后启用">查询</button>
     <button class="btn" onclick={() => askConfirm('')} disabled={flows.length === 0}>确认本批余额</button>
   </div>
-  <table class="dense">
+  <table class="data-table">
     <thead>
       <tr><th>交易时间</th><th>对方单位</th><th>摘要</th><th class="num">转入</th><th class="num">转出</th><th class="num">余额</th><th>校验</th></tr>
     </thead>
