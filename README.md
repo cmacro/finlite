@@ -2,6 +2,14 @@
 
 Congratulations on generating your Wails3 application! This README will guide you through the next steps to get your project up and running.
 
+## WSL 下使用 GTK3
+
+在 WSL Debian12 环境下使用 GTK3 作为 WebView 后端时，需要设置以下环境变量：
+
+```
+export GOFLAGS="-tags=gtk3"
+```
+
 ## Getting Started
 
 1. Navigate to your project directory in the terminal.
