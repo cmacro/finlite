@@ -2,37 +2,39 @@ package app
 
 import (
 	"embed"
-	"time"
+	"log"
 
 	"finlite/internal/services"
+	"finlite/internal/store"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
-func init() {
-	// Register a custom event whose associated data type is string.
-	// This is not required, but the binding generator will pick up registered events
-	// and provide a strongly typed JS/TS API for them.
-	application.RegisterEvent[string]("time")
-}
-
-// Run initializes the application, creates a window,
-// and starts a goroutine that emits a time-based event every second.
-// assets is the embedded frontend/dist FS passed in from main
-// (go:embed patterns must live in the directory that owns the files,
-// so they can't live under internal/).
-// It blocks until the application has been exited.
+// Run 初始化应用：打开 finlite.db，注册全部 Service，建桌面窗口。
+// assets 为 main.go 嵌入的 frontend/dist（go:embed 必须在拥有文件的目录）。
 func Run(assets embed.FS) error {
-	// Create a new Wails application by providing the necessary options.
-	// Variables 'Name' and 'Description' are for application metadata.
-	// 'Assets' configures the asset server with the 'FS' variable pointing to the frontend files.
-	// 'Services' is a list of Go struct instances. The frontend has access to the methods of these instances.
-	// 'Mac' options tailor the application when running on macOS.
+	db, err := store.Open(store.DefaultPath())
+	if err != nil {
+		log.Printf("打开数据库失败：%v", err)
+		return err
+	}
+
 	app := application.New(application.Options{
 		Name:        "finlite",
-		Description: "A demo of using raw HTML & CSS",
+		Description: "健康管理公司简易财务助手：导入→对账→汇总→凭证→余额表",
 		Services: []application.Service{
 			application.NewService(&services.GreetService{}),
+			application.NewService(services.NewImportService(db)),
+			application.NewService(services.NewBankFlowService(db)),
+			application.NewService(services.NewOrderFlowService(db)),
+			application.NewService(services.NewReconService(db)),
+			application.NewService(services.NewSummaryService(db)),
+			application.NewService(services.NewVoucherService(db)),
+			application.NewService(services.NewAccountService(db)),
+			application.NewService(services.NewFeeRateService(db)),
+			application.NewService(services.NewBackupService(db)),
+			application.NewService(services.NewReportService(db)),
+			application.NewService(services.NewAuditService(db)),
 		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),
@@ -42,16 +44,10 @@ func Run(assets embed.FS) error {
 		},
 	})
 
-	// Create a new window with the necessary options.
-	// 'Title' is the title of the window.
-	// 'Mac' options tailor the window when running on macOS.
-	// 'BackgroundColour' is the background colour of the window.
-	// 'URL' is the URL that will be loaded into the webview.
 	app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title: "Window 1",
-		// Window sized to the golden ratio (1000 / 618 ≈ 1.618).
-		Width:  1000,
-		Height: 618,
+		Title:  "finlite 财务助手",
+		Width:  1280,
+		Height: 800,
 		Mac: application.MacWindow{
 			InvisibleTitleBarHeight: 50,
 			Backdrop:                application.MacBackdropTranslucent,
@@ -61,16 +57,5 @@ func Run(assets embed.FS) error {
 		URL:              "/",
 	})
 
-	// Create a goroutine that emits an event containing the current time every second.
-	// The frontend can listen to this event and update the UI accordingly.
-	go func() {
-		for {
-			now := time.Now().Format(time.RFC1123)
-			app.Event.Emit("time", now)
-			time.Sleep(time.Second)
-		}
-	}()
-
-	// Run the application. This blocks until the application has been exited.
 	return app.Run()
 }
