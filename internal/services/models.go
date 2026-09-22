@@ -7,6 +7,7 @@ package services
 
 type ImportResult struct {
 	BatchID        string `json:"batchId"`
+	SourceType     string `json:"sourceType"` // bank_flow / order_flow（见 import_batches.source_type）
 	FileName       string `json:"fileName"`
 	RowCount       int    `json:"rowCount"`
 	SuccessCount   int    `json:"successCount"`

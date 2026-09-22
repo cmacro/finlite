@@ -23,6 +23,14 @@ export function ImportBankFile(filePath: string): $CancellablePromise<$models.Im
 }
 
 /**
+ * ImportFile 统一导入入口：前端选文件后传文件名+内容，按文件名自动识别类型
+ * （银行/订单，见 DetectSourceType），解析→去重→余额校验→入库。
+ */
+export function ImportFile(fileName: string, content: string): $CancellablePromise<$models.ImportResult> {
+    return $Call.ByID(2099676318, fileName, content);
+}
+
+/**
  * ImportOrderFile 导入订单流水 TSV。去重键 icbc_order_no UNIQUE。
  */
 export function ImportOrderFile(filePath: string): $CancellablePromise<$models.ImportResult> {

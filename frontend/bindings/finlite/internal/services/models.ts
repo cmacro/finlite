@@ -92,6 +92,11 @@ export interface ImportError {
 
 export interface ImportResult {
     "batchId": string;
+
+    /**
+     * bank_flow / order_flow（见 import_batches.source_type）
+     */
+    "sourceType": string;
     "fileName": string;
     "rowCount": number;
     "successCount": number;
