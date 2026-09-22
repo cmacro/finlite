@@ -159,9 +159,12 @@ Before a task is complete:
 
 ```sh
 gofmt -l ./...
-go vet ./...
-go build ./...
+go vet -tags=gtk3 ./...
+go build -tags=gtk3 .
 ```
+
+`-tags=gtk3` 是必需的（本机 GTK3 + webkit2gtk-4.1，无 GTK4 头文件，Wails `linux_cgo` 按 tag 选实现）。
+编译门禁用根包 `go build .`，不要用 `go build ./...`（会误算 `build/{android,ios}` 的 `package main` 模板）。
 
 Frontend change also requires:
 
