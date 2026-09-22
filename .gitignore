@@ -1,5 +1,7 @@
 .task
 bin
+# 根目录构建产物（gobuild 输出）
+/finlite
 frontend/dist
 frontend/node_modules
 build/linux/appimage/build
@@ -13,3 +15,6 @@ build/android/gen/
 .DS_Store
 
 raw
+
+# 本地环境变量（个人，含机器差异，不提交）
+.env
