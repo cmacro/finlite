@@ -21,7 +21,6 @@ TODO: 接 SummaryService.List / Save / Audit / GenerateFromRecon（bindings 生�
 </script>
 
 <section>
-  <h2 class="page-title">数据汇总</h2>
   <div class="toolbar">
     <button class="btn" disabled title="bindings 生成后启用">从对账预填</button>
     <button class="btn" disabled title="bindings 生成后启用">新增汇总</button>

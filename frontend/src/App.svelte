@@ -26,12 +26,15 @@
 
   let route = $state<RouteKey>('import');
 
+  const currentLabel = $derived(nav.find((n) => n.key === route)?.label ?? '');
+
   function go(key: RouteKey): void {
     route = key;
   }
 </script>
 
-<main class="flex min-h-screen">
+<!-- 布局：main 锁定视口高度（overflow-hidden），仅右侧内容区独立滚动，左侧导航固定不随内容滚动。 -->
+<main class="flex h-screen overflow-hidden">
   <aside class="w-[180px] shrink-0 border-r border-sider px-2 py-4">
     <h1 class="mx-2 mb-4 text-base font-bold">finlite 财务助手</h1>
     <nav>
@@ -49,7 +52,12 @@
       {/each}
     </nav>
   </aside>
-  <div class="min-w-0 flex-1 px-5 py-4">
+  <!-- 内容列：标题行固定不滚动，仅标题下方的内容主体独立滚动。 -->
+  <div class="flex h-full min-w-0 flex-1 flex-col">
+    <header class="shrink-0 px-5 pt-4">
+      <h2 class="page-title">{currentLabel}</h2>
+    </header>
+    <div class="min-h-0 flex-1 overflow-y-auto px-5 pb-4">
     {#if route === 'import'}
       <ImportPage />
     {:else if route === 'bank-flow'}
@@ -67,5 +75,6 @@
     {:else}
       <SettingsPage />
     {/if}
+    </div>
   </div>
 </main>

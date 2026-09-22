@@ -10,7 +10,6 @@ TODO: 接 ReconService.ReconcileByDate / ListDiffs（bindings 生成后）。 --
 </script>
 
 <section>
-  <h2 class="page-title">对账中心</h2>
   <div class="toolbar">
     <input class="input" type="date" bind:value={date} />
     <button class="btn" disabled title="bindings 生成后启用">对账</button>

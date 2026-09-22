@@ -60,7 +60,6 @@
 </script>
 
 <section>
-  <h2 class="page-title">导入中心</h2>
   <div class="toolbar">
     <button class="btn" onclick={onPickFile} disabled={busy}>
       选择文件导入

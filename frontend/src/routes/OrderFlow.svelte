@@ -10,7 +10,6 @@ TODO: 接 OrderFlowService.List（bindings 生成后）。 -->
 </script>
 
 <section>
-  <h2 class="page-title">订单流水</h2>
   <div class="toolbar">
     <input class="input" type="date" bind:value={settleDate} />
     <label class="flex items-center gap-1 text-sm"><input type="checkbox" bind:checked={onlyFeeAdj} /> 仅看费率差异</label>

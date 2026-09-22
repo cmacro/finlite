@@ -10,7 +10,6 @@ TODO: 接 ReportService.BalanceSheet / DailyIncome（bindings 生成后）。 --
 </script>
 
 <section>
-  <h2 class="page-title">科目余额表</h2>
   <div class="toolbar">
     <input class="input" type="date" bind:value={dateFrom} />
     <span class="text-sm">至</span>

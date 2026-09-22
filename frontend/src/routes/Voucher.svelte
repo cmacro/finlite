@@ -21,7 +21,6 @@ TODO: 接 VoucherService.List / Get / Create / Audit / UnAudit（bindings 生成
 </script>
 
 <section>
-  <h2 class="page-title">凭证管理</h2>
   <div class="toolbar">
     <button class="btn" disabled title="bindings 生成后启用">查询</button>
   </div>

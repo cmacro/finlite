@@ -16,4 +16,8 @@
   .data-table .empty {
     @apply p-5 text-center text-muted;
   }
+  /* 余额不平行整行红底（确认后取消红底） */
+  .data-table .row-mismatch td {
+    @apply bg-danger-soft;
+  }
 }
