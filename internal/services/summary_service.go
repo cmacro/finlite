@@ -93,6 +93,9 @@ func (s *SummaryService) Save(ctx context.Context, req SaveSummaryReq) (Summary,
 	now := time.Now().Format(time.RFC3339)
 	var out Summary
 	err := s.DB.WithWriteTx(ctx, func(tx *sql.Tx) error {
+		if err := checkReceiptNoUnique(tx, req.ReceiptNo, req.ID); err != nil {
+			return err
+		}
 		if strings.TrimSpace(req.ID) == "" {
 			id := uuid.NewString()
 			feeAuto := req.FeeActual
@@ -161,6 +164,8 @@ func (s *SummaryService) Save(ctx context.Context, req SaveSummaryReq) (Summary,
 }
 
 // Audit 审核 / 驳回汇总。
+// 状态机（业务文档 §5）：draft → reviewed；reviewed → draft（驳回）。
+// vouchered 为终态：已生成凭证的汇总不可驳回，否则会绕过「一汇总一凭证」。
 func (s *SummaryService) Audit(ctx context.Context, id string, approve bool, operator, comment string) (Summary, error) {
 	if strings.TrimSpace(id) == "" {
 		return Summary{}, fmt.Errorf("汇总不能为空")
@@ -168,9 +173,11 @@ func (s *SummaryService) Audit(ctx context.Context, id string, approve bool, ope
 	now := time.Now().Format(time.RFC3339)
 	target := "reviewed"
 	action := "review"
+	from := "draft"
 	if !approve {
 		target = "draft"
 		action = "reject"
+		from = "reviewed"
 	}
 	var out Summary
 	err := s.DB.WithWriteTx(ctx, func(tx *sql.Tx) error {
@@ -180,8 +187,11 @@ func (s *SummaryService) Audit(ctx context.Context, id string, approve bool, ope
 		} else if err != nil {
 			return fmt.Errorf("读取汇总失败：%v", err)
 		}
-		if approve && cur != "draft" {
-			return fmt.Errorf("只有草稿可审核，当前状态：%s", cur)
+		if cur != from {
+			if cur == "vouchered" {
+				return fmt.Errorf("已生成凭证的汇总不可驳回或重新审核，请先反审核并作废对应凭证")
+			}
+			return fmt.Errorf("汇总状态不允许该操作，当前：%s（需为 %s）", cur, from)
 		}
 		if _, err := tx.Exec(`UPDATE data_summaries SET status=?, updated_at=? WHERE id=?`, target, now, id); err != nil {
 			return fmt.Errorf("审核汇总失败：%v", err)
@@ -223,6 +233,24 @@ func (s *SummaryService) GenerateFromRecon(ctx context.Context, date string, ope
 		return Summary{}, err
 	}
 	return Summary{ID: id, Date: date, Status: "draft", Source: "auto"}, nil
+}
+
+// checkReceiptNoUnique 收据号唯一（业务文档 §7 F5）：空号不占用，排除自身后不得重复。
+// 数据库侧另有部分唯一索引兜底（upgrade/01-receipt-no-unique.sql），此处提供中文报错。
+func checkReceiptNoUnique(tx *sql.Tx, receiptNo, selfID string) error {
+	no := strings.TrimSpace(receiptNo)
+	if no == "" {
+		return nil
+	}
+	var n int
+	if err := tx.QueryRow(`SELECT COUNT(*) FROM data_summaries
+		WHERE receipt_no=? AND id<>?`, no, selfID).Scan(&n); err != nil {
+		return fmt.Errorf("校验收据号失败：%v", err)
+	}
+	if n > 0 {
+		return fmt.Errorf("收据号已存在：%s", no)
+	}
+	return nil
 }
 
 func decOrZero(s string) string {

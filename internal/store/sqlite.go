@@ -1,5 +1,6 @@
 // Package store 拥有 SQLite 的打开/迁移/查询：WAL + 单写 mutex + database/sql 裸 SQL。
-// 业务表结构见 upgrade/00-latest-schema.sql（与业务文档 §8 同步）。
+// 业务表结构见 upgrade/00-latest-schema.sql（与业务文档 §8 同步），
+// 增量脚本见 upgrade/NN-*.sql，按 PRAGMA user_version 顺序执行（见 migrate.go）。
 package store
 
 import (
@@ -18,8 +19,9 @@ import (
 //go:embed upgrade/00-latest-schema.sql
 var baselineSchema string
 
-// SchemaVersion 基线版本：新库直接建 baseline 并置 user_version。
-const SchemaVersion = 1
+// SchemaVersion 当前 schema 版本：等于最后一个增量脚本的 to 版本。
+// 新库直接建 baseline 并置 user_version=SchemaVersion；旧库按脚本递增升级。
+const SchemaVersion = 3
 
 // DB 封装单写互斥的 *sql.DB。读多并发由 database/sql 池处理，写路径统一加锁。
 type DB struct {
@@ -65,8 +67,16 @@ func Open(path string) (*DB, error) {
 // Pool 裸连接池，供 Service 组装查询使用（写事务请走 WithWriteTx）。
 func (d *DB) Pool() *sql.DB { return d.pool }
 
-// Close 关闭连接池。
+// Close 关闭连接池。恢复备份前须先 Close + checkpoint，避免 WAL 未落盘。
 func (d *DB) Close() error { return d.pool.Close() }
+
+// Checkpoint 把 WAL 内容落盘并截断，备份/恢复前调用保证文件自洽。
+func (d *DB) Checkpoint() error {
+	if _, err := d.pool.Exec(`PRAGMA wal_checkpoint(TRUNCATE)`); err != nil {
+		return fmt.Errorf("检查点失败：%v", err)
+	}
+	return nil
+}
 
 // Path 返回库文件路径（备份/恢复用）。
 func (d *DB) Path() string { return d.path }
@@ -85,35 +95,6 @@ func (d *DB) WithWriteTx(ctx context.Context, fn func(tx *sql.Tx) error) error {
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("提交事务失败：%v", err)
-	}
-	return nil
-}
-
-func (d *DB) migrate() error {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	pragmas := []string{
-		`PRAGMA journal_mode=WAL`,
-		`PRAGMA synchronous=NORMAL`,
-		`PRAGMA foreign_keys=ON`,
-	}
-	for _, p := range pragmas {
-		if _, err := d.pool.Exec(p); err != nil {
-			return fmt.Errorf("设置 %s 失败：%v", p, err)
-		}
-	}
-	var version int
-	if err := d.pool.QueryRow(`PRAGMA user_version`).Scan(&version); err != nil {
-		return fmt.Errorf("读取 user_version 失败：%v", err)
-	}
-	if version >= SchemaVersion {
-		return nil
-	}
-	if _, err := d.pool.Exec(baselineSchema); err != nil {
-		return fmt.Errorf("初始化基线表结构失败：%v", err)
-	}
-	if _, err := d.pool.Exec(fmt.Sprintf(`PRAGMA user_version=%d`, SchemaVersion)); err != nil {
-		return fmt.Errorf("写入 user_version 失败：%v", err)
 	}
 	return nil
 }

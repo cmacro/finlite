@@ -148,10 +148,12 @@ description: finlite 单账套业务唯一依据：银行流水 + 订单流水 +
 状态机：
 
 ```
-汇总: draft → reviewed → vouchered；可驳回 reviewed→draft
+汇总: draft → reviewed → vouchered；可驳回 reviewed→draft（vouchered 不可驳回）
 凭证: draft → audited；反审核 audited→draft（留日志）
 银行余额批次: mismatch --确认--> confirmed（可撤销）
 ```
+
+生成凭证时同步回写 `data_summaries.voucher_id`；反查链：凭证 → 汇总 → 银行/订单行 → 文件+行号。
 
 ---
 
@@ -179,8 +181,9 @@ description: finlite 单账套业务唯一依据：银行流水 + 订单流水 +
 
 ### 6.3 银行余额校验（强制，直接复用 ForgeFin）
 
-- 逐行：`本行余额 == 上行余额 + 转入 - 转出`，`shopspring/decimal` 严格相等，**无容差**；
-- 整批：`末行余额 - 首行余额 == Σ转入 - Σ转出`，不平则 `balance_check_warning`；
+- **校验顺序**：网银导出的行序不保证（样本 `银行流水.tsv` 为倒序，且同一秒多行如 7-10 13:39:14 的 4,800/717/149 也是乱序），校验前必须重排：先按 `交易时间` 升序；同一秒内按余额衔接关系（`上行余额 + 转入 - 转出 == 本行余额`）重建真实先后，避免把实际连续的行误判为不平。衔接关系无法唯一确定时（起点不唯一或存在无衔接行），退回文件原序并如实标不平。
+- 逐行：`本行余额 == 上行余额 + 转入 - 转出`（首行无上行，直接 `ok`），`shopspring/decimal` 严格相等，**无容差**；
+- 整批：`末行余额 - 首行余额 == Σ(本行转入 - 本行转出) 之和（自第 2 行起）`。因递推式首行净额已被 `首行余额` 吸收，**Σ 必须排除首行**，否则恒误报；不平则 `balance_check_warning`；
 - 不平仍入库，写 `import_errors(field='balance_discontinuity')`，UI 红底 `mismatch` / 灰 `skip` / 绿 `ok`；
 - 唯一消红路径：按批次人工“确认余额”（写 `balance_confirmed_at`），可撤销；确认不改 `status`，仅换样式。结论来源见外部基线 `ForgeFin/docs/analysis/health-source-data-analysis.md:105-117`（外部只读，含原始商户号原值，禁止原样复制）。
 
@@ -234,7 +237,7 @@ description: finlite 单账套业务唯一依据：银行流水 + 订单流水 +
 | F3 | 订单流水 | 列表（订单号/金额/手续费/实收/支付方式/结算日）、费率复算差异提示 | 手续费 ±0.01 外标异 |
 | F4 | 对账中心 | 按结算日自动勾稽三方，匹配/差异两栏，差异一键定位原行 | 7-10/11/12 全绿，7-01 标差异 0.45 |
 | F5 | 数据汇总 | CRUD，自动预填，收据号唯一，手工费标记黄标，审核/驳回 | 未审核不可生成凭证 |
-| F6 | 凭证管理 | 列表/详情/新增（自动配平检查）、审核/反审核、打印预览 | 借贷不等禁止保存 |
+| F6 | 凭证管理 | 列表/详情/按 §6.5 模板由已审核汇总一键生成、审核/反审核、打印预览 | 借贷不等禁止保存 |
 | F7 | 科目余额表 | 期初+本期借贷+期末，按期间筛 | 期末=期初+借-贷（按方向） |
 | F8 | 基础设置 | 科目维护、费率维护、备份/恢复（sqlite `.backup` 级拷贝） | 备份文件可恢复打开 |
 
@@ -313,7 +316,7 @@ Wails3 约定：Service 方法 `context.Context` 首参可选，返回 `(T, erro
 - 任何汇总修改/审核/凭证生成写 `audit_logs`（old/new JSON）。
 - 原始 `bank_flows/order_flows` 只读，不提供 Update 接口；错行用“作废+备注”或重新导入。
 - 凭证保留 `source_summary_id`，汇总保留 `voucher_id`，可一键反查：凭证→汇总→银行/订单行→文件+行号。
-- 备份：设置页一键备份 `finlite.db` 到 `backups/finlite_YYYYMMDD_HHmmss.db`；恢复需二次确认后重启应用。
+- 备份：设置页一键备份 `finlite.db` 到 `backups/finlite_YYYYMMDD_HHmmss.db`；恢复需二次确认后重启应用。恢复前自动留一份当前库的 `pre-restore` 快照，防误恢复。
 
 ---
 
@@ -336,6 +339,8 @@ Wails3 约定：Service 方法 `context.Context` 首参可选，返回 `(T, erro
 订单：取 §4.2 核心列，其余整行进 `raw_json`；`工行订单号` 唯一去重；`结算日期` 为空则用交易日期+1 天并标待确认。
 
 汇总第二行费率行跳过（首列为空且含 `0.005`）。
+
+导入中心受理 TSV / CSV / XLSX：文本文件按首行检测分隔符（制表符优先，其次逗号）；XLSX 取首个工作表，首行即表头。列映射预览展示识别到的关键列与样本前若干行。
 
 ## 附录 B：脱敏映射使用
 

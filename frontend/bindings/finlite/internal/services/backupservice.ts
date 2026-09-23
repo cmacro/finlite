@@ -24,3 +24,12 @@ export function Backup(): $CancellablePromise<string> {
 export function ListBackups(): $CancellablePromise<string[] | null> {
     return $Call.ByID(3009772797);
 }
+
+/**
+ * Restore 用备份覆盖当前库（§7 F8「备份文件可恢复打开」）。
+ * 顺序：校验备份可打开 → checkpoint 当前库 → 留 pre-restore 快照 → 覆盖文件。
+ * 覆盖后当前连接持有的仍是旧文件句柄，必须重启应用才生效（前端二次确认后调 Restart）。
+ */
+export function Restore(backupPath: string): $CancellablePromise<string> {
+    return $Call.ByID(1668047532, backupPath);
+}

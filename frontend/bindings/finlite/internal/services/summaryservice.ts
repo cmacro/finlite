@@ -17,6 +17,8 @@ import * as $models from "./models.js";
 
 /**
  * Audit 审核 / 驳回汇总。
+ * 状态机（业务文档 §5）：draft → reviewed；reviewed → draft（驳回）。
+ * vouchered 为终态：已生成凭证的汇总不可驳回，否则会绕过「一汇总一凭证」。
  */
 export function Audit(id: string, approve: boolean, operator: string, comment: string): $CancellablePromise<$models.Summary> {
     return $Call.ByID(2785699645, id, approve, operator, comment);

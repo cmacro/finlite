@@ -15,15 +15,15 @@ import { Call as $Call, CancellablePromise as $CancellablePromise } from "@wails
 import * as $models from "./models.js";
 
 /**
- * BalanceSheet 科目余额表：期末 = 期初 + 借 - 贷（按借方科目方向简化）。
- * 期初暂取 0，本期发生取凭证分录汇总。
+ * BalanceSheet 科目余额表：期初 + 本期借贷 = 期末，按期间筛（§7 F7）。
+ * 金额全程用 decimal：发生额从 TEXT 读出后精确累加，不经 float64。
  */
 export function BalanceSheet(dateFrom: string, dateTo: string): $CancellablePromise<$models.BalanceRow[] | null> {
     return $Call.ByID(4107055065, dateFrom, dateTo);
 }
 
 /**
- * DailyIncome 收支日报：按日汇总收入/支出（汇总表口径）。
+ * DailyIncome 收支日报：按日汇总收入/支出（汇总表口径），decimal 精确累加。
  */
 export function DailyIncome(dateFrom: string, dateTo: string): $CancellablePromise<$models.DailyRow[] | null> {
     return $Call.ByID(296082372, dateFrom, dateTo);

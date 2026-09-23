@@ -23,6 +23,14 @@ export function Audit(id: string, operator: string): $CancellablePromise<$models
 }
 
 /**
+ * BuildEntries 按业务文档 §6.5 五类模板，由已审核汇总生成凭证分录（借贷自动配平）。
+ * 返回的分录仅作草稿：前端可在保存前调整科目/金额，保存时仍走 Create 的配平校验。
+ */
+export function BuildEntries(summaryID: string): $CancellablePromise<$models.VoucherEntry[] | null> {
+    return $Call.ByID(622364100, summaryID);
+}
+
+/**
  * Create 由已审核汇总生成凭证（一汇总一凭证）。
  */
 export function Create(req: $models.CreateVoucherReq): $CancellablePromise<$models.Voucher> {

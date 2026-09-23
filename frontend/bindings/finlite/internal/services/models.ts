@@ -64,6 +64,19 @@ export interface BankFlowPage {
     "pageSize": number;
 }
 
+/**
+ * ColumnMapping 导入前预览：识别到的关键列、缺失列与样本行（§7 F1「预览列映射」）。
+ */
+export interface ColumnMapping {
+    "sourceType": string;
+    "fileName": string;
+    "header": string[] | null;
+    "matched": string[] | null;
+    "missing": string[] | null;
+    "sampleRows": (string[] | null)[] | null;
+    "totalRows": number;
+}
+
 export interface CreateVoucherReq {
     "summaryId": string;
     "entries": VoucherEntry[] | null;

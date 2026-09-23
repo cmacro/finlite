@@ -25,4 +25,8 @@
   .input {
     @apply rounded-md border border-edge bg-surface px-2 py-1.5 text-[13px];
   }
+  /* 金额输入：右对齐等宽数字，与表格金额列一致 */
+  .input.num-input {
+    @apply text-right tabular-nums;
+  }
 }

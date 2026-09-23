@@ -23,7 +23,6 @@ func Run(assets embed.FS) error {
 		Name:        "finlite",
 		Description: "健康管理公司简易财务助手：导入→对账→汇总→凭证→余额表",
 		Services: []application.Service{
-			application.NewService(&services.GreetService{}),
 			application.NewService(services.NewImportService(db)),
 			application.NewService(services.NewBankFlowService(db)),
 			application.NewService(services.NewOrderFlowService(db)),

@@ -18,6 +18,8 @@ import * as $models from "./models.js";
 
 /**
  * ListDiffs 列出日期区间内未匹配的日期（待处理队列）。
+ * 日期集合取「订单结算日 ∪ 银行 POS 入账日」：银行侧独有日期（订单已导完但银行多出
+ * 一笔 POS 入账，或订单缺口）同样必须进队列，否则差异被静默吞掉（业务文档 §6.4）。
  */
 export function ListDiffs(dateFrom: string, dateTo: string): $CancellablePromise<$models.ReconDiff[] | null> {
     return $Call.ByID(306699711, dateFrom, dateTo);

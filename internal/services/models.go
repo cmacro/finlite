@@ -23,6 +23,17 @@ type ImportError struct {
 	Message   string `json:"message"`
 }
 
+// ColumnMapping 导入前预览：识别到的关键列、缺失列与样本行（§7 F1「预览列映射」）。
+type ColumnMapping struct {
+	SourceType string     `json:"sourceType"`
+	FileName   string     `json:"fileName"`
+	Header     []string   `json:"header"`
+	Matched    []string   `json:"matched"`
+	Missing    []string   `json:"missing"`
+	SampleRows [][]string `json:"sampleRows"`
+	TotalRows  int        `json:"totalRows"`
+}
+
 // ---------- 银行流水 ----------
 
 type BankFlow struct {

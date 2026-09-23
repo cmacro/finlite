@@ -115,8 +115,10 @@ func (s *ReconService) ReconcileByDate(ctx context.Context, date string) (ReconR
 }
 
 // ListDiffs 列出日期区间内未匹配的日期（待处理队列）。
+// 日期集合取「订单结算日 ∪ 银行 POS 入账日」：银行侧独有日期（订单已导完但银行多出
+// 一笔 POS 入账，或订单缺口）同样必须进队列，否则差异被静默吞掉（业务文档 §6.4）。
 func (s *ReconService) ListDiffs(ctx context.Context, dateFrom, dateTo string) ([]ReconDiff, error) {
-	q := `SELECT DISTINCT settle_date FROM order_flows WHERE 1=1`
+	q := `SELECT settle_date FROM order_flows WHERE 1=1`
 	var args []any
 	if dateFrom != "" {
 		q += ` AND settle_date>=?`
@@ -126,7 +128,16 @@ func (s *ReconService) ListDiffs(ctx context.Context, dateFrom, dateTo string) (
 		q += ` AND settle_date<=?`
 		args = append(args, dateTo)
 	}
-	q += ` ORDER BY settle_date`
+	q += ` UNION SELECT substr(txn_time,1,10) FROM bank_flows WHERE 1=1`
+	if dateFrom != "" {
+		q += ` AND substr(txn_time,1,10)>=?`
+		args = append(args, dateFrom)
+	}
+	if dateTo != "" {
+		q += ` AND substr(txn_time,1,10)<=?`
+		args = append(args, dateTo)
+	}
+	q += ` ORDER BY 1`
 	rows, err := s.DB.Pool().QueryContext(ctx, q, args...)
 	if err != nil {
 		return nil, fmt.Errorf("查询对账日期失败：%v", err)
@@ -138,7 +149,9 @@ func (s *ReconService) ListDiffs(ctx context.Context, dateFrom, dateTo string) (
 			rows.Close()
 			return nil, fmt.Errorf("读取对账日期失败：%v", err)
 		}
-		dates = append(dates, d)
+		if strings.TrimSpace(d) != "" {
+			dates = append(dates, d)
+		}
 	}
 	rows.Close()
 	var out []ReconDiff
@@ -147,18 +160,39 @@ func (s *ReconService) ListDiffs(ctx context.Context, dateFrom, dateTo string) (
 		if err != nil {
 			return nil, err
 		}
-		if !r.Matched {
-			out = append(out, ReconDiff{
-				Date:   d,
-				Field:  "order_vs_bank",
-				Expect: r.OrderNet,
-				Actual: r.BankPOSIn,
-				Detail: "订单实收合计与银行POS转入不一致，请定位原行（文件+行号）核对补贴/立减",
-			})
+		if r.Matched {
+			continue
 		}
+		out = append(out, buildDiff(r))
 	}
 	if out == nil {
 		out = []ReconDiff{}
 	}
 	return out, nil
+}
+
+// buildDiff 按三方勾稽结果定位差异字段，供待处理队列展示。
+func buildDiff(r ReconResult) ReconDiff {
+	orderNet, _ := decimal.Parse(r.OrderNet)
+	bankPOS, _ := decimal.Parse(r.BankPOSIn)
+	summary, _ := decimal.Parse(r.SummaryActual)
+	switch {
+	case !orderNet.Equal(bankPOS):
+		return ReconDiff{
+			Date:   r.Date,
+			Field:  "订单实收 vs 银行POS",
+			Expect: r.OrderNet,
+			Actual: r.BankPOSIn,
+			Detail: "Σ订单实收与银行POS转入不一致，请定位原行（文件+行号）核对补贴/立减",
+		}
+	default:
+		return ReconDiff{
+			Date:   r.Date,
+			Field:  "银行POS vs 汇总实际收入",
+			Expect: r.BankPOSIn,
+			Actual: r.SummaryActual,
+			Detail: fmt.Sprintf("银行POS与汇总实际收入不一致（差 %s），请核对数据汇总页当日收入行",
+				decimal.Format(bankPOS.Sub(summary))),
+		}
+	}
 }

@@ -33,7 +33,8 @@ Conventions:
 ## Mandatory rules
 
 1. **Bank balance, strict, no tolerance:**
-   `balance == prev_balance + in - out` per row; `last - first == sum(in) - sum(out)` per batch.
+   Reorder rows before checking: sort by `txn_time`, then within the same second rebuild the real order by balance chaining (`prev + in - out == balance`). Network-bank exports scramble both (the sample file is descending). Fall back to file order when the chain is ambiguous, and report mismatch honestly.
+   `balance == prev_balance + in - out` per row; `last - first == sum(in) - sum(out)` over rows **from the second onward** (the first row's net is already absorbed into `first`).
    Mismatch still imports (`balance_status='mismatch'` + `import_errors`), cleared only by batch confirm (`balance_confirmed_at`), revocable.
 2. **Voucher balance:** `sum(debit) == sum(credit)` via decimal. Reject with Chinese diff message.
 3. **State gates:** only `reviewed` summary -> voucher; one summary -> one voucher.

@@ -37,7 +37,8 @@ CREATE TABLE IF NOT EXISTS bank_flows (
     balance_status       TEXT NOT NULL DEFAULT 'skip',
     balance_confirmed_at TEXT,
     voucher_id           TEXT,
-    created_at           TEXT NOT NULL
+    created_at           TEXT NOT NULL,
+    raw_json             TEXT NOT NULL DEFAULT '{}'
 );
 CREATE INDEX IF NOT EXISTS idx_bank_flows_txn_time ON bank_flows (txn_time);
 CREATE INDEX IF NOT EXISTS idx_bank_flows_batch ON bank_flows (batch_id);
@@ -84,6 +85,10 @@ CREATE TABLE IF NOT EXISTS data_summaries (
 );
 CREATE INDEX IF NOT EXISTS idx_data_summaries_date ON data_summaries (date);
 CREATE INDEX IF NOT EXISTS idx_data_summaries_status ON data_summaries (status);
+-- 收据号唯一（业务文档 §7 F5）：仅对已填号的行生效，空串/未编号允许重复。
+CREATE UNIQUE INDEX IF NOT EXISTS uq_data_summaries_receipt_no
+ON data_summaries (receipt_no)
+WHERE receipt_no IS NOT NULL AND receipt_no <> '';
 
 CREATE TABLE IF NOT EXISTS vouchers (
     id                TEXT NOT NULL PRIMARY KEY,

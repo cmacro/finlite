@@ -12,4 +12,8 @@
   .modal-actions {
     @apply flex justify-end gap-2;
   }
+  /* 表单型对话框（汇总编辑等）比确认框宽 */
+  .modal-box-wide {
+    @apply min-w-[520px] max-w-[680px];
+  }
 }

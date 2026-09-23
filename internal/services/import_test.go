@@ -35,12 +35,12 @@ func TestDetectSourceType(t *testing.T) {
 	}
 }
 
-// TestParseTSVText BOM 去除与表头/数据行拆分。
-func TestParseTSVText(t *testing.T) {
+// TestParseTabularText BOM 去除与表头/数据行拆分。
+func TestParseTabularText(t *testing.T) {
 	content := "\uFEFF交易时间\t转入金额\t余额\n2026-07-10 02:45:36\t11,970.00\t657,872.62\n"
-	header, rows, err := parseTSVText(content)
+	header, rows, err := parseTabularText(content)
 	if err != nil {
-		t.Fatalf("parseTSVText: %v", err)
+		t.Fatalf("parseTabularText: %v", err)
 	}
 	if len(header) != 3 || strings.TrimPrefix(header[0], "\uFEFF") != "交易时间" {
 		t.Errorf("表头未去 BOM 或列数不对：%v", header)
