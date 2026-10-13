@@ -16,7 +16,8 @@ import * as $models from "./models.js";
 
 /**
  * BalanceSheet 科目余额表：期初 + 本期借贷 = 期末，按期间筛（§7 F7）。
- * 金额全程用 decimal：发生额从 TEXT 读出后精确累加，不经 float64。
+ * 金额全程用 decimal：逐行读出 TEXT 后在 Go 里精确累加，不经 SQLite 的 SUM 数值强转
+ * （SUM(TEXT) 会被强转成 REAL，引入 float 误差，违反「金额禁用 float64」）。
  */
 export function BalanceSheet(dateFrom: string, dateTo: string): $CancellablePromise<$models.BalanceRow[] | null> {
     return $Call.ByID(4107055065, dateFrom, dateTo);
