@@ -1,0 +1,927 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Finlite — 对账中心</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: #ffffff;
+  --fg: #111111;
+  --accent: #1677ff;
+  --surface: #f7f8fa;
+  --muted: #6b7280;
+  --border: #d9dee7;
+
+  /* Derived state colors via oklch — not hex literals */
+  --ok: oklch(0.62 0.17 145);
+  --ok-bg: oklch(0.96 0.03 145);
+  --ok-border: oklch(0.80 0.08 145);
+  --warn: oklch(0.72 0.14 75);
+  --warn-bg: oklch(0.96 0.05 75);
+  --warn-border: oklch(0.85 0.08 75);
+  --err: oklch(0.58 0.20 25);
+  --err-bg: oklch(0.95 0.04 25);
+  --err-border: oklch(0.78 0.10 25);
+
+  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+  --radius: 8px;
+  --sidebar-w: 220px;
+  --topbar-h: 52px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5715;
+  color: var(--fg);
+  background: var(--surface);
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── App Shell ── */
+.app { display: flex; height: 100vh; }
+
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--bg);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+.sidebar-brand {
+  height: var(--topbar-h);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--fg);
+}
+.sidebar-brand .logo-dot {
+  width: 24px; height: 24px;
+  background: var(--accent);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 13px; font-weight: 700;
+}
+.sidebar-nav { flex: 1; padding: 8px 0; overflow-y: auto; }
+.nav-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 12px 16px 4px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+  color: var(--fg);
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  transition: background 0.15s;
+  font-family: var(--font);
+}
+.nav-item:hover { background: var(--surface); }
+.nav-item.active {
+  background: var(--surface);
+  color: var(--accent);
+  font-weight: 600;
+  position: relative;
+}
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--accent);
+}
+.nav-icon {
+  width: 18px; height: 18px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0.7;
+}
+.nav-item.active .nav-icon { opacity: 1; }
+.sidebar-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ── Main Area ── */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.topbar {
+  height: var(--topbar-h);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  flex-shrink: 0;
+}
+.topbar-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fg);
+}
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.topbar-period {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.topbar-period strong { color: var(--fg); font-weight: 600; }
+
+/* ── Content ── */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font);
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: oklch(0.55 0.22 255);
+  border-color: oklch(0.55 0.22 255);
+  color: #fff;
+}
+.btn-sm { height: 28px; padding: 0 10px; font-size: 12px; }
+.btn-ghost { border-color: transparent; background: none; }
+.btn-ghost:hover { background: var(--surface); border-color: transparent; color: var(--accent); }
+
+/* ── Stat Cards ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+}
+.stat-label {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.stat-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--fg);
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.stat-value .unit { font-size: 14px; font-weight: 500; color: var(--muted); margin-left: 4px; }
+.stat-trend {
+  font-size: 12px;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.stat-trend.ok { color: var(--ok); }
+.stat-trend.warn { color: var(--warn); }
+
+/* ── Toolbar ── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+.toolbar-left { display: flex; align-items: center; gap: 12px; }
+.toolbar-right { display: flex; align-items: center; gap: 8px; }
+
+.filter-select, .filter-input {
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 12px;
+  font-size: 13px;
+  font-family: var(--font);
+  color: var(--fg);
+  background: var(--bg);
+  cursor: pointer;
+}
+.filter-select:focus-visible, .filter-input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+  border-color: var(--accent);
+}
+
+.tab-group {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.tab-btn {
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--font);
+  transition: all 0.15s;
+}
+.tab-btn:hover { color: var(--fg); background: var(--surface); }
+.tab-btn.active {
+  background: var(--accent);
+  color: #fff;
+}
+.tab-btn + .tab-btn { border-left: 1px solid var(--border); }
+.tab-btn.active + .tab-btn { border-left-color: var(--accent); }
+.tab-btn + .tab-btn.active { border-left-color: var(--accent); }
+.tab-count {
+  display: inline-block;
+  min-width: 18px;
+  padding: 0 5px;
+  height: 18px;
+  line-height: 18px;
+  text-align: center;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 4px;
+  background: var(--surface);
+  color: var(--muted);
+}
+.tab-btn.active .tab-count { background: rgba(255,255,255,0.25); color: #fff; }
+
+/* ── Recon Table ── */
+.recon-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.recon-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.recon-table thead th {
+  background: var(--surface);
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 12px;
+  text-align: left;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  user-select: none;
+}
+.recon-table thead th.num { text-align: right; }
+.recon-table thead th.center { text-align: center; }
+.recon-table tbody td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--fg);
+  vertical-align: middle;
+}
+.recon-table tbody td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+.recon-table tbody tr:last-child td { border-bottom: none; }
+.recon-table tbody tr { cursor: pointer; transition: background 0.12s; }
+.recon-table tbody tr:hover { background: var(--surface); }
+.recon-table tbody tr.expanded { background: var(--surface); }
+.recon-table tbody tr.diff-row td { background: var(--warn-bg); }
+.recon-table tbody tr.diff-row:hover td { background: oklch(0.94 0.06 75); }
+
+.date-cell {
+  font-weight: 600;
+  font-size: 13px;
+}
+.date-cell .weekday {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+/* ── Status Badges ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-ok {
+  background: var(--ok-bg);
+  color: oklch(0.40 0.12 145);
+  border: 1px solid var(--ok-border);
+}
+.badge-warn {
+  background: var(--warn-bg);
+  color: oklch(0.45 0.11 75);
+  border: 1px solid var(--warn-border);
+}
+.badge-pending {
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.badge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.badge-ok .badge-dot { background: var(--ok); }
+.badge-warn .badge-dot { background: var(--warn); }
+.badge-pending .badge-dot { background: var(--muted); }
+
+/* ── Drill-down Panel ── */
+.drill-row td { padding: 0 !important; border-bottom: none !important; }
+.drill-panel {
+  padding: 16px 24px 20px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.drill-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+.drill-col {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.drill-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg);
+}
+.drill-col-header .source-tag {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+.drill-col-table {
+  width: 100%;
+  font-size: 12px;
+  border-collapse: collapse;
+}
+.drill-col-table td {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--fg);
+  vertical-align: top;
+}
+.drill-col-table tr:last-child td { border-bottom: none; }
+.drill-col-table td.label { color: var(--muted); white-space: nowrap; width: 70px; }
+.drill-col-table td.val {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.drill-col-table td.val.fg-accent { color: var(--accent); font-weight: 600; }
+.drill-col-table tr.summary-row td {
+  border-top: 2px solid var(--border);
+  font-weight: 600;
+  padding-top: 8px;
+}
+.drill-col-table tr.summary-row td.val { font-size: 13px; }
+
+.diff-detail {
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.diff-detail-icon {
+  flex-shrink: 0;
+  width: 20px; height: 20px;
+  margin-top: 1px;
+}
+.diff-detail-text {
+  flex: 1;
+  font-size: 12px;
+  line-height: 1.6;
+  color: oklch(0.40 0.10 75);
+}
+.diff-detail-text strong { font-weight: 600; }
+.diff-detail-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ── Expand indicator ── */
+.expand-icon {
+  display: inline-flex;
+  transition: transform 0.2s;
+  color: var(--muted);
+}
+tr.expanded .expand-icon { transform: rotate(90deg); }
+
+/* ── Footer summary ── */
+.recon-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+}
+.recon-footer .footer-totals {
+  display: flex;
+  gap: 24px;
+}
+.recon-footer .footer-totals span strong {
+  color: var(--fg);
+  font-weight: 600;
+  font-family: var(--mono);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+::-webkit-scrollbar-track { background: transparent; }
+</style>
+</head>
+<body>
+
+<div class="app" data-od-id="app-shell">
+  <!-- Sidebar -->
+  <aside class="sidebar" data-od-id="sidebar-nav">
+    <div class="sidebar-brand">
+      <span class="logo-dot">F</span>
+      <span>Finlite</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">业务流程</div>
+      <button class="nav-item" data-od-id="nav-import">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8m0 0L5 7m3 3l3-3M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1"/></svg>
+        </span>
+        导入中心
+      </button>
+      <button class="nav-item" data-od-id="nav-bank">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 6l6-4 6 4M3 6v6h10V6M5 8v3M8 8v3M11 8v3"/></svg>
+        </span>
+        银行流水
+      </button>
+      <button class="nav-item" data-od-id="nav-order">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1"/><path d="M5 6h6M5 9h4"/></svg>
+        </span>
+        订单流水
+      </button>
+      <button class="nav-item active" data-od-id="nav-recon">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8l3 3 7-7"/></svg>
+        </span>
+        对账中心
+      </button>
+      <button class="nav-item" data-od-id="nav-summary">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13h12M4 13V6M8 13V3M12 13V8"/></svg>
+        </span>
+        数据汇总
+      </button>
+      <div class="nav-section-label">会计核算</div>
+      <button class="nav-item" data-od-id="nav-voucher">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1"/><path d="M5 5h6M5 8h6M5 11h3"/></svg>
+        </span>
+        凭证管理
+      </button>
+      <button class="nav-item" data-od-id="nav-balance">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h8"/></svg>
+        </span>
+        科目余额表
+      </button>
+      <div class="nav-section-label">系统</div>
+      <button class="nav-item" data-od-id="nav-settings">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 1v2m0 10v2M1 8h2m10 0h2M3 3l1.5 1.5M11.5 11.5L13 13M3 13l1.5-1.5M11.5 4.5L13 3"/></svg>
+        </span>
+        基础设置
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      锦绣健康管理 · 单账套
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Topbar -->
+    <header class="topbar" data-od-id="topbar">
+      <div class="topbar-title">对账中心</div>
+      <div class="topbar-right">
+        <div class="topbar-period">
+          会计期间：<strong>2026年7月</strong>
+        </div>
+        <button class="btn btn-sm" data-od-id="btn-export">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 10V2m0 0L5 5m3-3l3 3M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1"/></svg>
+          导出对账单
+        </button>
+        <button class="btn btn-sm btn-primary" data-od-id="btn-recon-run">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8l3 3 7-7"/></svg>
+          重新对账
+        </button>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content" data-od-id="recon-view">
+
+      <!-- Stat Cards -->
+      <div class="stats-row">
+        <div class="stat-card" data-od-id="stat-total">
+          <div class="stat-label">对账总金额（POS 实收）</div>
+          <div class="stat-value">28,573.68<span class="unit">元</span></div>
+          <div class="stat-trend ok">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l3 3 7-7"/></svg>
+            5 个结算日已核对
+          </div>
+        </div>
+        <div class="stat-card" data-od-id="stat-matched">
+          <div class="stat-label">已匹配</div>
+          <div class="stat-value">4<span class="unit">/ 5 天</span></div>
+          <div class="stat-trend ok">三方勾稽一致</div>
+        </div>
+        <div class="stat-card" data-od-id="stat-diff">
+          <div class="stat-label">差异待处理</div>
+          <div class="stat-value" style="color: var(--warn);">1<span class="unit" style="color: var(--warn);">笔</span></div>
+          <div class="stat-trend warn">差异金额 0.45 元</div>
+        </div>
+        <div class="stat-card" data-od-id="stat-pending">
+          <div class="stat-label">待汇总生成</div>
+          <div class="stat-value">3<span class="unit">天</span></div>
+          <div class="stat-trend" style="color: var(--muted);">已匹配但未制凭证</div>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <div class="tab-group" data-od-id="tab-status">
+            <button class="tab-btn active" data-filter="all">全部<span class="tab-count">5</span></button>
+            <button class="tab-btn" data-filter="matched">已匹配<span class="tab-count">4</span></button>
+            <button class="tab-btn" data-filter="diff">差异<span class="tab-count">1</span></button>
+          </div>
+        </div>
+        <div class="toolbar-right">
+          <select class="filter-select" data-od-id="filter-period">
+            <option>2026年7月</option>
+            <option>2026年6月</option>
+          </select>
+          <input class="filter-input" type="text" placeholder="搜索日期 / 金额" style="width: 160px;" data-od-id="filter-search" />
+        </div>
+      </div>
+
+      <!-- Reconciliation Table -->
+      <div class="recon-card" data-od-id="recon-table-card">
+        <table class="recon-table" data-od-id="recon-table">
+          <thead>
+            <tr>
+              <th style="width: 28px;"></th>
+              <th>结算日期</th>
+              <th class="num">订单实收合计</th>
+              <th class="num">银行 POS 转入</th>
+              <th class="num">汇总实际收入</th>
+              <th class="num">差异</th>
+              <th class="center">状态</th>
+              <th style="width: 80px;">操作</th>
+            </tr>
+          </thead>
+          <tbody id="recon-tbody">
+          </tbody>
+        </table>
+        <div class="recon-footer">
+          <div class="footer-totals">
+            <span>已匹配合计：<strong>28,573.68</strong> 元</span>
+            <span>差异合计：<strong>0.45</strong> 元</span>
+            <span>结算日数：<strong>5</strong></span>
+          </div>
+          <span>数据截止：2026-07-14 09:30</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  // ── Real sample data from business document ──
+  const reconData = [
+    {
+      date: '2026-07-01', weekday: '周三',
+      orderNet: '3580.45', bankPos: '3580.00', summaryIncome: '3580.00',
+      diff: '0.45', status: 'diff',
+      orders: [
+        { no: '240701001', customer: '客户A', method: '微信', orderAmt: '2400.00', fee: '6.00', net: '2394.00' },
+        { no: '240701002', customer: '客户B', method: '微信', orderAmt: '1000.00', fee: '2.50', net: '997.50' },
+        { no: '240701003', customer: '客户C', method: '支付宝', orderAmt: '189.50', fee: '0.47', net: '189.03' }
+      ],
+      bank: [
+        { time: '07-01 02:38', counterparty: '待清算商户银行卡POS净收暂收销账户', remark: '1001****7575', inAmt: '3580.00', outAmt: '—', balance: '52,318.00' }
+      ],
+      summary: [
+        { receiptNo: '0000498', reason: 'POS收入汇总', income: '3580.00', fee: '8.97', actual: '3580.00' }
+      ],
+      diffNote: '订单实收合计 3580.45 与银行 POS 转入 3580.00 差异 0.45 元。疑似商户补贴/消费立减未入账，需人工核实后补录或标记处理。'
+    },
+    {
+      date: '2026-07-09', weekday: '周四',
+      orderNet: '11970.00', bankPos: '11970.00', summaryIncome: '11970.00',
+      diff: '0.00', status: 'matched',
+      orders: [
+        { no: '240709001', customer: '王浩然', method: '微信', orderAmt: '12000.00', fee: '30.00', net: '11970.00' }
+      ],
+      bank: [
+        { time: '07-10 02:45', counterparty: '待清算商户银行卡POS净收暂收销账户', remark: '1001****7575', inAmt: '11970.00', outAmt: '—', balance: '64,288.00' }
+      ],
+      summary: [
+        { receiptNo: '0000501', reason: '王浩然产康充值', income: '12000.00', fee: '30.00', actual: '11970.00' }
+      ]
+    },
+    {
+      date: '2026-07-10', weekday: '周五',
+      orderNet: '9256.80', bankPos: '9256.80', summaryIncome: '9256.80',
+      diff: '0.00', status: 'matched',
+      orders: [
+        { no: '240710001', customer: '赵雨桐', method: '微信', orderAmt: '8680.00', fee: '21.70', net: '8658.30' },
+        { no: '240710002', customer: '晓璐', method: '微信', orderAmt: '600.00', fee: '1.50', net: '598.50' }
+      ],
+      bank: [
+        { time: '07-11 02:42', counterparty: '待清算商户银行卡POS净收暂收销账户', remark: '1001****7575', inAmt: '9256.80', outAmt: '—', balance: '73,544.80' }
+      ],
+      summary: [
+        { receiptNo: '0000502', reason: '赵雨桐牛奶光', income: '8680.00', fee: '21.70', actual: '8658.30' },
+        { receiptNo: '0000503', reason: '晓璐护理项目', income: '600.00', fee: '1.50', actual: '598.50' }
+      ]
+    },
+    {
+      date: '2026-07-11', weekday: '周六',
+      orderNet: '446.88', bankPos: '446.88', summaryIncome: '446.88',
+      diff: '0.00', status: 'matched',
+      orders: [
+        { no: '240711001', customer: '客户D', method: '微信', orderAmt: '448.00', fee: '1.12', net: '446.88' }
+      ],
+      bank: [
+        { time: '07-12 02:35', counterparty: '待清算商户银行卡POS净收暂收销账户', remark: '1001****7575', inAmt: '446.88', outAmt: '—', balance: '73,991.68' }
+      ],
+      summary: [
+        { receiptNo: '0000504', reason: 'POS收入汇总', income: '448.00', fee: '1.12', actual: '446.88' }
+      ]
+    },
+    {
+      date: '2026-07-12', weekday: '周日',
+      orderNet: '5320.00', bankPos: '5320.00', summaryIncome: '5320.00',
+      diff: '0.00', status: 'matched',
+      orders: [
+        { no: '240712001', customer: '客户E', method: '微信', orderAmt: '3200.00', fee: '8.00', net: '3192.00' },
+        { no: '240712002', customer: '客户F', method: '支付宝', orderAmt: '2128.00', fee: '5.32', net: '2122.68' }
+      ],
+      bank: [
+        { time: '07-13 02:40', counterparty: '待清算商户银行卡POS净收暂收销账户', remark: '1001****7575', inAmt: '5314.68', outAmt: '—', balance: '79,306.36' },
+        { time: '07-13 02:40', counterparty: '待清算商户银行卡POS净收暂收销账户', remark: '1001****7575', inAmt: '5.32', outAmt: '—', balance: '79,311.68' }
+      ],
+      summary: [
+        { receiptNo: '0000505', reason: '客户E护理项目', income: '3200.00', fee: '8.00', actual: '3192.00' },
+        { receiptNo: '0000506', reason: '客户F产品购买', income: '2128.00', fee: '5.32', actual: '2122.68' }
+      ]
+    }
+  ];
+
+  // ── Rendering ──
+  const tbody = document.getElementById('recon-tbody');
+  let currentFilter = 'all';
+  let expandedDate = null;
+
+  function fmtDate(d) {
+    const parts = d.split('-');
+    return parts[1] + '-' + parts[2];
+  }
+
+  function renderTable() {
+    tbody.innerHTML = '';
+    const filtered = reconData.filter(r => {
+      if (currentFilter === 'all') return true;
+      if (currentFilter === 'matched') return r.status === 'matched';
+      if (currentFilter === 'diff') return r.status === 'diff';
+      return true;
+    });
+
+    filtered.forEach(row => {
+      // Main row
+      const tr = document.createElement('tr');
+      tr.dataset.date = row.date;
+      if (row.status === 'diff') tr.classList.add('diff-row');
+      if (expandedDate === row.date) tr.classList.add('expanded');
+
+      const badgeHtml = row.status === 'matched'
+        ? '<span class="badge badge-ok"><span class="badge-dot"></span>三方一致</span>'
+        : '<span class="badge badge-warn"><span class="badge-dot"></span>差异待处理</span>';
+
+      const diffHtml = row.diff === '0.00'
+        ? '<span style="color: var(--muted);">—</span>'
+        : '<span style="color: var(--warn); font-weight: 600;">' + row.diff + '</span>';
+
+      const actionHtml = row.status === 'matched'
+        ? '<button class="btn btn-sm btn-ghost" onclick="event.stopPropagation()">生成汇总</button>'
+        : '<button class="btn btn-sm btn-ghost" onclick="event.stopPropagation()">定位原行</button>';
+
+      tr.innerHTML =
+        '<td><span class="expand-icon"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4l4 4-4 4"/></svg></span></td>' +
+        '<td><span class="date-cell">' + fmtDate(row.date) + '<span class="weekday">' + row.weekday + '</span></span></td>' +
+        '<td class="num">' + row.orderNet + '</td>' +
+        '<td class="num">' + row.bankPos + '</td>' +
+        '<td class="num">' + row.summaryIncome + '</td>' +
+        '<td class="num">' + diffHtml + '</td>' +
+        '<td class="center" style="text-align:center;">' + badgeHtml + '</td>' +
+        '<td>' + actionHtml + '</td>';
+
+      tr.addEventListener('click', function() {
+        expandedDate = (expandedDate === row.date) ? null : row.date;
+        renderTable();
+      });
+
+      tbody.appendChild(tr);
+
+      // Drill-down panel
+      if (expandedDate === row.date) {
+        const drillTr = document.createElement('tr');
+        drillTr.classList.add('drill-row');
+        drillTr.innerHTML = '<td colspan="8">' + renderDrillPanel(row) + '</td>';
+        tbody.appendChild(drillTr);
+      }
+    });
+  }
+
+  function renderDrillPanel(row) {
+    let html = '<div class="drill-panel">';
+    html += '<div class="drill-grid">';
+
+    // Orders column
+    html += '<div class="drill-col">';
+    html += '<div class="drill-col-header"><span>订单流水</span><span class="source-tag">' + row.orders.length + ' 笔</span></div>';
+    html += '<table class="drill-col-table">';
+    row.orders.forEach(o => {
+      html += '<tr><td class="label">' + o.customer + '</td><td>' + o.method + '</td><td class="val">' + o.orderAmt + '</td></tr>';
+      html += '<tr><td class="label">手续费</td><td></td><td class="val">' + o.fee + '</td></tr>';
+    });
+    html += '<tr class="summary-row"><td class="label">实收合计</td><td></td><td class="val fg-accent">' + row.orderNet + '</td></tr>';
+    html += '</table></div>';
+
+    // Bank column
+    html += '<div class="drill-col">';
+    html += '<div class="drill-col-header"><span>银行流水</span><span class="source-tag">POS 转入</span></div>';
+    html += '<table class="drill-col-table">';
+    row.bank.forEach(b => {
+      html += '<tr><td class="label">' + b.time + '</td><td colspan="2" style="font-size:11px;color:var(--muted);">' + b.counterparty + '</td></tr>';
+      html += '<tr><td class="label">附言</td><td colspan="2" style="font-size:11px;color:var(--muted);">' + b.remark + '</td></tr>';
+      html += '<tr><td class="label">转入</td><td></td><td class="val">' + b.inAmt + '</td></tr>';
+    });
+    html += '<tr class="summary-row"><td class="label">转入合计</td><td></td><td class="val fg-accent">' + row.bankPos + '</td></tr>';
+    html += '</table></div>';
+
+    // Summary column
+    html += '<div class="drill-col">';
+    html += '<div class="drill-col-header"><span>数据汇总</span><span class="source-tag">' + row.summary.length + ' 行</span></div>';
+    html += '<table class="drill-col-table">';
+    row.summary.forEach(s => {
+      html += '<tr><td class="label">' + s.receiptNo + '</td><td>' + s.reason + '</td><td class="val">' + s.actual + '</td></tr>';
+    });
+    html += '<tr class="summary-row"><td class="label">收入合计</td><td></td><td class="val fg-accent">' + row.summaryIncome + '</td></tr>';
+    html += '</table></div>';
+
+    html += '</div>'; // drill-grid
+
+    // Diff detail for diff rows
+    if (row.status === 'diff') {
+      html += '<div class="diff-detail">';
+      html += '<svg class="diff-detail-icon" viewBox="0 0 20 20" fill="none" stroke="oklch(0.45 0.11 75)" stroke-width="1.5"><path d="M10 2L2 17h16L10 2z"/><path d="M10 8v4M10 14v.5"/></svg>';
+      html += '<div class="diff-detail-text"><strong>差异分析：</strong>' + row.diffNote + '</div>';
+      html += '<div class="diff-detail-actions">';
+      html += '<button class="btn btn-sm">忽略差异</button>';
+      html += '<button class="btn btn-sm btn-primary">补录调整</button>';
+      html += '</div>';
+      html += '</div>';
+    }
+
+    html += '</div>'; // drill-panel
+    return html;
+  }
+
+  // ── Tab filter ──
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      currentFilter = this.dataset.filter;
+      expandedDate = null;
+      renderTable();
+    });
+  });
+
+  // ── Nav items (visual only for this prototype) ──
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', function() {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // ── Initial render ──
+  renderTable();
+})();
+</script>
+
+</body>
+</html>
