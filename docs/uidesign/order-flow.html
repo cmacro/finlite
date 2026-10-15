@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>订单流水 · Finlite</title>
+<style>
+:root{
+  --bg:#ffffff;
+  --surface:#f7f8fa;
+  --surface-2:#f1f3f7;
+  --surface-3:#e9edf3;
+  --fg:#111111;
+  --fg-2:#374151;
+  --muted:#6b7280;
+  --border:#d9dee7;
+  --border-soft:#edf0f5;
+  --accent:#1677ff;
+  --accent-on:#ffffff;
+  --accent-weak:#e9f2ff;
+  --accent-weak-2:#d6e8ff;
+  --accent-hover:color-mix(in oklab, var(--accent), black 8%);
+  --accent-active:color-mix(in oklab, var(--accent), black 14%);
+  --ok:oklch(0.62 0.17 145);
+  --ok-bg:oklch(0.965 0.035 145);
+  --ok-border:oklch(0.85 0.09 145);
+  --ok-fg:oklch(0.50 0.15 145);
+  --warn:oklch(0.72 0.14 75);
+  --warn-bg:oklch(0.977 0.045 85);
+  --warn-bg-strong:oklch(0.952 0.075 85);
+  --warn-border:oklch(0.84 0.10 80);
+  --warn-fg:oklch(0.50 0.12 65);
+  --err:oklch(0.58 0.20 25);
+  --err-bg:oklch(0.974 0.028 25);
+  --err-bg-strong:oklch(0.953 0.052 25);
+  --err-border:oklch(0.86 0.09 25);
+  --err-fg:oklch(0.49 0.18 25);
+  --radius-xs:4px;
+  --radius-sm:6px;
+  --radius-md:8px;
+  --radius-lg:12px;
+  --radius-pill:9999px;
+  --font-ui:Inter,system-ui,-apple-system,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  --font-mono:"SF Mono","JetBrains Mono",ui-monospace,"Cascadia Mono",Menlo,Consolas,monospace;
+  --shadow-sm:0 1px 2px rgba(17,24,39,.05);
+  --shadow-md:0 8px 24px rgba(17,24,39,.10);
+  --shadow-lg:-18px 0 48px rgba(17,24,39,.16);
+  --focus:0 0 0 3px rgba(22,119,255,.28);
+  --ease:cubic-bezier(.2,0,0,1);
+  --sidebar-w:220px;
+  --topbar-h:52px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  font-family:var(--font-ui);
+  font-size:14px;
+  line-height:1.5;
+  color:var(--fg);
+  background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow:hidden;
+}
+::selection{background:var(--accent-weak-2);}
+button{font-family:inherit;font-size:inherit;cursor:pointer;}
+input{font-family:inherit;font-size:inherit;color:inherit;}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums;}
+.tnum{font-variant-numeric:tabular-nums;}
+.app{display:flex;height:100vh;width:100%;}
+
+/* ---------- Sidebar ---------- */
+.sidebar{
+  width:var(--sidebar-w);flex:0 0 var(--sidebar-w);height:100vh;
+  background:var(--bg);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+}
+.brand{
+  height:var(--topbar-h);flex:0 0 var(--topbar-h);
+  display:flex;align-items:center;gap:9px;padding:0 16px;
+  border-bottom:1px solid var(--border);
+}
+.brand-mark{
+  width:26px;height:26px;border-radius:7px;flex:0 0 26px;
+  background:linear-gradient(150deg,oklch(0.62 0.19 255),var(--accent));
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:800;font-size:14px;letter-spacing:-.02em;
+}
+.brand-name{font-size:16px;font-weight:700;letter-spacing:-.02em;}
+.brand-sub{font-size:11px;color:var(--muted);margin-left:auto;font-weight:500;}
+.nav{flex:1;overflow-y:auto;padding:12px 10px 18px;}
+.nav-group{margin-bottom:14px;}
+.nav-label{
+  font-size:11px;font-weight:600;color:var(--muted);
+  letter-spacing:.04em;padding:0 10px 6px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 10px;border-radius:var(--radius-md);
+  color:var(--fg-2);font-size:13px;font-weight:500;
+  cursor:pointer;position:relative;border:1px solid transparent;
+  transition:background var(--ease) .12s,color var(--ease) .12s;
+  width:100%;text-align:left;background:none;
+}
+.nav-item svg{width:16px;height:16px;flex:0 0 16px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.85;}
+.nav-item:hover{background:var(--surface-2);color:var(--fg);}
+.nav-item.active{background:var(--accent-weak);color:var(--accent);font-weight:600;}
+.nav-item.active svg{opacity:1;}
+.nav-item.active::before{
+  content:"";position:absolute;left:-10px;top:50%;transform:translateY(-50%);
+  width:3px;height:18px;border-radius:0 3px 3px 0;background:var(--accent);
+}
+.nav-item:focus-visible{outline:none;box-shadow:var(--focus);}
+.nav-foot{
+  padding:10px 16px 14px;border-top:1px solid var(--border-soft);
+  font-size:11px;color:var(--muted);display:flex;align-items:center;gap:7px;
+}
+.nav-foot .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);}
+
+/* ---------- Main ---------- */
+.main{flex:1;min-width:0;height:100vh;display:flex;flex-direction:column;background:var(--surface);}
+.topbar{
+  height:var(--topbar-h);flex:0 0 var(--topbar-h);
+  background:var(--bg);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:14px;padding:0 20px;
+}
+.page-titles{display:flex;align-items:baseline;gap:10px;min-width:0;}
+.page-title{font-size:16px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;}
+.tag-mod{
+  font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-weak);
+  padding:2px 7px;border-radius:var(--radius-sm);letter-spacing:.03em;
+}
+.tag-readonly{
+  font-size:11px;font-weight:500;color:var(--muted);background:var(--surface-2);
+  border:1px solid var(--border);padding:1px 7px;border-radius:var(--radius-pill);
+  display:inline-flex;align-items:center;gap:5px;
+}
+.tag-readonly svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:1.7;}
+.topbar-spacer{flex:1;}
+.period{
+  display:flex;align-items:center;gap:8px;height:32px;padding:0 11px;
+  border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface);
+  font-size:12px;color:var(--fg-2);
+}
+.period .k{color:var(--muted);}
+.period .v{font-weight:600;color:var(--fg);font-variant-numeric:tabular-nums;}
+.period svg{width:14px;height:14px;stroke:var(--muted);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+
+/* Buttons */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  height:32px;padding:0 13px;border-radius:var(--radius-md);
+  border:1px solid var(--border);background:var(--bg);color:var(--fg-2);
+  font-size:13px;font-weight:500;white-space:nowrap;
+  transition:background var(--ease) .12s,border-color var(--ease) .12s,color var(--ease) .12s;
+}
+.btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+.btn:hover{background:var(--surface-2);color:var(--fg);border-color:var(--surface-3);}
+.btn:active{background:var(--surface-3);}
+.btn:focus-visible{outline:none;box-shadow:var(--focus);}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-on);}
+.btn-primary:hover{background:var(--accent-hover);border-color:var(--accent-hover);color:var(--accent-on);}
+.btn-primary:active{background:var(--accent-active);border-color:var(--accent-active);}
+.btn-ghost{border-color:transparent;background:transparent;}
+.btn-ghost:hover{background:var(--surface-2);border-color:transparent;}
+.btn-sm{height:28px;padding:0 10px;font-size:12px;}
+
+/* ---------- Content ---------- */
+.content{
+  flex:1;min-height:0;display:flex;flex-direction:column;gap:13px;
+  padding:15px 20px 16px;
+}
+
+/* Info banner */
+.info-banner{
+  display:flex;align-items:flex-start;gap:10px;
+  background:var(--accent-weak);border:1px solid var(--accent-weak-2);
+  border-radius:var(--radius-md);padding:10px 14px;flex:0 0 auto;
+}
+.info-banner .ib-icon{flex:0 0 18px;width:18px;height:18px;margin-top:1px;color:var(--accent);}
+.info-banner .ib-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.info-banner .ib-title{font-size:13px;font-weight:600;color:oklch(0.42 0.14 255);}
+.info-banner .ib-body{font-size:12.5px;color:var(--fg-2);line-height:1.55;}
+.info-banner .ib-body b{font-weight:600;color:var(--fg);}
+.info-banner code{
+  font-family:var(--font-mono);font-size:12px;background:rgba(255,255,255,.72);
+  border:1px solid var(--accent-weak-2);border-radius:var(--radius-xs);padding:0 5px;
+}
+
+/* Stat cards */
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;flex:0 0 auto;}
+.stat{
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:13px 15px;display:flex;flex-direction:column;gap:5px;min-width:0;
+  box-shadow:var(--shadow-sm);
+}
+.stat .s-label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.stat .s-value{font-size:22px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.15;}
+.stat .s-value .cur{font-size:14px;font-weight:600;color:var(--muted);margin-right:2px;}
+.stat .s-sub{font-size:11.5px;color:var(--muted);}
+.stat.warn{border-color:var(--warn-border);background:var(--warn-bg);}
+.stat.warn .s-value{color:var(--warn-fg);}
+.stat.warn .s-sub{color:var(--warn-fg);opacity:.85;}
+.stat.warn .s-label{color:var(--warn-fg);}
+
+/* Filter bar */
+.filter-bar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:11px 15px;flex:0 0 auto;box-shadow:var(--shadow-sm);
+}
+.filter-field{display:flex;align-items:center;gap:7px;}
+.filter-field .fl{font-size:12.5px;color:var(--muted);white-space:nowrap;}
+.inp{
+  height:32px;border:1px solid var(--border);border-radius:var(--radius-md);
+  background:var(--bg);padding:0 10px;font-size:13px;color:var(--fg);outline:none;
+  transition:border-color var(--ease) .12s,box-shadow var(--ease) .12s;
+}
+.inp::placeholder{color:var(--muted);}
+.inp:focus{border-color:var(--accent);box-shadow:var(--focus);}
+.inp-date{width:146px;font-variant-numeric:tabular-nums;}
+.inp-kw{width:224px;}
+.filter-sep{width:1px;height:22px;background:var(--border-soft);}
+.filter-spacer{flex:1;min-width:8px;}
+.count-txt{font-size:12.5px;color:var(--muted);white-space:nowrap;}
+.count-txt b{color:var(--fg);font-weight:600;font-variant-numeric:tabular-nums;}
+
+/* Switch */
+.switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none;}
+.switch input{position:absolute;opacity:0;width:0;height:0;}
+.switch .track{
+  width:34px;height:19px;border-radius:var(--radius-pill);background:var(--surface-3);
+  position:relative;transition:background var(--ease) .16s;flex:0 0 34px;
+}
+.switch .thumb{
+  position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;
+  background:#fff;box-shadow:var(--shadow-sm);transition:transform var(--ease) .16s;
+}
+.switch input:checked + .track{background:var(--accent);}
+.switch input:checked + .track .thumb{transform:translateX(15px);}
+.switch input:focus-visible + .track{box-shadow:var(--focus);}
+.switch .sw-label{font-size:12.5px;color:var(--fg-2);}
+
+/* ---------- Table card ---------- */
+.table-card{
+  flex:1;min-height:220px;display:flex;flex-direction:column;
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);
+  overflow:hidden;box-shadow:var(--shadow-sm);
+}
+.table-scroll{flex:1;min-height:0;overflow:auto;position:relative;}
+table.data{width:100%;min-width:1160px;border-collapse:separate;border-spacing:0;table-layout:fixed;}
+table.data thead th{
+  position:sticky;top:0;z-index:3;background:var(--surface);
+  border-bottom:1px solid var(--border);
+  font-size:12px;font-weight:600;color:var(--fg-2);text-align:left;
+  padding:9px 10px;white-space:nowrap;
+}
+table.data thead th.num{text-align:right;}
+table.data thead th.c{text-align:center;}
+tbody td{
+  padding:9px 10px;font-size:13px;color:var(--fg);
+  border-bottom:1px solid var(--border-soft);vertical-align:middle;
+  background:var(--bg);
+}
+tbody td.num{text-align:right;font-variant-numeric:tabular-nums;}
+tbody td.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:12.5px;}
+tr.data-row td{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+tr.data-row td.col-time{font-size:12px;font-variant-numeric:tabular-nums;}
+tr.data-row td:first-child{padding-left:8px;padding-right:4px;}
+tr.data-row{cursor:pointer;transition:background var(--ease) .1s;}
+tr.data-row:hover td{background:var(--surface-2);}
+tr.data-row.row-warn td{background:var(--warn-bg);}
+tr.data-row.row-warn:hover td{background:var(--warn-bg-strong);}
+tr.data-row.row-err td{background:var(--err-bg);}
+tr.data-row.row-err:hover td{background:var(--err-bg-strong);}
+tr.data-row td.first-warn{box-shadow:inset 3px 0 0 var(--warn);}
+tr.data-row td.first-err{box-shadow:inset 3px 0 0 var(--err);}
+tr.data-row.row-last td{border-bottom:none;}
+tr.data-row:focus-visible{outline:none;}
+tr.data-row:focus-visible td{background:var(--surface-2);box-shadow:inset 0 0 0 2px var(--accent);}
+
+/* expand button */
+.exp-btn{
+  width:22px;height:22px;border-radius:var(--radius-sm);border:1px solid transparent;
+  background:transparent;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;
+  transition:background var(--ease) .12s,transform var(--ease) .16s,color var(--ease) .12s;
+}
+.exp-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.exp-btn:hover{background:var(--surface-3);color:var(--fg-2);}
+.exp-btn:focus-visible{outline:none;box-shadow:var(--focus);}
+tr.expanded .exp-btn{transform:rotate(90deg);color:var(--accent);}
+
+.third-empty{color:var(--muted);}
+.pay{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--fg-2);white-space:nowrap;}
+.pay .dot{width:7px;height:7px;border-radius:50%;flex:0 0 7px;}
+.pay-wechat .dot{background:var(--ok);}
+.pay-alipay .dot{background:var(--accent);}
+.card-type{font-size:12.5px;color:var(--muted);white-space:nowrap;}
+
+.badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11.5px;font-weight:600;padding:1px 8px;border-radius:var(--radius-pill);
+  white-space:nowrap;border:1px solid transparent;line-height:1.7;
+}
+.badge-warn{background:var(--warn-bg-strong);color:var(--warn-fg);border-color:var(--warn-border);}
+.badge-err{background:var(--err-bg-strong);color:var(--err-fg);border-color:var(--err-border);}
+.badge-ok{background:var(--ok-bg);color:var(--ok-fg);border-color:var(--ok-border);}
+.rate-ok{font-size:12.5px;color:var(--ok-fg);}
+.rate-none{font-size:12.5px;color:var(--muted);}
+.mini-tag{
+  display:inline-flex;align-items:center;font-size:10.5px;font-weight:600;
+  color:var(--accent);background:var(--accent-weak);border:1px solid var(--accent-weak-2);
+  padding:0 6px;border-radius:var(--radius-pill);line-height:1.7;white-space:nowrap;
+}
+.rate-cell{display:flex;flex-wrap:wrap;align-items:center;gap:5px;}
+.link-btn{
+  background:none;border:none;padding:0;color:var(--accent);font-size:12.5px;font-weight:500;
+  border-radius:var(--radius-xs);
+}
+.link-btn:hover{text-decoration:underline;}
+.link-btn:focus-visible{outline:none;box-shadow:var(--focus);}
+
+/* group bar */
+tr.group-row>td{
+  padding:0;background:var(--surface-2);
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+}
+.group-inner{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:8px 13px;
+}
+.group-date{display:flex;align-items:center;gap:8px;font-size:12.5px;}
+.group-date .gd-k{color:var(--muted);}
+.group-date .gd-v{font-weight:700;color:var(--fg);font-variant-numeric:tabular-nums;letter-spacing:-.01em;}
+.group-date .gd-wd{color:var(--fg-2);}
+.group-date .gd-n{color:var(--muted);}
+.group-pos{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);}
+.group-spacer{flex:1;min-width:12px;}
+.group-subs{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.group-sub{font-size:11.5px;color:var(--muted);display:flex;align-items:baseline;gap:5px;}
+.group-sub b{font-size:12px;color:var(--fg);font-weight:600;font-variant-numeric:tabular-nums;}
+
+/* recalc detail row */
+tr.detail-row>td{padding:0;background:var(--bg);border-bottom:1px solid var(--border-soft);}
+tr.detail-row.hidden{display:none;}
+.recalc{
+  padding:12px 16px 14px;background:linear-gradient(180deg,var(--surface) 0%,var(--bg) 100%);
+  border-left:3px solid var(--accent);
+}
+.recalc-head{font-size:11.5px;font-weight:700;color:var(--fg-2);letter-spacing:.03em;margin-bottom:9px;display:flex;align-items:center;gap:7px;}
+.recalc-head svg{width:13px;height:13px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.recalc-line{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:9px;}
+.rc-item{display:flex;flex-direction:column;gap:2px;min-width:104px;}
+.rc-item .rk{font-size:11px;color:var(--muted);}
+.rc-item .rv{font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--fg);}
+.rc-item .rv.ok{color:var(--ok-fg);}
+.rc-item .rv.warn{color:var(--warn-fg);}
+.rc-item .rv.err{color:var(--err-fg);}
+.rc-op{color:var(--muted);font-size:15px;padding-bottom:1px;}
+.identity{
+  display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+  border-top:1px dashed var(--border);padding-top:9px;font-size:12.5px;color:var(--fg-2);
+}
+.identity .id-k{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.03em;}
+.identity .id-eq{font-variant-numeric:tabular-nums;font-family:var(--font-mono);font-size:12.5px;}
+.identity .id-res{font-weight:600;font-variant-numeric:tabular-nums;}
+.identity .id-diff{font-size:11.5px;font-weight:600;padding:1px 8px;border-radius:var(--radius-pill);}
+.identity .id-diff.ok{background:var(--ok-bg);color:var(--ok-fg);border:1px solid var(--ok-border);}
+.identity .id-diff.err{background:var(--err-bg-strong);color:var(--err-fg);border:1px solid var(--err-border);}
+.identity.is-err{color:var(--err-fg);}
+.parse-note{
+  display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--err-fg);
+  background:var(--err-bg);border:1px solid var(--err-border);border-radius:var(--radius-md);
+  padding:8px 11px;
+}
+.parse-note svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:0 0 14px;}
+
+/* summary bar */
+.summary{
+  flex:0 0 auto;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  border-top:1px solid var(--border);background:var(--surface);
+  padding:10px 15px;
+}
+.summary-left{font-size:12.5px;color:var(--muted);}
+.summary-left b{color:var(--fg);font-weight:600;font-variant-numeric:tabular-nums;}
+.summary-spacer{flex:1;}
+.summary-metrics{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.sm{display:flex;flex-direction:column;gap:1px;align-items:flex-end;}
+.sm .sm-k{font-size:11px;color:var(--muted);}
+.sm .sm-v{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em;}
+.sm-chip{
+  font-size:11.5px;font-weight:600;color:var(--warn-fg);
+  background:var(--warn-bg);border:1px solid var(--warn-border);
+  padding:3px 9px;border-radius:var(--radius-pill);
+}
+
+/* empty state */
+.empty{
+  position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;padding:40px;text-align:center;background:var(--bg);
+}
+.empty.show{display:flex;}
+.empty .em-ic{
+  width:52px;height:52px;border-radius:var(--radius-lg);background:var(--surface-2);
+  display:flex;align-items:center;justify-content:center;color:var(--muted);
+}
+.empty .em-ic svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+.empty .em-title{font-size:14px;font-weight:600;color:var(--fg-2);}
+.empty .em-sub{font-size:12.5px;color:var(--muted);max-width:340px;}
+
+/* ---------- Drawer ---------- */
+.drawer-overlay{
+  position:fixed;inset:0;background:rgba(17,24,39,.34);z-index:40;
+  opacity:0;visibility:hidden;transition:opacity var(--ease) .2s,visibility var(--ease) .2s;
+}
+.drawer-overlay.open{opacity:1;visibility:visible;}
+.drawer{
+  position:fixed;top:0;right:0;height:100vh;width:472px;max-width:94vw;z-index:41;
+  background:var(--bg);border-left:1px solid var(--border);box-shadow:var(--shadow-lg);
+  transform:translateX(100%);transition:transform var(--ease) .24s;
+  display:flex;flex-direction:column;
+}
+.drawer.open{transform:none;}
+.drawer-head{
+  flex:0 0 auto;display:flex;align-items:center;gap:12px;
+  padding:14px 18px;border-bottom:1px solid var(--border);
+}
+.drawer-head .dh-title{font-size:14px;font-weight:700;letter-spacing:-.01em;}
+.drawer-head .dh-sub{font-size:12px;color:var(--muted);font-family:var(--font-mono);margin-top:1px;}
+.drawer-head .dh-close{
+  margin-left:auto;width:30px;height:30px;border-radius:var(--radius-md);border:1px solid transparent;
+  background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;
+}
+.drawer-head .dh-close svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.drawer-head .dh-close:hover{background:var(--surface-2);color:var(--fg);}
+.drawer-head .dh-close:focus-visible{outline:none;box-shadow:var(--focus);}
+.drawer-body{flex:1;min-height:0;overflow-y:auto;padding:16px 18px 28px;}
+.dr-status{
+  display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:var(--radius-md);
+  margin-bottom:16px;font-size:12.5px;
+}
+.dr-status.ok{background:var(--ok-bg);border:1px solid var(--ok-border);color:var(--ok-fg);}
+.dr-status.warn{background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--warn-fg);}
+.dr-status.err{background:var(--err-bg);border:1px solid var(--err-border);color:var(--err-fg);}
+.dr-status svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 15px;}
+.dr-sec{margin-bottom:18px;}
+.dr-sec-title{
+  font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.05em;
+  margin-bottom:9px;display:flex;align-items:center;gap:8px;
+}
+.dr-sec-title::after{content:"";flex:1;height:1px;background:var(--border-soft);}
+.dr-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border-soft);border:1px solid var(--border-soft);border-radius:var(--radius-md);overflow:hidden;}
+.dr-field{background:var(--bg);padding:9px 12px;display:flex;flex-direction:column;gap:3px;min-width:0;}
+.dr-field .dk{font-size:11px;color:var(--muted);}
+.dr-field .dv{font-size:13px;color:var(--fg);font-weight:500;word-break:break-all;}
+.dr-field .dv.mono{font-family:var(--font-mono);font-size:12.5px;font-variant-numeric:tabular-nums;}
+.dr-field .dv.num{font-variant-numeric:tabular-nums;font-weight:600;}
+.dr-field .dv.err{color:var(--err-fg);}
+.dr-field.wide{grid-column:1 / -1;}
+.dr-field .dv.empty-v{color:var(--muted);font-weight:400;}
+.attr-box{
+  background:var(--accent-weak);border:1px solid var(--accent-weak-2);border-radius:var(--radius-md);
+  padding:11px 13px;font-size:12.5px;color:var(--fg-2);line-height:1.6;
+}
+.attr-box b{color:oklch(0.42 0.14 255);}
+.attr-box .attr-flow{
+  display:flex;align-items:center;gap:9px;margin-top:8px;flex-wrap:wrap;
+  font-family:var(--font-mono);font-size:12px;font-variant-numeric:tabular-nums;
+}
+.attr-flow .af-node{background:#fff;border:1px solid var(--accent-weak-2);border-radius:var(--radius-sm);padding:4px 9px;}
+.attr-flow .af-arrow{color:var(--accent);font-weight:700;}
+.attr-flow .af-node.hl{border-color:var(--accent);color:oklch(0.42 0.14 255);font-weight:600;}
+.recon-list{display:flex;flex-direction:column;gap:8px;}
+.recon-item{
+  display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:var(--radius-md);
+  padding:9px 12px;font-size:12.5px;
+}
+.recon-item .ri-ic{width:26px;height:26px;border-radius:var(--radius-sm);background:var(--surface-2);display:flex;align-items:center;justify-content:center;color:var(--fg-2);flex:0 0 26px;}
+.recon-item .ri-ic svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+.recon-item .ri-main{flex:1;min-width:0;}
+.recon-item .ri-k{font-size:11px;color:var(--muted);}
+.recon-item .ri-v{font-size:12.5px;color:var(--fg);font-variant-numeric:tabular-nums;}
+.json-box{
+  background:#0f1729;border-radius:var(--radius-md);padding:11px 13px;overflow:auto;
+  max-height:220px;
+}
+.json-box pre{
+  font-family:var(--font-mono);font-size:11.5px;line-height:1.65;color:#cbd5e1;white-space:pre;
+}
+.json-box .j-key{color:#7dd3fc;}
+.json-box .j-str{color:#a5e6b8;}
+.json-box .j-num{color:#fcd34d;}
+.json-box .j-null{color:#94a3b8;}
+.empty-note{font-size:12.5px;color:var(--muted);}
+
+/* toast */
+.toast{
+  position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(14px);
+  background:oklch(0.30 0.02 260);color:#fff;font-size:13px;font-weight:500;
+  padding:10px 17px;border-radius:var(--radius-md);box-shadow:var(--shadow-md);
+  opacity:0;pointer-events:none;z-index:60;max-width:70vw;text-align:center;
+  transition:opacity var(--ease) .2s,transform var(--ease) .2s;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+@media (max-width:1180px){
+  .stats{grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+@media (max-width:900px){
+  :root{--sidebar-w:64px;}
+  .brand-sub,.nav-label,.nav-item span,.nav-foot span{display:none;}
+  .nav-item{justify-content:center;}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+</style>
+</head>
+<body>
+<div class="app" data-od-id="app-shell">
+
+  <!-- ================= Sidebar ================= -->
+  <aside class="sidebar" data-od-id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">F</div>
+      <div class="brand-name">Finlite</div>
+      <div class="brand-sub">单账套</div>
+    </div>
+    <nav class="nav" data-od-id="nav">
+      <div class="nav-group">
+        <div class="nav-label">数据接入</div>
+        <button class="nav-item" data-od-id="nav-import">
+          <svg viewBox="0 0 16 16"><path d="M8 10.5V3M8 3 5.2 5.8M8 3l2.8 2.8"/><path d="M2.8 10.5v2.2A1.3 1.3 0 0 0 4.1 14h7.8a1.3 1.3 0 0 0 1.3-1.3v-2.2"/></svg>
+          <span>导入中心</span>
+        </button>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">流水账务</div>
+        <button class="nav-item" data-od-id="nav-bank">
+          <svg viewBox="0 0 16 16"><path d="M2.4 6.4 8 3l5.6 3.4"/><path d="M3.6 6.6v4.8M6.2 6.6v4.8M9.8 6.6v4.8M12.4 6.6v4.8"/><path d="M2.4 13.2h11.2"/></svg>
+          <span>银行流水</span>
+        </button>
+        <button class="nav-item active" data-od-id="nav-order" aria-current="page">
+          <svg viewBox="0 0 16 16"><path d="M4.2 2.5h5.1l2.5 2.5v8a.5.5 0 0 1-.5.5H4.2a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 .5-.5Z"/><path d="M9.2 2.5V5h2.6"/><path d="M5.6 8h4.8M5.6 10.4h4.8"/></svg>
+          <span>订单流水</span>
+        </button>
+        <button class="nav-item" data-od-id="nav-store">
+          <svg viewBox="0 0 16 16"><path d="M2.6 6 4 3.2h8L13.4 6"/><path d="M3.2 6v6.8h9.6V6"/><path d="M3 6a1.9 1.9 0 0 0 3.3 1.2A1.9 1.9 0 0 0 8 8.3a1.9 1.9 0 0 0 1.7-1.1A1.9 1.9 0 0 0 13 6"/></svg>
+          <span>店面收款</span>
+        </button>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">对账与汇总</div>
+        <button class="nav-item" data-od-id="nav-recon">
+          <svg viewBox="0 0 16 16"><path d="M8 3v10M4.5 13.2h7"/><path d="M4 6 2.2 9.6h3.6L4 6Zm8 0L10.2 9.6h3.6L12 6Z"/><path d="M3.6 6h8.8"/></svg>
+          <span>对账中心</span>
+        </button>
+        <button class="nav-item" data-od-id="nav-summary">
+          <svg viewBox="0 0 16 16"><path d="M2.8 13V8.4M6.4 13V3.4M10 13V9.6M13.2 13V6.2"/></svg>
+          <span>数据汇总</span>
+        </button>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">账务处理</div>
+        <button class="nav-item" data-od-id="nav-voucher">
+          <svg viewBox="0 0 16 16"><path d="M4.4 2.5h7.2v11H4.4z"/><path d="M6.2 5.4h3.6M6.2 8h3.6M6.2 10.6h2.2"/></svg>
+          <span>凭证管理</span>
+        </button>
+        <button class="nav-item" data-od-id="nav-balance">
+          <svg viewBox="0 0 16 16"><path d="M2.4 3.5h11.2v9H2.4z"/><path d="M2.4 6.5h11.2M6.6 3.5v9"/></svg>
+          <span>科目余额表</span>
+        </button>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">系统</div>
+        <button class="nav-item" data-od-id="nav-settings">
+          <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.9v1.5M8 12.6v1.5M1.9 8h1.5M12.6 8h1.5M3.7 3.7l1.1 1.1M11.2 11.2l1.1 1.1M12.3 3.7l-1.1 1.1M4.8 11.2l-1.1 1.1"/></svg>
+          <span>基础设置</span>
+        </button>
+      </div>
+    </nav>
+    <div class="nav-foot"><span class="dot"></span><span>账套正常 · 2026 年度</span></div>
+  </aside>
+
+  <!-- ================= Main ================= -->
+  <div class="main">
+
+    <!-- Topbar -->
+    <header class="topbar" data-od-id="topbar">
+      <div class="page-titles">
+        <h1 class="page-title" data-od-id="page-title">订单流水</h1>
+        <span class="tag-mod">F3</span>
+        <span class="tag-readonly" data-od-id="readonly-badge">
+          <svg viewBox="0 0 16 16"><rect x="3.2" y="7" width="9.6" height="6.4" rx="1.2"/><path d="M5.4 7V5.2a2.6 2.6 0 0 1 5.2 0V7"/></svg>
+          原始数据 · 只读
+        </span>
+      </div>
+      <div class="topbar-spacer"></div>
+      <div class="period" data-od-id="period">
+        <svg viewBox="0 0 16 16"><rect x="2.4" y="3.2" width="11.2" height="10.4" rx="1.4"/><path d="M2.4 6.4h11.2M5.4 2.2v2M10.6 2.2v2"/></svg>
+        <span class="k">会计期间</span><span class="v">2026-07</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="btnRefresh" data-od-id="btn-refresh">
+        <svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.6-3.7"/><path d="M13.2 2.6v2.9h-2.9"/></svg>
+        刷新
+      </button>
+      <button class="btn btn-sm" id="btnExport" data-od-id="btn-export">
+        <svg viewBox="0 0 16 16"><path d="M8 2.4v7.2M8 9.6 5.2 6.8M8 9.6l2.8-2.8"/><path d="M2.8 10.6v2.1a1.3 1.3 0 0 0 1.3 1.3h7.8a1.3 1.3 0 0 0 1.3-1.3v-2.1"/></svg>
+        导出明细
+      </button>
+    </header>
+
+    <!-- Content -->
+    <main class="content" data-od-id="content">
+
+      <!-- Info banner -->
+      <section class="info-banner" data-od-id="info-banner" role="note">
+        <span class="ib-icon"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2"/><path d="M8 7.2v4.2M8 4.9v.1"/></svg></span>
+        <div>
+          <div class="ib-title">收入归属规则：按结算日期（T+1）入账，非交易时间</div>
+          <div class="ib-body">
+            本表为工行商户后台导出的订单原始明细（共 40+ 列），交易级只读数据，页面不提供编辑 / 删除。
+            金额恒等式 <code>订单金额 − 手续费 = 实收</code>，允许 <b>±0.01</b> 元舍入误差；超出阈值即标记为差异行，需人工复核。
+          </div>
+        </div>
+      </section>
+
+      <!-- Stat cards -->
+      <section class="stats" data-od-id="stats">
+        <div class="stat" data-od-id="stat-orders">
+          <div class="s-label">订单笔数</div>
+          <div class="s-value" id="statCount">—</div>
+          <div class="s-sub">全部展示 · 未分页</div>
+        </div>
+        <div class="stat" data-od-id="stat-amount">
+          <div class="s-label">订单金额合计</div>
+          <div class="s-value" id="statOrder"><span class="cur">¥</span>—</div>
+          <div class="s-sub" id="statOrderSub">命中订单金额</div>
+        </div>
+        <div class="stat" data-od-id="stat-fee">
+          <div class="s-label">手续费合计</div>
+          <div class="s-value" id="statFee"><span class="cur">¥</span>—</div>
+          <div class="s-sub">微信 / 支付宝 0.25% · 借记卡 0.5% · 贷记卡 0.6%</div>
+        </div>
+        <div class="stat" data-od-id="stat-net">
+          <div class="s-label">商户实收合计</div>
+          <div class="s-value" id="statNet"><span class="cur">¥</span>—</div>
+          <div class="s-sub">订单金额 − 手续费</div>
+        </div>
+        <div class="stat warn" data-od-id="stat-anomaly">
+          <div class="s-label">费率异常笔数</div>
+          <div class="s-value" id="statAnomaly">—</div>
+          <div class="s-sub" id="statAnomalySub">需人工复核</div>
+        </div>
+      </section>
+
+      <!-- Filter bar -->
+      <section class="filter-bar" data-od-id="filter-bar">
+        <div class="filter-field">
+          <span class="fl">结算日期</span>
+          <input class="inp inp-date" type="date" id="fDate" data-od-id="filter-date" aria-label="结算日期">
+        </div>
+        <div class="filter-sep"></div>
+        <div class="filter-field">
+          <span class="fl">关键字</span>
+          <input class="inp inp-kw" type="text" id="fKeyword" data-od-id="filter-keyword" placeholder="工行订单号 / 第三方订单号" aria-label="关键字">
+        </div>
+        <div class="filter-sep"></div>
+        <label class="switch" data-od-id="filter-fee-only">
+          <input type="checkbox" id="fFeeOnly">
+          <span class="track"><span class="thumb"></span></span>
+          <span class="sw-label">仅看费率差异</span>
+        </label>
+        <button class="btn btn-primary" id="btnQuery" data-od-id="btn-query">查询</button>
+        <button class="btn" id="btnReset" data-od-id="btn-reset">重置</button>
+        <div class="filter-spacer"></div>
+        <div class="count-txt" id="filterCount" data-od-id="filter-count">共 0 条 · 全部展示</div>
+      </section>
+
+      <!-- Table card -->
+      <section class="table-card" data-od-id="order-table">
+        <div class="table-scroll" id="tableScroll">
+          <table class="data" id="dataTable">
+            <colgroup>
+              <col style="width:40px"><col style="width:100px"><col style="width:136px"><col style="width:146px">
+              <col style="width:102px"><col style="width:104px"><col style="width:90px"><col style="width:104px">
+              <col style="width:82px"><col style="width:74px"><col style="width:126px"><col style="width:78px">
+            </colgroup>
+            <thead>
+              <tr>
+                <th aria-label="展开"></th>
+                <th>工行订单号</th>
+                <th>第三方订单号</th>
+                <th>交易时间</th>
+                <th>结算日期</th>
+                <th class="num">订单金额</th>
+                <th class="num">手续费</th>
+                <th class="num">实收</th>
+                <th>支付方式</th>
+                <th>借贷记</th>
+                <th>费率检查</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+          <div class="empty" id="emptyState" data-od-id="empty-state">
+            <div class="em-ic"><svg viewBox="0 0 24 24"><path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 16.5h6"/></svg></div>
+            <div class="em-title">暂无数据，请先在导入中心导入订单流水</div>
+            <div class="em-sub">订单流水来自工行商户后台导出的 TSV 文件，导入后按结算日期（T+1）自动归集与勾稽。</div>
+            <button class="btn btn-primary" id="btnGotoImport" data-od-id="btn-goto-import">
+              <svg viewBox="0 0 16 16"><path d="M8 10.5V3M8 3 5.2 5.8M8 3l2.8 2.8"/><path d="M2.8 10.5v2.2A1.3 1.3 0 0 0 4.1 14h7.8a1.3 1.3 0 0 0 1.3-1.3v-2.2"/></svg>
+              前往导入中心
+            </button>
+          </div>
+        </div>
+
+        <!-- Summary bar -->
+        <div class="summary" data-od-id="summary-bar">
+          <div class="summary-left">当前筛选合计 · 共 <b id="sumCount">0</b> 条 · 全部展示</div>
+          <div class="summary-spacer"></div>
+          <div class="summary-metrics">
+            <div class="sm"><span class="sm-k">订单金额</span><span class="sm-v" id="sumOrder">¥0.00</span></div>
+            <div class="sm"><span class="sm-k">手续费</span><span class="sm-v" id="sumFee">¥0.00</span></div>
+            <div class="sm"><span class="sm-k">商户实收</span><span class="sm-v" id="sumNet">¥0.00</span></div>
+            <span class="sm-chip" id="sumDiff" style="display:none;"></span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ================= Drawer ================= -->
+<div class="drawer-overlay" id="drawerOverlay" data-od-id="drawer-overlay"></div>
+<aside class="drawer" id="drawer" data-od-id="drawer" role="dialog" aria-modal="true" aria-label="订单详情"></aside>
+<div class="toast" id="toast" data-od-id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var RATE = 0.0025;
+  var WD = ["周日","周一","周二","周三","周四","周五","周六"];
+  var SOURCE = {
+    file: "工行商户_订单明细_20260701-20260712.tsv",
+    batch: "IMP-20260713-01",
+    imported: "2026-07-13 09:12:40",
+    columns: 42
+  };
+
+  /* ---- 脱敏示例数据 ---- */
+  var ROWS = [
+    {no:"240701001", third:"4200002456202606301234567890", trade:"2026-06-30 14:22:07", settle:"2026-07-01", order:3200.00,  fee:7.55,   net:3192.45, pay:"微信",   card:"借记卡", note:"",       status:"fee_diff",      manual:false},
+    {no:"240701002", third:"4200002456202606309876543210", trade:"2026-06-30 19:05:44", settle:"2026-07-01", order:2400.00,  fee:6.00,   net:2390.00, pay:"微信",   card:"贷记卡", note:"吴佳怡", status:"net_diff",      manual:true},
+    {no:"240701003", third:"2026063022001455900123456789", trade:"2026-06-30 21:31:10", settle:"2026-07-01", order:189.50,   fee:0.47,   net:189.03,  pay:"支付宝", card:"借记卡", note:"",       status:"ok",            manual:false},
+    {no:"240709001", third:"4200002456202607081122334455", trade:"2026-07-08 10:12:33", settle:"2026-07-09", order:12000.00, fee:30.00,  net:11970.00,pay:"微信",   card:"贷记卡", note:"",       status:"ok",            manual:false},
+    {no:"240709002", third:"4200002456202607086677889900", trade:"2026-07-08 13:48:02", settle:"2026-07-09", order:2400.00,  fee:6.00,   net:2394.00, pay:"微信",   card:"借记卡", note:"",       status:"ok",            manual:false},
+    {no:"240709003", third:"2026070822001499200456781234", trade:"2026-07-08 18:20:55", settle:"2026-07-09", order:2128.00,  fee:5.32,   net:2122.68, pay:"支付宝", card:"贷记卡", note:"吴佳怡", status:"ok",            manual:false},
+    {no:"240710001", third:"4200002456202607095544332211", trade:"2026-07-09 09:03:18", settle:"2026-07-10", order:8680.00,  fee:21.70,  net:8658.30, pay:"微信",   card:"借记卡", note:"",       status:"ok",            manual:false},
+    {no:"240710002", third:"2026070922001488301122334455", trade:"2026-07-09 12:37:41", settle:"2026-07-10", order:189.50,   fee:0.47,   net:189.03,  pay:"支付宝", card:"借记卡", note:"",       status:"ok",            manual:true},
+    {no:"240710003", third:"",                              trade:"2026-07-09 20:15:26", settle:"2026-07-10", order:600.00,   fee:1.50,   net:598.50,  pay:"微信",   card:"贷记卡", note:"",       status:"ok",            manual:false},
+    {no:"240711001", third:"4200002456202607107788990011", trade:"2026-07-10 08:44:09", settle:"2026-07-11", order:3200.00,  fee:8.00,   net:3192.00, pay:"微信",   card:"借记卡", note:"",       status:"ok",            manual:false},
+    {no:"240711002", third:"4200002456202607102233445566", trade:"2026-07-10 15:52:37", settle:"2026-07-11", order:1000.00,  fee:2.50,   net:997.50,  pay:"微信",   card:"贷记卡", note:"",       status:"ok",            manual:false},
+    {no:"240711003", third:"2026071022001477609988776655", trade:"2026-07-10 22:08:14", settle:"2026-07-11", order:2128.00,  fee:5.32,   net:2122.68, pay:"支付宝", card:"借记卡", note:"",       status:"ok",            manual:false},
+    {no:"240712001", third:"4200002456202607113344556677", trade:"2026-07-11 09:26:41", settle:"2026-07-12", order:12000.00, fee:30.00,  net:11970.00,pay:"微信",   card:"贷记卡", note:"",       status:"ok",            manual:false},
+    {no:"240712002", third:"4200002456202607119988776655", trade:"2026-07-11 11:14:03", settle:"2026-07-12", order:2400.00,  fee:6.00,   net:2394.00, pay:"微信",   card:"借记卡", note:"",       status:"ok",            manual:false},
+    {no:"240712003", third:"2026071122001466302244668811", trade:"2026-07-11 17:47:52", settle:"2026-07-12", order:8680.00,  fee:21.70,  net:8658.30, pay:"微信",   card:"贷记卡", note:"吴佳怡", status:"ok",            manual:false},
+    {no:"240712004", third:"",                              trade:"2026-07-11 23:58:19", settle:"2026-07-12", order:600.00,   fee:null,   net:598.50,  pay:"微信",   card:"借记卡", note:"",       status:"fee_parse_err", manual:false}
+  ];
+
+  var STATUS_TEXT = {
+    ok:"费率正确", fee_diff:"费率差异", net_diff:"实收差异", fee_parse_err:"金额解析失败"
+  };
+  var STATUS_CLASS = { ok:"ok", fee_diff:"warn", net_diff:"err", fee_parse_err:"err" };
+
+  var state = { date:"", keyword:"", feeOnly:false };
+  var expanded = {};
+
+  var $ = function(id){ return document.getElementById(id); };
+  var tbody = $("tbody");
+
+  /* ---- formatting ---- */
+  function fmt(n){
+    if(n===null || n===undefined) return "—";
+    return Number(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+  }
+  function money(n){ return (n===null||n===undefined) ? "—" : "¥"+fmt(n); }
+  function fmtDiff(n){
+    if(Math.abs(n) < 0.005) return "¥0.00";
+    return (n<0 ? "−" : "+") + "¥" + fmt(Math.abs(n));
+  }
+  function round2(n){ return Math.round(n*100)/100; }
+  function expectedFee(o){ return round2(o*RATE); }
+  function sum(list, key){
+    var t=0, seen=false;
+    list.forEach(function(r){ if(r[key]!==null && r[key]!==undefined){ t+=r[key]; seen=true; } });
+    return seen ? round2(t) : null;
+  }
+  function weekday(dstr){ return WD[new Date(dstr+"T00:00:00").getDay()]; }
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  /* ---- filtering & grouping ---- */
+  function passes(r){
+    if(state.date && r.settle !== state.date) return false;
+    if(state.keyword){
+      var k = state.keyword.toLowerCase();
+      var hit = r.no.toLowerCase().indexOf(k) >= 0 ||
+                (r.third && r.third.toLowerCase().indexOf(k) >= 0);
+      if(!hit) return false;
+    }
+    if(state.feeOnly && r.status === "ok") return false;
+    return true;
+  }
+  function filtered(){ return ROWS.filter(passes); }
+  function groupBySettle(list){
+    var map = {};
+    list.forEach(function(r){
+      if(!map[r.settle]) map[r.settle] = [];
+      map[r.settle].push(r);
+    });
+    return Object.keys(map).sort().map(function(d){
+      map[d].sort(function(a,b){ return a.trade < b.trade ? -1 : 1; });
+      return { date:d, rows:map[d] };
+    });
+  }
+
+  /* ---- rendering ---- */
+  function payHtml(pay){
+    var cls = pay === "微信" ? "pay-wechat" : "pay-alipay";
+    return '<span class="pay '+cls+'"><span class="dot"></span>'+pay+'</span>';
+  }
+  function rateCell(r){
+    var html = '<div class="rate-cell">';
+    if(r.status === "ok"){
+      html += '<span class="rate-ok">费率正确</span>';
+    } else {
+      var cls = r.status === "fee_diff" ? "badge-warn" : "badge-err";
+      html += '<span class="badge '+cls+'">'+STATUS_TEXT[r.status]+'</span>';
+    }
+    if(r.manual) html += '<span class="mini-tag">手动调整</span>';
+    html += "</div>";
+    return html;
+  }
+  function rowHtml(r, isLast){
+    var rc = "";
+    var first = "";
+    if(r.status === "fee_diff"){ rc = "row-warn"; first = "first-warn"; }
+    else if(r.status === "net_diff" || r.status === "fee_parse_err"){ rc = "row-err"; first = "first-err"; }
+    var third = r.third ? esc(r.third) : '<span class="third-empty">—</span>';
+    var thirdTitle = r.third ? ' title="'+esc(r.third)+'"' : "";
+    var trCls = "data-row " + rc + (isLast ? " row-last" : "") + (expanded[r.no] ? " expanded" : "");
+    return '<tr class="'+trCls+'" data-row="'+r.no+'" tabindex="0" data-od-id="row-'+r.no+'">' +
+      '<td class="'+(r.status!=="ok"?first:"")+'"><button class="exp-btn" data-toggle="'+r.no+'" aria-label="展开手续费复算" aria-expanded="'+(expanded[r.no]?"true":"false")+'">' +
+        '<svg viewBox="0 0 16 16"><path d="M6 3.5 10.5 8 6 12.5"/></svg></button></td>' +
+      '<td class="mono" title="'+esc(r.no)+'">'+esc(r.no)+'</td>' +
+      '<td class="mono"'+thirdTitle+'>'+third+'</td>' +
+      '<td class="col-time">'+esc(r.trade)+'</td>' +
+      '<td class="tnum">'+esc(r.settle)+'</td>' +
+      '<td class="num">'+money(r.order)+'</td>' +
+      '<td class="num">'+(r.status==="fee_parse_err" ? '<span style="color:var(--err-fg);font-weight:600;">解析失败</span>' : money(r.fee))+'</td>' +
+      '<td class="num">'+money(r.net)+'</td>' +
+      '<td>'+payHtml(r.pay)+'</td>' +
+      '<td><span class="card-type">'+r.card+'</span></td>' +
+      '<td>'+rateCell(r)+'</td>' +
+      '<td><button class="link-btn" data-drawer="'+r.no+'">查看详情</button></td>' +
+    '</tr>';
+  }
+  function detailHtml(r){
+    var hidden = expanded[r.no] ? "" : " hidden";
+    var body;
+    if(r.status === "fee_parse_err"){
+      body = '<div class="parse-note"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.6v4M8 10.8v.1"/></svg>' +
+        '手续费字段无法解析（源文件原始值缺失或格式异常），已跳过费率复算，标记为「金额解析失败」待人工复核。</div>';
+    } else {
+      var exp = expectedFee(r.order);
+      var feeDiff = round2(r.fee - exp);
+      var idDiff = round2((r.order - r.fee) - r.net);
+      var feeCls = Math.abs(feeDiff) < 0.005 ? "ok" : (r.status==="fee_diff" ? "warn" : "err");
+      var idCls = Math.abs(idDiff) < 0.005 ? "ok" : "err";
+      body =
+        '<div class="recalc-line">' +
+          '<div class="rc-item"><span class="rk">订单金额 × 费率</span><span class="rv">'+money(r.order)+' × 0.25%</span></div>' +
+          '<span class="rc-op">＝</span>' +
+          '<div class="rc-item"><span class="rk">预期手续费</span><span class="rv">'+money(exp)+'</span></div>' +
+          '<div class="rc-item"><span class="rk">实际手续费</span><span class="rv">'+money(r.fee)+'</span></div>' +
+          '<div class="rc-item"><span class="rk">差额</span><span class="rv '+feeCls+'">'+fmtDiff(feeDiff)+'</span></div>' +
+        '</div>' +
+        '<div class="identity'+(idCls==="err"?" is-err":"")+'">' +
+          '<span class="id-k">恒等式</span>' +
+          '<span class="id-eq">订单金额 − 手续费 = 实收 → '+money(r.order)+' − '+money(r.fee)+' = '+money(round2(r.order-r.fee))+'</span>' +
+          '<span class="id-diff '+idCls+'">实收差异 '+fmtDiff(idDiff)+'</span>' +
+        '</div>';
+    }
+    return '<tr class="detail-row'+hidden+'" data-detail="'+r.no+'"><td colspan="12"><div class="recalc">' +
+      '<div class="recalc-head"><svg viewBox="0 0 16 16"><path d="M2.6 8.4 6 11.6 13.4 4.6"/></svg>手续费复算 · '+esc(r.no)+'</div>' +
+      body + '</div></td></tr>';
+  }
+
+  function groupHtml(g){
+    var n = g.rows.length;
+    var o = sum(g.rows,"order"), f = sum(g.rows,"fee"), nt = sum(g.rows,"net");
+    var recon = g.rows.some(function(r){ return r.status !== "ok"; });
+    var parseErr = g.rows.filter(function(r){ return r.status === "fee_parse_err"; }).length;
+    var posBadge = recon
+      ? '<span class="badge badge-warn">待勾稽</span>'
+      : '<span class="badge badge-ok">已匹配</span>';
+    var feeNote = parseErr
+      ? ' <span style="color:var(--warn-fg);">· '+parseErr+' 笔解析失败未计入手续费小计</span>'
+      : '';
+    var head = '<tr class="group-row" data-od-id="group-'+g.date+'"><td colspan="12"><div class="group-inner">' +
+      '<div class="group-date">' +
+        '<span class="gd-k">结算日期</span><span class="gd-v">'+g.date+'</span>' +
+        '<span class="gd-wd">· '+weekday(g.date)+'</span>' +
+        '<span class="gd-n">· '+n+' 笔</span>' +
+      '</div>' +
+      '<div class="group-pos">银行 POS 到账（次日凌晨）'+posBadge+'</div>' +
+      '<div class="group-spacer"></div>' +
+      '<div class="group-subs">' +
+        '<span class="group-sub">订单金额 <b>'+money(o)+'</b></span>' +
+        '<span class="group-sub">手续费 <b>'+money(f)+'</b>'+feeNote+'</span>' +
+        '<span class="group-sub">实收 <b>'+money(nt)+'</b></span>' +
+      '</div>' +
+    '</div></td></tr>';
+    var body = "";
+    g.rows.forEach(function(r, i){
+      body += rowHtml(r, i === n-1);
+      body += detailHtml(r);
+    });
+    return head + body;
+  }
+
+  function render(){
+    var list = filtered();
+    var groups = groupBySettle(list);
+
+    tbody.innerHTML = groups.map(groupHtml).join("");
+    $("emptyState").classList.toggle("show", list.length === 0);
+
+    updateStats(list);
+    updateSummary(list);
+  }
+
+  function updateStats(list){
+    var n = list.length;
+    var o = sum(list,"order"), f = sum(list,"fee"), nt = sum(list,"net");
+    var anomaly = list.filter(function(r){ return r.status !== "ok"; }).length;
+    var fd = list.filter(function(r){ return r.status === "fee_diff"; }).length;
+    var nd = list.filter(function(r){ return r.status === "net_diff"; }).length;
+    var pe = list.filter(function(r){ return r.status === "fee_parse_err"; }).length;
+
+    $("statCount").textContent = n + " 笔";
+    $("statOrder").innerHTML = '<span class="cur">¥</span>' + fmt(o);
+    $("statFee").innerHTML = '<span class="cur">¥</span>' + fmt(f);
+    $("statNet").innerHTML = '<span class="cur">¥</span>' + fmt(nt);
+    $("statAnomaly").textContent = anomaly + " 笔";
+    $("statOrderSub").textContent = n + " 笔命中 · 全部展示";
+    $("statAnomalySub").textContent = "费率差异 " + fd + " · 实收差异 " + nd + " · 解析失败 " + pe;
+    $("filterCount").innerHTML = "共 <b>" + n + "</b> 条 · 全部展示";
+  }
+
+  function updateSummary(list){
+    var o = sum(list,"order"), f = sum(list,"fee"), nt = sum(list,"net");
+    $("sumCount").textContent = list.length;
+    $("sumOrder").textContent = money(o);
+    $("sumFee").textContent = money(f);
+    $("sumNet").textContent = money(nt);
+
+    var diffEl = $("sumDiff");
+    var diff = round2((o || 0) - (f || 0) - (nt || 0));
+    if(list.length && Math.abs(diff) >= 0.01){
+      diffEl.style.display = "";
+      diffEl.textContent = "勾稽差额 " + fmtDiff(diff);
+    } else {
+      diffEl.style.display = "none";
+    }
+  }
+
+  /* ---- drawer ---- */
+  function findRow(no){
+    for(var i=0;i<ROWS.length;i++){ if(ROWS[i].no===no) return ROWS[i]; }
+    return null;
+  }
+  function field(k, v, cls, wide){
+    var dv = (v===""||v===null||v===undefined)
+      ? '<span class="dv empty-v">—</span>'
+      : '<span class="dv '+(cls||"")+'">'+esc(v)+'</span>';
+    return '<div class="dr-field'+(wide?" wide":"")+'"><span class="dk">'+k+'</span>'+dv+'</div>';
+  }
+  function rawJson(r){
+    var obj = {
+      icbc_order_no: r.no,
+      third_order_no: r.third || null,
+      trade_time: r.trade,
+      settle_date: r.settle,
+      order_amount: fmt(r.order),
+      fee_amount: r.fee===null ? null : fmt(r.fee),
+      merchant_net: fmt(r.net),
+      pay_method: r.pay,
+      card_type: r.card,
+      customer_note: r.note || null,
+      source_file: SOURCE.file
+    };
+    var lines = ["{"];
+    var keys = Object.keys(obj);
+    keys.forEach(function(k, i){
+      var v = obj[k];
+      var val;
+      if(v===null) val = '<span class="j-null">null</span>';
+      else if(typeof v === "number") val = '<span class="j-num">'+v+'</span>';
+      else val = '<span class="j-str">"'+esc(v)+'"</span>';
+      lines.push('  <span class="j-key">"'+k+'"</span>: '+val+(i<keys.length-1?",":""));
+    });
+    lines.push("}");
+    return lines.join("\n");
+  }
+  function openDrawer(no){
+    var r = findRow(no);
+    if(!r) return;
+    var st = r.status, stCls = STATUS_CLASS[st];
+    var statusIcons = {
+      ok:'<path d="M2.6 8.4 6 11.6 13.4 4.6"/>',
+      warn:'<circle cx="8" cy="8" r="6.2"/><path d="M8 4.6v4M8 10.8v.1"/>',
+      err:'<circle cx="8" cy="8" r="6.2"/><path d="M8 4.6v4M8 10.8v.1"/>'
+    };
+    var statusMsg = {
+      ok:"费率与实收恒等式校验通过，无需人工干预。",
+      fee_diff:"实际手续费与按 0.25% 复算的预期手续费不符，请核对商户费率或导出字段。",
+      net_diff:"订单金额 − 手续费 与记录的商户实收不一致，请人工复核。",
+      fee_parse_err:"手续费字段无法解析，费率复算已跳过，请核对源文件。"
+    };
+    var exp = r.fee===null ? null : expectedFee(r.order);
+    var feeDisplay = r.fee===null ? "解析失败" : money(r.fee);
+
+    var html = '';
+    html += '<div class="drawer-head">' +
+      '<div><div class="dh-title">订单详情</div><div class="dh-sub">'+esc(r.no)+'</div></div>' +
+      '<button class="dh-close" data-close aria-label="关闭"><svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>';
+
+    html += '<div class="drawer-body">';
+    html += '<div class="dr-status '+stCls+'"><svg viewBox="0 0 16 16">'+statusIcons[st]+'</svg><span><b>'+STATUS_TEXT[st]+'</b> · '+statusMsg[st]+(r.manual?' · <b>该行已手动调整</b>':'')+'</span></div>';
+
+    html += '<div class="dr-sec"><div class="dr-sec-title">订单标识</div><div class="dr-grid">' +
+      field("工行订单号", r.no, "mono", true) +
+      field("第三方订单号", r.third, "mono", true) +
+      field("支付方式", r.pay) +
+      field("借贷记", r.card) +
+    '</div></div>';
+
+    html += '<div class="dr-sec"><div class="dr-sec-title">金额与费率</div><div class="dr-grid">' +
+      field("订单金额", money(r.order), "num") +
+      field("手续费", feeDisplay, "num"+(r.status==="fee_parse_err"?" err":"")) +
+      field("商户实收", money(r.net), "num") +
+      field("预期手续费 (0.25%)", exp===null?"—":money(exp), "num") +
+      field("费率检查", STATUS_TEXT[st]) +
+      field("复核状态", st==="ok"?"无需复核":"待人工复核") +
+    '</div></div>';
+
+    html += '<div class="dr-sec"><div class="dr-sec-title">时间与收入归属（T+1）</div>' +
+      '<div class="attr-box"><b>收入归属日 = 结算日期，非交易时间。</b>工行商户订单按 T+1 结算，本笔交易于交易时间发生，次一自然日入账。' +
+        '<div class="attr-flow"><span class="af-node">交易时间 '+esc(r.trade)+'</span><span class="af-arrow">→</span><span class="af-node hl">结算日期 '+esc(r.settle)+'（收入归属日）</span></div>' +
+      '</div></div>';
+
+    html += '<div class="dr-sec"><div class="dr-sec-title">客户信息</div><div class="dr-grid">' +
+      field("客户备注", r.note, "", true) +
+    '</div></div>';
+
+    html += '<div class="dr-sec"><div class="dr-sec-title">数据来源</div><div class="dr-grid">' +
+      field("来源文件", SOURCE.file, "", true) +
+      field("导入批次", SOURCE.batch, "mono") +
+      field("导入时间", SOURCE.imported) +
+      field("源列数", SOURCE.columns + " 列") +
+      field("数据性质", "原始数据 · 只读") +
+    '</div></div>';
+
+    html += '<div class="dr-sec"><div class="dr-sec-title">原始 JSON 摘要</div><div class="json-box"><pre>'+rawJson(r)+'</pre></div></div>';
+
+    var reconStatus = st==="ok" ? '<span class="badge badge-ok">已匹配</span>' : '<span class="badge badge-warn">待勾稽</span>';
+    html += '<div class="dr-sec"><div class="dr-sec-title">关联勾稽</div><div class="recon-list">' +
+      '<div class="recon-item"><div class="ri-ic"><svg viewBox="0 0 16 16"><path d="M2.4 6.4 8 3l5.6 3.4"/><path d="M3.6 6.6v4.8M12.4 6.6v4.8"/><path d="M2.4 13.2h11.2"/></svg></div>' +
+        '<div class="ri-main"><div class="ri-k">银行 POS 到账（次日凌晨）</div><div class="ri-v">'+esc(r.settle)+' · 结算批次 POS-'+esc(r.settle.replace(/-/g,""))+'</div></div>'+reconStatus+'</div>' +
+      '<div class="recon-item"><div class="ri-ic"><svg viewBox="0 0 16 16"><path d="M2.8 13V8.4M6.4 13V3.4M10 13V9.6M13.2 13V6.2"/></svg></div>' +
+        '<div class="ri-main"><div class="ri-k">数据汇总 · 店面收款归集</div><div class="ri-v">按结算日期并入 '+esc(r.settle)+' 日汇总</div></div><span class="badge badge-ok">已归集</span></div>' +
+    '</div></div>';
+
+    html += '</div>';
+
+    var drawer = $("drawer");
+    drawer.innerHTML = html;
+    drawer.classList.add("open");
+    $("drawerOverlay").classList.add("open");
+  }
+  function closeDrawer(){
+    $("drawer").classList.remove("open");
+    $("drawerOverlay").classList.remove("open");
+  }
+
+  var toastTimer;
+  function toast(msg){
+    var t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 2600);
+  }
+
+  /* ---- events ---- */
+  tbody.addEventListener("click", function(e){
+    var toggle = e.target.closest("[data-toggle]");
+    if(toggle){
+      e.stopPropagation();
+      var no = toggle.getAttribute("data-toggle");
+      expanded[no] = !expanded[no];
+      var tr = toggle.closest("tr");
+      var det = tbody.querySelector('[data-detail="'+no+'"]');
+      if(tr){ tr.classList.toggle("expanded", expanded[no]); }
+      if(det){ det.classList.toggle("hidden", !expanded[no]); }
+      toggle.setAttribute("aria-expanded", expanded[no] ? "true" : "false");
+      return;
+    }
+    var dbtn = e.target.closest("[data-drawer]");
+    if(dbtn){ e.stopPropagation(); openDrawer(dbtn.getAttribute("data-drawer")); return; }
+    var row = e.target.closest("tr[data-row]");
+    if(row){ openDrawer(row.getAttribute("data-row")); }
+  });
+  tbody.addEventListener("keydown", function(e){
+    if(e.key === "Enter" || e.key === " "){
+      var row = e.target.closest("tr[data-row]");
+      if(row){ e.preventDefault(); openDrawer(row.getAttribute("data-row")); }
+    }
+  });
+
+  $("btnQuery").addEventListener("click", function(){
+    state.date = $("fDate").value;
+    state.keyword = $("fKeyword").value.trim();
+    state.feeOnly = $("fFeeOnly").checked;
+    render();
+  });
+  $("btnReset").addEventListener("click", function(){
+    $("fDate").value = "";
+    $("fKeyword").value = "";
+    $("fFeeOnly").checked = false;
+    state = { date:"", keyword:"", feeOnly:false };
+    render();
+  });
+  $("fDate").addEventListener("change", function(){ state.date = $("fDate").value; render(); });
+  $("fKeyword").addEventListener("input", function(){ state.keyword = $("fKeyword").value.trim(); render(); });
+  $("fFeeOnly").addEventListener("change", function(){ state.feeOnly = $("fFeeOnly").checked; render(); });
+
+  $("btnGotoImport").addEventListener("click", function(){
+    toast("跳转「导入中心」：请选择工行商户后台导出的订单明细 TSV 文件进行导入。");
+  });
+  $("btnExport").addEventListener("click", function(){
+    toast("已导出当前筛选结果（" + filtered().length + " 条），文件格式与源 TSV 保持一致。");
+  });
+  $("btnRefresh").addEventListener("click", function(){
+    render();
+    toast("已重新加载订单流水，共 " + filtered().length + " 条 · 全部展示。");
+  });
+
+  $("drawerOverlay").addEventListener("click", closeDrawer);
+  $("drawer").addEventListener("click", function(e){
+    if(e.target.closest("[data-close]")) closeDrawer();
+  });
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape") closeDrawer();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

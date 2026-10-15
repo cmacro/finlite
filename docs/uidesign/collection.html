@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finlite · 店面收款</title>
+<style>
+:root{
+  --bg:#ffffff;
+  --surface:#f7f8fa;
+  --surface-2:#eef1f5;
+  --fg:#111111;
+  --fg-2:#374151;
+  --muted:#6b7280;
+  --border:#d9dee7;
+  --border-soft:#eaeef3;
+  --accent:#1677ff;
+  --accent-hover:#0f6aeb;
+  --accent-active:#0958d9;
+  --accent-soft:#e8f1ff;
+  --accent-on:#ffffff;
+  --violet:#8b5cf6;
+  --ok:oklch(0.62 0.17 145);
+  --ok-bg:oklch(0.965 0.035 145);
+  --ok-bd:oklch(0.85 0.10 145);
+  --warn:oklch(0.60 0.14 75);
+  --warn-bg:oklch(0.965 0.045 80);
+  --warn-bd:oklch(0.855 0.11 80);
+  --err:oklch(0.58 0.20 25);
+  --err-bg:oklch(0.965 0.03 25);
+  --err-bd:oklch(0.86 0.09 25);
+  --font-body:Inter,"PingFang SC","Microsoft YaHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"SF Mono","JetBrains Mono","Roboto Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r-sm:6px;
+  --r-md:8px;
+  --r-lg:10px;
+  --motion:140ms cubic-bezier(.2,0,0,1);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  font-family:var(--font-body);
+  font-size:14px;line-height:1.5;color:var(--fg);
+  background:var(--surface);
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+button,input,select,textarea{font-family:inherit}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#cfd6e0;border-radius:6px;border:2px solid var(--surface)}
+::-webkit-scrollbar-thumb:hover{background:#b6bfcc}
+::-webkit-scrollbar-track{background:transparent}
+
+.app{display:flex;height:100vh}
+
+.sidebar{width:220px;flex:0 0 220px;background:var(--bg);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.brand{height:52px;flex:0 0 52px;display:flex;align-items:center;gap:10px;padding:0 16px;border-bottom:1px solid var(--border)}
+.brand-mark{width:26px;height:26px;border-radius:7px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;flex:0 0 26px}
+.brand-mark svg{width:15px;height:15px}
+.brand-name{font-size:16px;font-weight:700;letter-spacing:-.01em}
+.brand-name span{color:var(--accent)}
+.brand-env{font-size:11px;color:var(--muted);margin-left:auto;font-family:var(--font-mono)}
+
+.nav{flex:1;overflow-y:auto;padding:6px 0 12px}
+.nav-group-label{font-size:11px;color:var(--muted);padding:14px 18px 6px;letter-spacing:.02em}
+.nav-item{display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;margin:1px 8px;border-radius:var(--r-sm);color:var(--fg-2);font-size:13.5px;cursor:pointer;user-select:none;transition:background var(--motion),color var(--motion);border:none;background:none;width:calc(100% - 16px);text-align:left}
+.nav-item:hover{background:var(--surface);color:var(--fg)}
+.nav-item .ic{width:16px;height:16px;flex:0 0 16px;color:var(--muted)}
+.nav-item:hover .ic{color:var(--fg-2)}
+.nav-item.active{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.nav-item.active .ic{color:var(--accent)}
+.nav-count{margin-left:auto;font-size:11px;font-family:var(--font-mono);background:var(--err-bg);color:var(--err);border:1px solid var(--err-bd);border-radius:9999px;padding:0 6px;line-height:16px}
+.nav-item.active .nav-count{background:var(--accent);color:#fff;border-color:var(--accent)}
+.sidebar-foot{border-top:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:9px}
+.avatar{width:26px;height:26px;border-radius:50%;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--fg-2)}
+.sidebar-foot .who{font-size:12.5px;line-height:1.3}
+.sidebar-foot .who b{font-weight:600}
+.sidebar-foot .who i{display:block;font-style:normal;color:var(--muted);font-size:11px}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column;height:100vh}
+.topbar{height:52px;flex:0 0 52px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;gap:16px}
+.topbar-left{display:flex;align-items:center;gap:12px;min-width:0}
+.topbar-left h1{font-size:16px;font-weight:650;margin:0;letter-spacing:-.01em}
+.crumb{font-size:12.5px;color:var(--muted)}
+.period-chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12.5px;color:var(--fg-2);background:var(--bg);cursor:pointer}
+.period-chip svg{width:14px;height:14px;color:var(--muted)}
+.period-chip b{font-family:var(--font-mono);font-weight:600;color:var(--fg)}
+.period-chip:hover{border-color:#c4ccd8;background:var(--surface)}
+.topbar-right{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+
+.btn{height:32px;padding:0 14px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--bg);color:var(--fg);font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background var(--motion),border-color var(--motion),color var(--motion);white-space:nowrap}
+.btn:hover{background:var(--surface);border-color:#c4ccd8}
+.btn:active{background:var(--surface-2)}
+.btn:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(22,119,255,.28)}
+.btn svg{width:15px;height:15px}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-on)}
+.btn-primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+.btn-primary:active{background:var(--accent-active);border-color:var(--accent-active)}
+.btn-primary:focus-visible{box-shadow:0 0 0 3px rgba(22,119,255,.4)}
+.btn-danger{color:var(--err);border-color:var(--err-bd);background:var(--bg)}
+.btn-danger:hover{background:var(--err-bg);border-color:var(--err)}
+.btn-sm{height:28px;padding:0 10px;font-size:12.5px}
+.btn-ghost{border-color:transparent;background:transparent;color:var(--accent)}
+.btn-ghost:hover{background:var(--accent-soft);border-color:transparent}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+
+.content{flex:1;overflow:auto;padding:16px 20px 26px}
+.tabs{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:2px;margin-bottom:14px;gap:2px}
+.tab{height:28px;padding:0 14px;border:none;background:none;border-radius:6px;font-size:13px;color:var(--fg-2);cursor:pointer;font-weight:500;transition:background var(--motion),color var(--motion)}
+.tab:hover{color:var(--fg)}
+.tab.active{background:var(--bg);color:var(--accent);box-shadow:0 1px 2px rgba(17,17,17,.06);font-weight:600}
+.tab:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(22,119,255,.28)}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.stat{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 16px;min-width:0}
+.stat-label{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.stat-value{font-size:23px;font-weight:650;margin-top:8px;font-family:var(--font-mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em;white-space:nowrap}
+.stat-value.is-warn{color:var(--warn)}
+.stat-sub{font-size:12px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:6px}
+.stat-sub .up{color:var(--err)}
+.stat-sub .ok{color:var(--ok)}
+.mini-rows{display:flex;flex-direction:column;gap:5px;margin-top:9px}
+.mini-row{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--fg-2)}
+.mini-row b{margin-left:auto;font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-weight:600;color:var(--fg)}
+.dot{width:7px;height:7px;border-radius:50%;flex:0 0 7px}
+.dot-ok{background:var(--ok)}
+.dot-accent{background:var(--accent)}
+.dot-violet{background:var(--violet)}
+
+.panel{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden}
+.panel-head{padding:10px 14px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;min-width:0}
+.fin{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 9px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);color:var(--fg-2);font-size:12.5px}
+.fin:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(22,119,255,.14)}
+.fin svg{width:14px;height:14px;color:var(--muted);flex:0 0 14px}
+.fin input,.fin select{border:none;background:none;outline:none;font-size:12.5px;color:var(--fg);height:100%}
+.fin input[type=date]{font-family:var(--font-mono);color:var(--fg-2);width:118px}
+.fin .sep{color:var(--muted)}
+.fin-search{flex:1;min-width:190px;max-width:280px}
+.fin-search input{width:100%}
+select.fin{-webkit-appearance:none;appearance:none;padding-right:26px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+.filter-note{font-size:12px;color:var(--muted);margin-left:auto;font-family:var(--font-mono)}
+
+.table-scroll{overflow:auto;max-height:calc(100vh - 372px);min-height:240px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;min-width:1180px}
+thead th{position:sticky;top:0;z-index:3;background:var(--surface);color:var(--muted);font-weight:500;text-align:left;padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap;font-size:12.5px}
+thead th.num,td.num{text-align:right}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--border-soft);white-space:nowrap;color:var(--fg-2);vertical-align:middle}
+tbody tr{transition:background var(--motion)}
+tbody tr:hover{background:#fafbfd}
+tbody tr:last-child td{border-bottom:none}
+td.mono,th.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+td .cust{color:var(--fg);font-weight:500}
+td .proj{color:var(--fg-2)}
+td .acct{color:var(--muted)}
+.col-actions{position:sticky;right:0;background:var(--bg);box-shadow:-8px 0 12px -8px rgba(17,17,17,.06)}
+tbody tr:hover .col-actions{background:#fafbfd}
+thead th.col-actions{background:var(--surface)}
+.row-actions{display:flex;align-items:center;gap:4px;justify-content:flex-end}
+.link{border:none;background:none;color:var(--accent);cursor:pointer;font-size:12.5px;padding:3px 6px;border-radius:5px;transition:background var(--motion)}
+.link:hover{background:var(--accent-soft)}
+.link.strong{font-weight:600}
+.link.muted{color:var(--muted)}
+.link.muted:hover{background:var(--surface)}
+.link:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(22,119,255,.28)}
+.attach-cell{display:inline-flex;align-items:center;gap:5px;color:var(--fg-2);font-family:var(--font-mono)}
+.attach-cell svg{width:14px;height:14px;color:var(--muted)}
+.attach-cell.none{color:var(--muted)}
+
+.badge{display:inline-flex;align-items:center;gap:5px;height:21px;padding:0 9px;border-radius:9999px;font-size:12px;border:1px solid transparent;font-weight:500;white-space:nowrap}
+.badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:0 0 6px}
+.badge-draft{color:var(--fg-2);background:var(--surface-2);border-color:var(--border)}
+.badge-confirmed{color:var(--ok);background:var(--ok-bg);border-color:var(--ok-bd)}
+.badge-summarized{color:var(--accent);background:var(--accent-soft);border-color:#bcd8ff}
+.badge-voided{color:var(--fg-2);background:var(--surface-2);border-color:var(--border)}
+.badge-voided .t{text-decoration:line-through}
+td .void-amt{text-decoration:line-through;color:#98a1ac}
+
+.panel-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-top:1px solid var(--border);background:var(--bg);flex-wrap:wrap}
+.foot-total{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--fg-2)}
+.foot-total b{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:15px;color:var(--fg)}
+.foot-total .sep{color:var(--border)}
+.foot-meta{font-size:12px;color:var(--muted);font-family:var(--font-mono)}
+
+.empty{padding:48px 16px;text-align:center;color:var(--muted);font-size:13px}
+
+.overlay{position:fixed;inset:0;background:rgba(17,17,17,.34);opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:40}
+.overlay.show{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100vh;width:580px;max-width:94vw;background:var(--bg);box-shadow:-24px 0 56px rgba(17,17,17,.16);transform:translateX(102%);transition:transform .26s cubic-bezier(.2,0,0,1),visibility .26s;z-index:50;display:flex;flex-direction:column;visibility:hidden}
+.drawer.show{transform:none;visibility:visible}
+.drawer-head{height:52px;flex:0 0 52px;padding:0 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.drawer-head .ttl{font-size:15px;font-weight:650}
+.drawer-head .sub{font-size:12px;color:var(--muted);font-family:var(--font-mono)}
+.icon-btn{margin-left:auto;width:30px;height:30px;border-radius:var(--r-sm);border:none;background:none;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background var(--motion),color var(--motion)}
+.icon-btn:hover{background:var(--surface);color:var(--fg)}
+.icon-btn:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(22,119,255,.28)}
+.icon-btn svg{width:17px;height:17px}
+.drawer-body{flex:1;overflow:auto;padding:18px 20px 24px}
+.drawer-foot{flex:0 0 auto;padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;background:var(--bg)}
+.drawer-foot .left{margin-right:auto}
+
+.section-title{font-size:12px;color:var(--muted);letter-spacing:.03em;margin:0 0 12px;font-weight:600;display:flex;align-items:center;gap:8px}
+.section-title::after{content:"";flex:1;height:1px;background:var(--border-soft)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
+.form-item{display:flex;flex-direction:column;gap:6px;min-width:0}
+.form-item.full{grid-column:1 / -1}
+.form-item label{font-size:12.5px;color:var(--fg-2);font-weight:500}
+.form-item label .req{color:var(--err)}
+.form-item .hint{font-size:11.5px;color:var(--muted)}
+.input,.select,.textarea{width:100%;height:34px;padding:0 10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13.5px;color:var(--fg);background:var(--bg);transition:border-color var(--motion),box-shadow var(--motion)}
+select.select{-webkit-appearance:none;appearance:none;padding-right:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center}
+.input:focus,.select:focus,.textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(22,119,255,.14)}
+.textarea{height:auto;min-height:64px;padding:8px 10px;resize:vertical;line-height:1.45}
+.amount-input{display:flex;align-items:center;gap:6px}
+.amount-input .cur{font-family:var(--font-mono);color:var(--muted);font-size:13.5px}
+.amount-input .input{font-family:var(--font-mono);text-align:right;font-variant-numeric:tabular-nums}
+.switch-row{display:flex;align-items:center;gap:10px;height:34px}
+.switch{position:relative;width:38px;height:21px;flex:0 0 38px}
+.switch input{opacity:0;width:0;height:0;position:absolute}
+.switch .track{position:absolute;inset:0;background:#cbd2dc;border-radius:9999px;transition:background var(--motion);cursor:pointer}
+.switch .track::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;background:#fff;border-radius:50%;transition:transform var(--motion);box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.switch input:checked + .track{background:var(--accent)}
+.switch input:checked + .track::after{transform:translateX(17px)}
+.switch input:focus-visible + .track{box-shadow:0 0 0 3px rgba(22,119,255,.3)}
+.switch-row .sw-label{font-size:13px;color:var(--fg-2)}
+
+.attach-area{margin-top:6px}
+.attach-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.thumb{position:relative;aspect-ratio:1/1;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;background:var(--surface)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in}
+.thumb .del{position:absolute;top:5px;right:5px;width:22px;height:22px;border-radius:6px;border:none;background:rgba(17,17,17,.62);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity var(--motion)}
+.thumb:hover .del{opacity:1}
+.thumb .del:hover{background:var(--err)}
+.thumb .del svg{width:13px;height:13px}
+.thumb .tag{position:absolute;left:5px;bottom:5px;font-size:10.5px;font-family:var(--font-mono);background:rgba(17,17,17,.62);color:#fff;padding:1px 5px;border-radius:4px}
+.attach-add{border:1.5px dashed var(--border);border-radius:var(--r-md);background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:var(--muted);cursor:pointer;aspect-ratio:1/1;font-size:11.5px;transition:border-color var(--motion),color var(--motion),background var(--motion);text-align:center;padding:6px}
+.attach-add:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.attach-add svg{width:20px;height:20px}
+.attach-add:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(22,119,255,.28)}
+.attach-hint{margin-top:10px;font-size:11.5px;color:var(--muted);line-height:1.5}
+
+.info-list{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border-soft);border-radius:var(--r-md);overflow:hidden}
+.info-list .row{display:flex;justify-content:space-between;gap:12px;padding:9px 14px;border-bottom:1px solid var(--border-soft);font-size:13px}
+.info-list .row:nth-child(odd){background:#fcfcfd}
+.info-list .row.full{grid-column:1 / -1}
+.info-list .k{color:var(--muted)}
+.info-list .v{color:var(--fg);font-weight:500;text-align:right}
+.info-list .v.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.info-list .v.big{font-size:15px;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+
+.stepper{display:flex;align-items:center;gap:0;margin:4px 0 4px}
+.step{display:flex;align-items:center;gap:9px;flex:1;min-width:0}
+.step .bullet{width:24px;height:24px;flex:0 0 24px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);font-family:var(--font-mono)}
+.step .txt{font-size:12.5px;color:var(--muted);line-height:1.25}
+.step .txt b{display:block;font-weight:600;color:var(--fg-2);font-size:12.5px}
+.step .txt i{font-style:normal;font-size:11px;font-family:var(--font-mono)}
+.step .bar{flex:1;height:2px;background:var(--border);margin:0 10px;border-radius:2px}
+.step.done .bullet{background:var(--ok);border-color:var(--ok);color:#fff}
+.step.done .txt b{color:var(--fg)}
+.step.done .bar{background:var(--ok-bd)}
+.step.current .bullet{border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);font-weight:600}
+.step.current .txt b{color:var(--accent)}
+.step:last-child .bar{display:none}
+.void-strip{margin-top:10px;display:flex;align-items:center;gap:9px;padding:9px 12px;border:1px solid var(--err-bd);background:var(--err-bg);border-radius:var(--r-sm);color:var(--err);font-size:12.5px}
+.void-strip svg{width:16px;height:16px;flex:0 0 16px}
+
+.kv-block{border:1px solid var(--border-soft);border-radius:var(--r-md);padding:14px}
+.audit{display:flex;flex-direction:column;gap:9px;margin-top:2px}
+.audit-item{display:flex;gap:9px;font-size:12.5px;color:var(--fg-2)}
+.audit-item .when{font-family:var(--font-mono);color:var(--muted);flex:0 0 116px}
+.audit-item .what b{color:var(--fg);font-weight:600}
+
+.recon-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.recon-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:15px 16px}
+.recon-card .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.recon-card .hd .name{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:8px}
+.recon-compare{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.recon-cell{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--r-sm);padding:9px 11px}
+.recon-cell .k{font-size:11.5px;color:var(--muted)}
+.recon-cell .v{font-size:15px;font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-weight:600;margin-top:4px}
+.recon-cell.diff .v.warn{color:var(--warn)}
+.recon-cell.diff .v.ok{color:var(--ok)}
+.pending-list{margin-top:2px;display:flex;flex-direction:column}
+.pending-item{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--border-soft);font-size:12.5px}
+.pending-item:last-child{border-bottom:none}
+.pending-item .pd-ic{width:26px;height:26px;flex:0 0 26px;border-radius:6px;background:var(--warn-bg);border:1px solid var(--warn-bd);color:var(--warn);display:flex;align-items:center;justify-content:center}
+.pending-item .pd-ic svg{width:14px;height:14px}
+.pending-item .pd-main{min-width:0;flex:1}
+.pending-item .pd-main b{display:block;color:var(--fg);font-weight:600}
+.pending-item .pd-main i{font-style:normal;color:var(--muted);font-family:var(--font-mono);font-size:11.5px}
+.pending-item .pd-amt{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-weight:600;color:var(--warn)}
+
+.modal-mask{position:fixed;inset:0;z-index:60;background:rgba(17,17,17,.42);display:none;align-items:center;justify-content:center;padding:24px}
+.modal-mask.show{display:flex}
+.modal{width:420px;max-width:100%;background:var(--bg);border-radius:var(--r-lg);box-shadow:0 24px 64px rgba(17,17,17,.28);padding:22px}
+.modal h3{margin:0 0 8px;font-size:16px;font-weight:650;display:flex;align-items:center;gap:9px}
+.modal h3 svg{width:19px;height:19px;color:var(--warn)}
+.modal h3.danger svg{color:var(--err)}
+.modal p{margin:0 0 16px;font-size:13px;color:var(--fg-2);line-height:1.55}
+.modal p .hl{font-family:var(--font-mono);color:var(--fg);font-weight:600}
+.modal .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:4px}
+.modal .textarea{margin-bottom:16px}
+
+.lightbox{position:fixed;inset:0;z-index:70;background:rgba(17,17,17,.8);display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:32px}
+.lightbox.show{display:flex}
+.lightbox img{max-width:min(560px,80vw);max-height:78vh;border-radius:var(--r-md);box-shadow:0 24px 64px rgba(0,0,0,.5);background:#fff}
+.lightbox .cap{color:#fff;font-size:13px;font-family:var(--font-mono)}
+.lightbox .lb-close{position:absolute;top:22px;right:26px;width:36px;height:36px;border-radius:8px;border:none;background:rgba(255,255,255,.14);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.lightbox .lb-close:hover{background:rgba(255,255,255,.26)}
+.lightbox .lb-close svg{width:19px;height:19px}
+
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);z-index:80;background:#1f2937;color:#fff;font-size:13px;padding:11px 16px;border-radius:var(--r-md);box-shadow:0 16px 40px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;display:flex;align-items:center;gap:9px;max-width:min(560px,90vw)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast svg{width:16px;height:16px;color:#4ade80;flex:0 0 16px}
+.toast.warn svg{color:var(--warn)}
+.toast.err svg{color:#f87171}
+
+@media (max-width:1240px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" data-od-id="sidebar">
+    <div class="brand" data-od-id="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9M10 20V4M16 20v-7M22 20H2"/></svg>
+      </span>
+      <div class="brand-name">Fin<span>lite</span></div>
+      <div class="brand-env">v1.4</div>
+    </div>
+    <nav class="nav" id="main-nav" aria-label="主导航"></nav>
+    <div class="sidebar-foot" data-od-id="sidebar-user">
+      <div class="avatar">出</div>
+      <div class="who"><b>陈出纳</b><i>出纳 · 康健健康管理</i></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar" data-od-id="topbar">
+      <div class="topbar-left">
+        <h1 data-od-id="page-title">店面收款</h1>
+        <span class="crumb">— 登记门店线下收款</span>
+        <button class="period-chip" data-od-id="period-chip" title="切换会计期间">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v3M16 3v3"/></svg>
+          会计期间 <b>2024-06</b>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+      </div>
+      <div class="topbar-right">
+        <button class="btn" data-od-id="btn-batch-import" id="btn-batch-import">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 19h16"/></svg>
+          批量导入
+        </button>
+        <button class="btn btn-primary" data-od-id="btn-new-collection" id="btn-new-collection">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          新增收款
+        </button>
+      </div>
+    </header>
+
+    <div class="content" data-od-id="content">
+      <div class="tabs" data-od-id="view-tabs" role="tablist">
+        <button class="tab active" data-od-id="tab-register" data-view="list" role="tab" aria-selected="true">收款登记</button>
+        <button class="tab" data-od-id="tab-channel-recon" data-view="recon" role="tab" aria-selected="false">通道对账视图</button>
+      </div>
+
+      <section class="view" id="view-list" data-od-id="view-list">
+        <div class="stats" data-od-id="stats">
+          <div class="stat" data-od-id="stat-total">
+            <div class="stat-label">本期收款合计</div>
+            <div class="stat-value" id="stat-total-value">¥--</div>
+            <div class="stat-sub" id="stat-total-sub">--</div>
+          </div>
+          <div class="stat" data-od-id="stat-pending">
+            <div class="stat-label">待审核（草稿）</div>
+            <div class="stat-value is-warn" id="stat-pending-value">--</div>
+            <div class="stat-sub" id="stat-pending-sub">--</div>
+          </div>
+          <div class="stat" data-od-id="stat-channel">
+            <div class="stat-label">按收款方式合计</div>
+            <div class="mini-rows">
+              <div class="mini-row"><span class="dot dot-ok"></span>现金 <b id="stat-cash">--</b></div>
+              <div class="mini-row"><span class="dot dot-accent"></span>个人码（微信/支付宝） <b id="stat-personal">--</b></div>
+              <div class="mini-row"><span class="dot dot-violet"></span>对公转账 <b id="stat-corp">--</b></div>
+            </div>
+          </div>
+          <div class="stat" data-od-id="stat-unsynced">
+            <div class="stat-label">未生成汇总</div>
+            <div class="stat-value" id="stat-unsynced-value">--</div>
+            <div class="stat-sub" id="stat-unsynced-sub">--</div>
+          </div>
+        </div>
+
+        <div class="panel" data-od-id="collection-panel">
+          <div class="panel-head" data-od-id="filter-bar">
+            <div class="filters">
+              <div class="fin" title="收款日期区间">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v3M16 3v3"/></svg>
+                <input type="date" id="f-date-from" value="2024-06-01" data-od-id="filter-date-from">
+                <span class="sep">~</span>
+                <input type="date" id="f-date-to" value="2024-06-30" data-od-id="filter-date-to">
+              </div>
+              <select class="fin" id="f-store" data-od-id="filter-store"></select>
+              <select class="fin" id="f-method" data-od-id="filter-method"></select>
+              <select class="fin" id="f-account" data-od-id="filter-account"></select>
+              <select class="fin" id="f-operator" data-od-id="filter-operator"></select>
+              <select class="fin" id="f-status" data-od-id="filter-status"></select>
+              <div class="fin fin-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <input type="text" id="f-keyword" placeholder="客户 / 收据号 / 事由" data-od-id="filter-keyword">
+              </div>
+              <button class="btn btn-sm" id="btn-reset" data-od-id="btn-reset-filters">重置</button>
+            </div>
+          </div>
+
+          <div class="table-scroll">
+            <table data-od-id="collection-table">
+              <thead>
+                <tr>
+                  <th>收款日期</th>
+                  <th>门店</th>
+                  <th>客户</th>
+                  <th>项目</th>
+                  <th>收款方式</th>
+                  <th>到账账户</th>
+                  <th class="num">金额</th>
+                  <th>收据号</th>
+                  <th>经手人</th>
+                  <th>附件</th>
+                  <th>状态</th>
+                  <th class="col-actions" style="text-align:right">操作</th>
+                </tr>
+              </thead>
+              <tbody id="collection-body"></tbody>
+            </table>
+          </div>
+
+          <div class="panel-foot" data-od-id="table-footer">
+            <div class="foot-total">
+              <span>当前筛选合计</span>
+              <b id="foot-total">¥--</b>
+              <span class="sep">|</span>
+              <span>共 <b id="foot-count" style="font-size:13px">--</b> 笔</span>
+              <span class="sep">|</span>
+              <span id="foot-voided" style="color:var(--muted);font-size:12px">--</span>
+            </div>
+            <div class="foot-meta" id="foot-meta">显示 -- / --</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-recon" data-od-id="view-recon" hidden>
+        <div class="recon-cards">
+          <div class="recon-card" data-od-id="recon-card-nonbank">
+            <div class="hd">
+              <div class="name"><span class="dot dot-ok"></span>店面非银通道（现金 + 个人码）</div>
+              <span class="badge badge-confirmed" id="recon-nonbank-status"><span class="t">已平</span></span>
+            </div>
+            <div class="recon-compare">
+              <div class="recon-cell"><div class="k">登记合计</div><div class="v" id="recon-nonbank-reg">¥--</div></div>
+              <div class="recon-cell"><div class="k">汇总合计</div><div class="v" id="recon-nonbank-sum">¥--</div></div>
+              <div class="recon-cell diff"><div class="k">差异</div><div class="v ok" id="recon-nonbank-diff">¥--</div></div>
+            </div>
+            <div class="attach-hint" id="recon-nonbank-note">--</div>
+          </div>
+          <div class="recon-card" data-od-id="recon-card-corp">
+            <div class="hd">
+              <div class="name"><span class="dot dot-violet"></span>对公转账通道</div>
+              <span class="badge badge-draft" id="recon-corp-status"><span class="t">待处理</span></span>
+            </div>
+            <div class="recon-compare">
+              <div class="recon-cell"><div class="k">登记合计</div><div class="v" id="recon-corp-reg">¥--</div></div>
+              <div class="recon-cell"><div class="k">银行到账合计</div><div class="v" id="recon-corp-bank">¥--</div></div>
+              <div class="recon-cell diff"><div class="k">差异</div><div class="v warn" id="recon-corp-diff">¥--</div></div>
+            </div>
+            <div class="attach-hint" id="recon-corp-note">--</div>
+          </div>
+        </div>
+
+        <div class="panel" data-od-id="recon-panel">
+          <div class="panel-head" style="justify-content:space-between">
+            <div style="font-size:13px;font-weight:600">通道核对明细</div>
+            <div class="filter-note">数据源：店面收款登记 · 银行流水 · 数据汇总</div>
+          </div>
+          <div class="table-scroll" style="max-height:calc(100vh - 468px)">
+            <table data-od-id="recon-table" style="min-width:880px">
+              <thead>
+                <tr>
+                  <th>通道</th>
+                  <th class="num">登记合计</th>
+                  <th class="num">对账合计</th>
+                  <th class="num">差异</th>
+                  <th class="num">登记笔数</th>
+                  <th>状态</th>
+                  <th style="text-align:right">操作</th>
+                </tr>
+              </thead>
+              <tbody id="recon-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:14px" data-od-id="pending-panel">
+          <div class="panel-head" style="justify-content:space-between">
+            <div style="font-size:13px;font-weight:600">待处理队列</div>
+            <div class="filter-note" id="pending-count">--</div>
+          </div>
+          <div style="padding:4px 16px 10px">
+            <div class="pending-list" id="pending-list"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" data-od-id="overlay"></div>
+
+<aside class="drawer" id="drawer-edit" data-od-id="drawer-edit" aria-hidden="true" aria-label="新增收款">
+  <div class="drawer-head">
+    <div>
+      <div class="ttl" id="edit-title">新增收款</div>
+      <div class="sub" id="edit-sub">店面线下收款登记</div>
+    </div>
+    <button class="icon-btn" id="edit-close" data-od-id="btn-edit-close" aria-label="关闭">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body">
+    <div class="section-title">基础信息</div>
+    <div class="form-grid">
+      <div class="form-item">
+        <label for="e-date">收款日期 <span class="req">*</span></label>
+        <input class="input" type="date" id="e-date" value="2024-06-17" data-od-id="field-date">
+      </div>
+      <div class="form-item">
+        <label for="e-store">门店 <span class="req">*</span></label>
+        <select class="select" id="e-store" data-od-id="field-store"></select>
+      </div>
+      <div class="form-item">
+        <label for="e-customer">客户姓名 <span class="req">*</span></label>
+        <input class="input" type="text" id="e-customer" placeholder="请输入客户姓名" data-od-id="field-customer">
+      </div>
+      <div class="form-item">
+        <label for="e-phone">客户电话</label>
+        <input class="input" type="text" id="e-phone" value="160****593" data-od-id="field-phone">
+      </div>
+      <div class="form-item full">
+        <label for="e-project">项目 / 事由类别 <span class="req">*</span></label>
+        <select class="select" id="e-project" data-od-id="field-project"></select>
+      </div>
+      <div class="form-item">
+        <label for="e-method">收款方式 <span class="req">*</span></label>
+        <select class="select" id="e-method" data-od-id="field-method"></select>
+      </div>
+      <div class="form-item">
+        <label for="e-account">到账账户 <span class="req">*</span>
+          <span class="hint" id="account-hint">随收款方式自动推荐</span>
+        </label>
+        <select class="select" id="e-account" data-od-id="field-account"></select>
+      </div>
+      <div class="form-item">
+        <label for="e-amount">收款金额（元） <span class="req">*</span></label>
+        <div class="amount-input">
+          <span class="cur">¥</span>
+          <input class="input" type="text" id="e-amount" inputmode="decimal" placeholder="0.00" data-od-id="field-amount">
+        </div>
+      </div>
+      <div class="form-item">
+        <label for="e-receipt">收据号</label>
+        <input class="input" type="text" id="e-receipt" placeholder="SR-20240617-00" data-od-id="field-receipt">
+      </div>
+      <div class="form-item">
+        <label>是否开票</label>
+        <div class="switch-row">
+          <label class="switch">
+            <input type="checkbox" id="e-invoice" data-od-id="field-invoice">
+            <span class="track"></span>
+          </label>
+          <span class="sw-label" id="invoice-label">未开票</span>
+        </div>
+      </div>
+      <div class="form-item">
+        <label for="e-operator">经手人 <span class="req">*</span></label>
+        <select class="select" id="e-operator" data-od-id="field-operator"></select>
+      </div>
+      <div class="form-item full">
+        <label for="e-note">事由 / 备注</label>
+        <textarea class="textarea" id="e-note" placeholder="补充说明，如会员卡号、退款背景等" data-od-id="field-note"></textarea>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:22px">单据照片附件</div>
+    <div class="attach-area">
+      <div class="attach-grid" id="edit-attach-grid"></div>
+      <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp,application/pdf" multiple hidden>
+      <div class="attach-hint">支持 jpg / png / webp / pdf，单张 ≤ 10MB，单条记录 ≤ 10 张。用于留存收款凭据，形成「收款记录 → 附件 → 数据汇总 → 凭证」可追溯链。</div>
+    </div>
+  </div>
+  <div class="drawer-foot">
+    <button class="btn btn-ghost left" id="edit-cancel" data-od-id="btn-edit-cancel">取消</button>
+    <button class="btn" id="edit-save-draft" data-od-id="btn-save-draft">保存草稿</button>
+    <button class="btn btn-primary" id="edit-save-submit" data-od-id="btn-save-submit">保存并提交</button>
+  </div>
+</aside>
+
+<aside class="drawer" id="drawer-detail" data-od-id="drawer-detail" aria-hidden="true" aria-label="收款详情与审核">
+  <div class="drawer-head">
+    <div>
+      <div class="ttl" id="detail-title">收款详情</div>
+      <div class="sub" id="detail-sub">--</div>
+    </div>
+    <button class="icon-btn" id="detail-close" data-od-id="btn-detail-close" aria-label="关闭">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="detail-body"></div>
+  <div class="drawer-foot" id="detail-foot"></div>
+</aside>
+
+<div class="modal-mask" id="modal-mask" data-od-id="modal-confirm">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3 id="modal-title"></h3>
+    <p id="modal-text"></p>
+    <textarea class="textarea" id="modal-input" style="display:none" placeholder="请填写原因（必填）"></textarea>
+    <div class="modal-actions">
+      <button class="btn" id="modal-cancel">取消</button>
+      <button class="btn btn-primary" id="modal-ok">确认</button>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" data-od-id="lightbox">
+  <button class="lb-close" id="lightbox-close" aria-label="关闭预览">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+  </button>
+  <img id="lightbox-img" alt="附件预览">
+  <div class="cap" id="lightbox-cap"></div>
+</div>
+
+<div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 6"/></svg><span id="toast-msg"></span></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var ICON = {
+    import:'<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 19h16"/>',
+    bank:'<path d="M3 21h18"/><path d="M5 21V11M9 21V11M15 21V11M19 21V11"/><path d="m3 9 9-5 9 5z"/>',
+    orders:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+    collection:'<rect x="2.5" y="6" width="19" height="12" rx="2.5"/><circle cx="12" cy="12" r="2.4"/><path d="M6 12h.01M18 12h.01"/>',
+    reconciliation:'<path d="M12 3v18"/><path d="m5 7 7-4 7 4"/><path d="M5 7 2 15a4 4 0 0 0 6 0z"/><path d="M19 7l-3 8a4 4 0 0 0 6 0z"/>',
+    summary:'<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
+    voucher:'<path d="M6 2h9l5 5v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path d="M15 2v5h5"/><path d="M9 12h6M9 16h6"/>',
+    balance:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 4v16"/>',
+    settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.36a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.64 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.64 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.64a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.36 9v0a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/>',
+    paperclip:'<path d="M21 11.5 12.5 20a5.5 5.5 0 0 1-7.8-7.8l8.5-8.5a3.5 3.5 0 0 1 5 5l-8.5 8.5a1.5 1.5 0 0 1-2.1-2.1l7.8-7.8"/>',
+    close:'<path d="M6 6l12 12M18 6 6 18"/>',
+    check:'<path d="m5 12 5 5L20 6"/>',
+    image:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="m21 16-5-5L5 20"/>',
+    trash:'<path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/>',
+    alert:'<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 18h.01"/>',
+    warn:'<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 18h.01"/>',
+    plus:'<path d="M12 5v14M5 12h14"/>',
+    search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+    file:'<path d="M6 2h9l5 5v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path d="M15 2v5h5"/>'
+  };
+  function svg(name, cls){
+    return '<svg class="'+(cls||'')+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+(ICON[name]||'')+'</svg>';
+  }
+
+  var NAV = [
+    { group:'数据采集', items:[
+      {id:'nav-import', label:'导入中心', icon:'import'},
+      {id:'nav-bank', label:'银行流水', icon:'bank'},
+      {id:'nav-orders', label:'订单流水', icon:'orders'},
+      {id:'nav-collection', label:'店面收款', icon:'collection', active:true}
+    ]},
+    { group:'核对与结算', items:[
+      {id:'nav-reconciliation', label:'对账中心', icon:'reconciliation'},
+      {id:'nav-summary', label:'数据汇总', icon:'summary'}
+    ]},
+    { group:'账务处理', items:[
+      {id:'nav-vouchers', label:'凭证管理', icon:'voucher'},
+      {id:'nav-balance', label:'科目余额表', icon:'balance'}
+    ]},
+    { group:'系统', items:[
+      {id:'nav-settings', label:'基础设置', icon:'settings'}
+    ]}
+  ];
+
+  var STORES = ['望京旗舰店','中关村店','国贸店','朝阳大悦城店','亦庄店'];
+  var PROJECTS = ['会员年卡续费','健康管理套餐','中医理疗套餐','营养咨询服务','体测服务','会员月卡','企业健康服务年费','企业团检预付款','企业健康讲座'];
+  var OPERATORS = ['李晓琳','张伟','王芳','陈明','孙悦'];
+
+  var METHOD = {
+    cash:{label:'现金', group:'cash'},
+    wechat:{label:'微信个人码', group:'personal'},
+    alipay:{label:'支付宝个人码', group:'personal'},
+    bank_transfer:{label:'对公转账', group:'corporate'},
+    other:{label:'其他', group:'other'}
+  };
+  var ACCOUNT = { cash:'现金账户', personal:'个人收款账户', corporate:'对公银行账户' };
+  var METHOD_RECOMMEND = { cash:'cash', wechat:'personal', alipay:'personal', bank_transfer:'corporate', other:'cash' };
+  var STATUS = { draft:{label:'草稿'}, confirmed:{label:'已确认'}, summarized:{label:'已汇总'}, voided:{label:'已作废'} };
+
+  var RECORDS = [
+    {id:'SC240617001', date:'2024-06-17', store:'望京旗舰店', customer:'王浩然', project:'会员年卡续费', method:'cash', account:'cash', amount:8800.00, receipt:'SR-20240617-01', operator:'李晓琳', attachments:3, status:'confirmed', invoice:true, phone:'160****593', note:'会员年卡续费，已开票'},
+    {id:'SC240617002', date:'2024-06-17', store:'中关村店', customer:'赵雨桐', project:'健康管理套餐', method:'wechat', account:'personal', amount:3600.00, receipt:'SR-20240617-02', operator:'张伟', attachments:1, status:'confirmed', invoice:false, phone:'138****204', note:'微信个人码收款'},
+    {id:'SC240617003', date:'2024-06-17', store:'国贸店', customer:'晓璐', project:'中医理疗套餐', method:'alipay', account:'personal', amount:1280.00, receipt:'SR-20240617-03', operator:'王芳', attachments:2, status:'draft', invoice:false, phone:'159****771', note:'待补充客户签字单据'},
+    {id:'SC240616001', date:'2024-06-16', store:'朝阳大悦城店', customer:'客户A', project:'企业健康服务年费', method:'bank_transfer', account:'corporate', amount:12000.00, receipt:'SR-20240616-01', operator:'陈明', attachments:1, status:'summarized', invoice:true, phone:'137****428', note:'对公转账，已附回单'},
+    {id:'SC240616002', date:'2024-06-16', store:'望京旗舰店', customer:'刘思远', project:'营养咨询服务', method:'wechat', account:'personal', amount:480.00, receipt:'SR-20240616-02', operator:'李晓琳', attachments:0, status:'confirmed', invoice:false, phone:'186****050', note:'单次咨询'},
+    {id:'SC240616003', date:'2024-06-16', store:'亦庄店', customer:'孙梦洁', project:'体测服务', method:'cash', account:'cash', amount:260.00, receipt:'SR-20240616-03', operator:'张伟', attachments:1, status:'confirmed', invoice:false, phone:'160****318', note:'体测 + 报告打印'},
+    {id:'SC240615001', date:'2024-06-15', store:'中关村店', customer:'周天宇', project:'会员月卡', method:'alipay', account:'personal', amount:299.00, receipt:'SR-20240615-01', operator:'王芳', attachments:0, status:'draft', invoice:false, phone:'135****902', note:'新客首月'},
+    {id:'SC240615002', date:'2024-06-15', store:'国贸店', customer:'郑一鸣', project:'中医理疗套餐', method:'cash', account:'cash', amount:380.00, receipt:'SR-20240615-02', operator:'陈明', attachments:2, status:'summarized', invoice:false, phone:'158****664', note:'单次理疗'},
+    {id:'SC240615003', date:'2024-06-15', store:'朝阳大悦城店', customer:'客户B', project:'企业团检预付款', method:'bank_transfer', account:'corporate', amount:26000.00, receipt:'SR-20240615-03', operator:'孙悦', attachments:4, status:'confirmed', invoice:true, phone:'139****117', note:'团检预付款，分两期'},
+    {id:'SC240614001', date:'2024-06-14', store:'望京旗舰店', customer:'何雨珊', project:'健康管理套餐', method:'wechat', account:'personal', amount:5200.00, receipt:'SR-20240614-01', operator:'李晓琳', attachments:1, status:'summarized', invoice:true, phone:'136****285', note:'套餐 A'},
+    {id:'SC240614002', date:'2024-06-14', store:'亦庄店', customer:'吴俊豪', project:'会员年卡续费', method:'other', account:'cash', amount:6600.00, receipt:'SR-20240614-02', operator:'张伟', attachments:1, status:'voided', invoice:false, phone:'133****740', note:'客户换卡，原记录作废重录'},
+    {id:'SC240614003', date:'2024-06-14', store:'中关村店', customer:'林悦', project:'营养咨询服务', method:'alipay', account:'personal', amount:180.00, receipt:'SR-20240614-03', operator:'王芳', attachments:0, status:'confirmed', invoice:false, phone:'150****393', note:'营养师面询'},
+    {id:'SC240613001', date:'2024-06-13', store:'国贸店', customer:'客户C', project:'企业健康讲座', method:'bank_transfer', account:'corporate', amount:9500.00, receipt:'SR-20240613-01', operator:'陈明', attachments:2, status:'draft', invoice:true, phone:'134****521', note:'讲座服务费，待确认到账'},
+    {id:'SC240613002', date:'2024-06-13', store:'朝阳大悦城店', customer:'罗嘉怡', project:'体测服务', method:'cash', account:'cash', amount:160.00, receipt:'SR-20240613-02', operator:'孙悦', attachments:1, status:'summarized', invoice:false, phone:'161****088', note:'门店体测'}
+  ];
+
+  var RECON_PENDING = [
+    {title:'对公转账 ¥9,500.00 未匹配银行流水', meta:'2024-06-13 · 客户C · 国贸店', amount:'待匹配'},
+    {title:'跨行手续费差额 ¥320.00', meta:'2024-06-15 · 客户B · 朝阳大悦城店', amount:'-¥320.00'},
+    {title:'现金登记 ¥380.00 待补汇总', meta:'2024-06-15 · 郑一鸣 · 国贸店', amount:'待补录'}
+  ];
+
+  var state = { view:'list', editAttachments:[], detailId:null };
+
+  function yuan(n){
+    return '¥' + Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+  function amountPlain(n){
+    return Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+  function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+  function receiptThumb(i){
+    var tilt = [-5,-3,3,5,4,-4][i % 6];
+    var lines = '';
+    for(var k=0;k<7;k++){
+      var w = 58 + ((i*13 + k*29) % 34);
+      lines += '<rect x="70" y="'+(74+k*13)+'" width="'+w+'" height="5" rx="2.5" fill="#d9dee7"/>';
+    }
+    var s = "<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'><defs><linearGradient id='g' x1='0' y1='0' x2='0.4' y2='1'><stop offset='0' stop-color='#eef1f5'/><stop offset='1' stop-color='#dfe5ee'/></linearGradient></defs><rect width='240' height='240' fill='url(#g)'/><g transform='rotate("+tilt+" 120 120)'><rect x='62' y='24' width='116' height='192' rx='4' fill='#ffffff' stroke='#d7dde6'/><rect x='78' y='40' width='84' height='9' rx='3' fill='#9aa6b6'/><rect x='78' y='55' width='50' height='6' rx='3' fill='#c2cad6'/>"+lines+"<rect x='70' y='172' width='100' height='1' fill='#e5e9ef'/><rect x='70' y='184' width='38' height='7' rx='3' fill='#8b95a4'/><rect x='120' y='184' width='50' height='7' rx='3' fill='#b7c0cc'/></g></svg>";
+    return 'data:image/svg+xml,' + encodeURIComponent(s);
+  }
+
+  function el(id){ return document.getElementById(id); }
+
+  function buildNav(){
+    var html = '';
+    NAV.forEach(function(g){
+      html += '<div class="nav-group-label">'+g.group+'</div>';
+      g.items.forEach(function(it){
+        html += '<button class="nav-item'+(it.active?' active':'')+'" data-od-id="'+it.id+'" data-key="'+it.id+'">'
+          + svg(it.icon,'ic') + '<span>'+it.label+'</span>'
+          + (it.id==='nav-collection' ? '<span class="nav-count" id="nav-pending-count">0</span>' : '')
+          + '</button>';
+      });
+    });
+    el('main-nav').innerHTML = html;
+  }
+
+  function fillSelects(){
+    var opt = function(v,t){ return '<option value="'+v+'">'+t+'</option>'; };
+    var fStore = opt('','全部门店') + STORES.map(function(s){return opt(s,s);}).join('');
+    el('f-store').innerHTML = fStore;
+    el('e-store').innerHTML = STORES.map(function(s){return opt(s,s);}).join('');
+    var fMethod = opt('','全部收款方式') + Object.keys(METHOD).map(function(k){return opt(k,METHOD[k].label);}).join('');
+    el('f-method').innerHTML = fMethod;
+    el('e-method').innerHTML = Object.keys(METHOD).map(function(k){return opt(k,METHOD[k].label);}).join('');
+    var fAccount = opt('','全部到账账户') + Object.keys(ACCOUNT).map(function(k){return opt(k,ACCOUNT[k]);}).join('');
+    el('f-account').innerHTML = fAccount;
+    el('e-account').innerHTML = Object.keys(ACCOUNT).map(function(k){return opt(k,ACCOUNT[k]);}).join('');
+    el('f-operator').innerHTML = opt('','全部经手人') + OPERATORS.map(function(s){return opt(s,s);}).join('');
+    el('e-operator').innerHTML = OPERATORS.map(function(s){return opt(s,s);}).join('');
+    var fStatus = opt('','全部状态') + Object.keys(STATUS).map(function(k){return opt(k,STATUS[k].label);}).join('');
+    el('f-status').innerHTML = fStatus;
+    el('e-project').innerHTML = PROJECTS.map(function(s){return opt(s,s);}).join('');
+  }
+
+  function getFilters(){
+    return {
+      from: el('f-date-from').value,
+      to: el('f-date-to').value,
+      store: el('f-store').value,
+      method: el('f-method').value,
+      account: el('f-account').value,
+      operator: el('f-operator').value,
+      status: el('f-status').value,
+      keyword: el('f-keyword').value.trim().toLowerCase()
+    };
+  }
+
+  function applyFilters(){
+    var f = getFilters();
+    return RECORDS.filter(function(r){
+      if(f.from && r.date < f.from) return false;
+      if(f.to && r.date > f.to) return false;
+      if(f.store && r.store !== f.store) return false;
+      if(f.method && r.method !== f.method) return false;
+      if(f.account && r.account !== f.account) return false;
+      if(f.operator && r.operator !== f.operator) return false;
+      if(f.status && r.status !== f.status) return false;
+      if(f.keyword){
+        var hay = (r.customer+' '+r.receipt+' '+r.note+' '+r.project+' '+r.id).toLowerCase();
+        if(hay.indexOf(f.keyword) === -1) return false;
+      }
+      return true;
+    });
+  }
+
+  function statusBadge(status){
+    var b = {draft:'badge-draft', confirmed:'badge-confirmed', summarized:'badge-summarized', voided:'badge-voided'}[status];
+    return '<span class="badge '+b+'"><span class="t">'+STATUS[status].label+'</span></span>';
+  }
+
+  function renderTable(rows){
+    var body = el('collection-body');
+    if(!rows.length){
+      body.innerHTML = '<tr><td colspan="12"><div class="empty">没有符合当前筛选条件的收款记录。调整筛选或点击「新增收款」录入。</div></td></tr>';
+    } else {
+      body.innerHTML = rows.map(function(r,i){
+        var ctxBtn = '';
+        if(r.status==='draft') ctxBtn = '<button class="link strong" data-act="review" data-id="'+r.id+'">审核</button>';
+        else if(r.status==='confirmed') ctxBtn = '<button class="link strong" data-act="summary" data-id="'+r.id+'">汇总</button>';
+        var amtCls = r.status==='voided' ? 'num mono amount void-amt' : 'num mono amount';
+        var amtTxt = r.status==='voided' ? '<span class="void-amt">'+yuan(r.amount)+'</span>' : yuan(r.amount);
+        var attach = r.attachments>0
+          ? '<span class="attach-cell">'+svg('paperclip')+r.attachments+'</span>'
+          : '<span class="attach-cell none">'+svg('paperclip')+'0</span>';
+        return '<tr data-od-id="row-collection-'+(i+1)+'" data-id="'+r.id+'">'
+          + '<td class="mono">'+r.date+'</td>'
+          + '<td>'+esc(r.store)+'</td>'
+          + '<td class="cust">'+esc(r.customer)+'</td>'
+          + '<td class="proj">'+esc(r.project)+'</td>'
+          + '<td>'+METHOD[r.method].label+'</td>'
+          + '<td class="acct">'+ACCOUNT[r.account]+'</td>'
+          + '<td class="'+amtCls+'">'+amtTxt+'</td>'
+          + '<td class="mono">'+esc(r.receipt)+'</td>'
+          + '<td>'+esc(r.operator)+'</td>'
+          + '<td>'+attach+'</td>'
+          + '<td>'+statusBadge(r.status)+'</td>'
+          + '<td class="col-actions"><div class="row-actions">'
+          + '<button class="link" data-act="view" data-id="'+r.id+'">查看</button>'
+          + ctxBtn
+          + '</div></td>'
+          + '</tr>';
+      }).join('');
+    }
+    var valid = rows.filter(function(r){return r.status!=='voided';});
+    var total = valid.reduce(function(a,r){return a+r.amount;},0);
+    var voidCount = rows.length - valid.length;
+    el('foot-total').textContent = yuan(total);
+    el('foot-count').textContent = valid.length;
+    el('foot-voided').textContent = voidCount ? ('含 '+voidCount+' 笔作废（不计入合计）') : '无作废记录';
+    el('foot-meta').textContent = '显示 ' + rows.length + ' / ' + RECORDS.length + ' 条';
+  }
+
+  function renderStats(){
+    var valid = RECORDS.filter(function(r){return r.status!=='voided';});
+    var total = valid.reduce(function(a,r){return a+r.amount;},0);
+    var drafts = valid.filter(function(r){return r.status==='draft';});
+    var draftAmt = drafts.reduce(function(a,r){return a+r.amount;},0);
+    var confirmed = valid.filter(function(r){return r.status==='confirmed';});
+    var confirmedAmt = confirmed.reduce(function(a,r){return a+r.amount;},0);
+    var cash = valid.filter(function(r){return r.account==='cash';}).reduce(function(a,r){return a+r.amount;},0);
+    var personal = valid.filter(function(r){return r.account==='personal';}).reduce(function(a,r){return a+r.amount;},0);
+    var corp = valid.filter(function(r){return r.account==='corporate';}).reduce(function(a,r){return a+r.amount;},0);
+
+    el('stat-total-value').textContent = yuan(total);
+    el('stat-total-sub').innerHTML = '共 <b>'+valid.length+'</b> 笔有效记录 · 期间 2024-06';
+    el('stat-pending-value').textContent = drafts.length + ' 笔';
+    el('stat-pending-sub').innerHTML = '金额 <b style="font-family:var(--font-mono)">'+yuan(draftAmt)+'</b> · 待出纳提交';
+    el('stat-cash').textContent = yuan(cash);
+    el('stat-personal').textContent = yuan(personal);
+    el('stat-corp').textContent = yuan(corp);
+    el('stat-unsynced-value').textContent = confirmed.length + ' 笔';
+    el('stat-unsynced-sub').innerHTML = '金额 <b style="font-family:var(--font-mono)">'+yuan(confirmedAmt)+'</b> · 未纳入数据汇总';
+    var nc = el('nav-pending-count');
+    if(nc) nc.textContent = String(drafts.length);
+  }
+
+  function renderRecon(){
+    var valid = RECORDS.filter(function(r){return r.status!=='voided';});
+    var nonBank = valid.filter(function(r){return r.account==='cash'||r.account==='personal';});
+    var nonBankTotal = nonBank.reduce(function(a,r){return a+r.amount;},0);
+    var corp = valid.filter(function(r){return r.account==='corporate';});
+    var corpTotal = corp.reduce(function(a,r){return a+r.amount;},0);
+    var corpBank = corpTotal - 320;
+    var corpDiff = corpTotal - corpBank;
+
+    el('recon-nonbank-reg').textContent = yuan(nonBankTotal);
+    el('recon-nonbank-sum').textContent = yuan(nonBankTotal);
+    el('recon-nonbank-diff').textContent = yuan(0);
+    el('recon-nonbank-note').textContent = '登记 '+nonBank.length+' 笔，全部已生成汇总，账实相符。';
+    el('recon-corp-reg').textContent = yuan(corpTotal);
+    el('recon-corp-bank').textContent = yuan(corpBank);
+    el('recon-corp-diff').textContent = yuan(-corpDiff);
+    el('recon-corp-note').textContent = '登记 '+corp.length+' 笔；银行到账合计较登记少 ¥320.00（跨行手续费），差额进入待处理队列。';
+
+    var rows = [
+      {name:'店面非银通道（现金 + 个人码）', reg:nonBankTotal, recon:nonBankTotal, count:nonBank.length, ok:true},
+      {name:'对公转账通道', reg:corpTotal, recon:corpBank, count:corp.length, ok:false}
+    ];
+    el('recon-body').innerHTML = rows.map(function(r){
+      var diff = r.reg - r.recon;
+      var badge = r.ok ? '<span class="badge badge-confirmed"><span class="t">已平</span></span>' : '<span class="badge badge-draft"><span class="t">待处理</span></span>';
+      return '<tr>'
+        + '<td style="color:var(--fg);font-weight:500">'+r.name+'</td>'
+        + '<td class="num mono">'+yuan(r.reg)+'</td>'
+        + '<td class="num mono">'+yuan(r.recon)+'</td>'
+        + '<td class="num mono" style="color:'+(diff? 'var(--warn)':'var(--ok)')+'">'+yuan(diff)+'</td>'
+        + '<td class="num mono">'+r.count+'</td>'
+        + '<td>'+badge+'</td>'
+        + '<td style="text-align:right"><button class="link">查看明细</button></td>'
+        + '</tr>';
+    }).join('');
+
+    el('pending-count').textContent = RECON_PENDING.length + ' 项待跟进';
+    el('pending-list').innerHTML = RECON_PENDING.map(function(p){
+      return '<div class="pending-item">'
+        + '<span class="pd-ic">'+svg('warn')+'</span>'
+        + '<span class="pd-main"><b>'+esc(p.title)+'</b><i>'+esc(p.meta)+'</i></span>'
+        + '<span class="pd-amt">'+esc(p.amount)+'</span>'
+        + '<button class="link">处理</button>'
+        + '</div>';
+    }).join('');
+  }
+
+  function renderAll(){
+    renderStats();
+    renderTable(applyFilters());
+    renderRecon();
+  }
+
+  function switchView(v){
+    state.view = v;
+    el('view-list').hidden = v!=='list';
+    el('view-recon').hidden = v!=='recon';
+    document.querySelectorAll('.tab').forEach(function(t){
+      var on = t.getAttribute('data-view')===v;
+      t.classList.toggle('active', on);
+      t.setAttribute('aria-selected', on ? 'true':'false');
+    });
+    try{ localStorage.setItem('finlite-collection-view', v); }catch(e){}
+  }
+
+  function recById(id){ return RECORDS.filter(function(r){return r.id===id;})[0]; }
+
+  function openDrawer(d){ el(d).classList.add('show'); el(d).setAttribute('aria-hidden','false'); el('overlay').classList.add('show'); }
+  function closeDrawer(d){ el(d).classList.remove('show'); el(d).setAttribute('aria-hidden','true'); if(!document.querySelector('.drawer.show')) el('overlay').classList.remove('show'); }
+  function closeAllDrawers(){ document.querySelectorAll('.drawer').forEach(function(d){d.classList.remove('show');d.setAttribute('aria-hidden','true');}); el('overlay').classList.remove('show'); }
+
+  function toast(msg, kind){
+    var t = el('toast');
+    el('toast-msg').textContent = msg;
+    t.className = 'toast show' + (kind? ' '+kind : '');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function(){ t.classList.remove('show'); }, 3200);
+  }
+
+  var modalCallback = null;
+  function openModal(opts){
+    el('modal-title').innerHTML = opts.icon ? svg(opts.icon) + esc(opts.title) : esc(opts.title);
+    el('modal-title').className = opts.danger ? 'danger' : '';
+    el('modal-text').innerHTML = opts.text;
+    var input = el('modal-input');
+    if(opts.input){ input.style.display='block'; input.value=''; input.placeholder = opts.placeholder||'请填写原因（必填）'; }
+    else input.style.display='none';
+    var ok = el('modal-ok');
+    ok.textContent = opts.okText || '确认';
+    ok.className = 'btn ' + (opts.danger ? 'btn-danger' : 'btn-primary');
+    modalCallback = opts.onOk;
+    el('modal-mask').classList.add('show');
+  }
+  function closeModal(){ el('modal-mask').classList.remove('show'); modalCallback = null; }
+
+  // ---- Edit drawer ----
+  function renderEditAttachments(){
+    var grid = el('edit-attach-grid');
+    var html = state.editAttachments.map(function(a,i){
+      return '<div class="thumb">'
+        + '<img src="'+a.src+'" alt="收款单据附件" data-lb="'+a.src+'" data-lb-cap="'+esc(a.name)+'">'
+        + '<button class="del" data-del="'+i+'" aria-label="删除附件">'+svg('trash')+'</button>'
+        + '<span class="tag">'+ (a.ext ? a.ext.toUpperCase() : 'IMG') +'</span>'
+        + '</div>';
+    }).join('');
+    html += '<button class="attach-add" id="attach-add" data-od-id="btn-add-photo">'+svg('plus')+'<span>添加照片</span></button>';
+    grid.innerHTML = html;
+  }
+
+  function openEditDrawer(){
+    state.editAttachments = [receiptThumb(0), receiptThumb(2), receiptThumb(4)].map(function(src,i){
+      return {src:src, name:'收款单据_'+(i+1)+'.jpg', ext:'jpg'};
+    });
+    el('edit-title').textContent = '新增收款';
+    el('edit-sub').textContent = '店面线下收款登记';
+    el('e-date').value = '2024-06-17';
+    el('e-customer').value = '';
+    el('e-phone').value = '160****593';
+    el('e-amount').value = '';
+    el('e-receipt').value = '';
+    el('e-note').value = '';
+    el('e-invoice').checked = false;
+    el('invoice-label').textContent = '未开票';
+    el('e-method').value = 'cash';
+    recommendAccount();
+    renderEditAttachments();
+    openDrawer('drawer-edit');
+  }
+
+  function recommendAccount(){
+    var m = el('e-method').value;
+    el('e-account').value = METHOD_RECOMMEND[m] || 'cash';
+    el('account-hint').textContent = '已按「'+METHOD[m].label+'」推荐：'+ACCOUNT[METHOD_RECOMMEND[m]||'cash'];
+  }
+
+  function addRecord(status){
+    var amount = parseFloat(String(el('e-amount').value).replace(/[,¥\s]/g,''));
+    if(!el('e-customer').value.trim()){ toast('请填写客户姓名','err'); el('e-customer').focus(); return; }
+    if(!amount || amount<=0){ toast('请填写有效的收款金额','err'); el('e-amount').focus(); return; }
+    var d = el('e-date').value || '2024-06-17';
+    var seq = String(RECORDS.filter(function(r){return r.date===d;}).length + 1).padStart(3,'0');
+    var rec = {
+      id:'SC'+d.replace(/-/g,'').slice(2)+seq,
+      date:d,
+      store:el('e-store').value,
+      customer:el('e-customer').value.trim(),
+      project:el('e-project').value,
+      method:el('e-method').value,
+      account:el('e-account').value,
+      amount:Math.round(amount*100)/100,
+      receipt:el('e-receipt').value.trim() || ('SR-'+d.replace(/-/g,'')+'-'+seq),
+      operator:el('e-operator').value,
+      attachments:state.editAttachments.length,
+      status:status,
+      invoice:el('e-invoice').checked,
+      phone:el('e-phone').value.trim(),
+      note:el('e-note').value.trim()
+    };
+    RECORDS.unshift(rec);
+    closeDrawer('drawer-edit');
+    renderAll();
+    toast(status==='confirmed'
+      ? ('已提交收款记录 '+rec.id+'，状态：已确认')
+      : ('已保存草稿 '+rec.id+'，可在列表中继续编辑'));
+  }
+
+  // ---- Detail drawer ----
+  function openDetailDrawer(id){
+    var r = recById(id);
+    if(!r) return;
+    state.detailId = id;
+    el('detail-title').textContent = '收款详情';
+    el('detail-sub').textContent = r.id + ' · ' + r.date;
+    el('detail-body').innerHTML = buildDetail(r);
+    el('detail-foot').innerHTML = buildDetailFoot(r);
+    openDrawer('drawer-detail');
+  }
+
+  function stepper(r){
+    var order = ['draft','confirmed','summarized'];
+    var curIdx = r.status==='voided' ? -1 : order.indexOf(r.status);
+    var html = '<div class="stepper">';
+    order.forEach(function(s,i){
+      var cls = 'step';
+      if(curIdx>=0 && i<curIdx) cls += ' done';
+      else if(curIdx>=0 && i===curIdx) cls += ' current';
+      var bullet = (curIdx>=0 && i<curIdx) ? svg('check') : (i+1);
+      html += '<div class="'+cls+'"><span class="bullet">'+bullet+'</span>'
+        + '<span class="txt"><b>'+STATUS[s].label+'</b><i>'+stepMeta(s)+'</i></span>'
+        + '<span class="bar"></span></div>';
+    });
+    html += '</div>';
+    if(r.status==='voided'){
+      html += '<div class="void-strip">'+svg('alert')+'<div><b>该记录已作废</b> · 原因：'+(r.voidReason||'客户换卡，原记录作废重录')+'</div></div>';
+    }
+    return html;
+  }
+  function stepMeta(s){
+    if(s==='draft') return '门店经手录入';
+    if(s==='confirmed') return '出纳/会计确认';
+    return '生成数据汇总';
+  }
+
+  function buildDetail(r){
+    var thumbs = '';
+    var n = Math.max(r.attachments, 0);
+    for(var i=0;i<n;i++){
+      var cap = r.customer + ' · 单据 ' + (i+1);
+      thumbs += '<div class="thumb"><img src="'+receiptThumb(i)+'" alt="'+esc(cap)+'" data-lb="'+receiptThumb(i)+'" data-lb-cap="'+esc(cap)+'"><span class="tag">JPG</span></div>';
+    }
+    if(!n) thumbs = '<div class="attach-hint">该记录暂无附件，可在编辑中补充单据照片。</div>';
+
+    return ''
+      + '<div class="section-title">状态流转</div>'
+      + stepper(r)
+      + '<div class="section-title" style="margin-top:20px">收款信息</div>'
+      + '<div class="info-list">'
+      + infoRow('收款日期', r.date, true)
+      + infoRow('门店', r.store)
+      + infoRow('客户姓名', r.customer)
+      + infoRow('客户电话', r.phone, true)
+      + infoRow('项目', r.project)
+      + infoRow('收款方式', METHOD[r.method].label)
+      + infoRow('到账账户', ACCOUNT[r.account])
+      + infoRow('收据号', r.receipt, true)
+      + infoRow('经手人', r.operator)
+      + infoRow('是否开票', r.invoice ? '已开票' : '未开票')
+      + '<div class="row full"><span class="k">收款金额</span><span class="v big">'+yuan(r.amount)+'</span></div>'
+      + '<div class="row full"><span class="k">事由 / 备注</span><span class="v" style="font-weight:400;text-align:left">'+ (r.note?esc(r.note):'—') +'</span></div>'
+      + '</div>'
+      + '<div class="section-title" style="margin-top:20px">单据照片附件（'+n+'）</div>'
+      + '<div class="attach-grid">'+thumbs+'</div>'
+      + '<div class="section-title" style="margin-top:20px">操作记录</div>'
+      + '<div class="audit">'
+      + auditItem('2024-06-17 09:12', r.operator + ' 提交收款记录 <b>'+r.id+'</b>')
+      + (r.status!=='draft' ? auditItem('2024-06-17 10:40', '陈出纳 <b>确认收款</b>，生成待汇总任务') : '')
+      + (r.status==='summarized' ? auditItem('2024-06-17 15:05', '系统按 <b>日期 + 门店</b> 生成数据汇总') : '')
+      + (r.status==='voided' ? auditItem('2024-06-17 16:20', '管理员 <b>作废</b> 该记录：'+(r.voidReason||'原因已记录')) : '')
+      + '</div>';
+  }
+  function infoRow(k,v,mono){
+    return '<div class="row"><span class="k">'+k+'</span><span class="v'+(mono?' mono':'')+'">'+esc(v)+'</span></div>';
+  }
+  function auditItem(when, what){
+    return '<div class="audit-item"><span class="when">'+when+'</span><span class="what">'+what+'</span></div>';
+  }
+
+  function buildDetailFoot(r){
+    if(r.status==='voided'){
+      return '<button class="btn btn-ghost left" data-dact="close">关闭</button>'
+        + '<span style="color:var(--muted);font-size:12.5px;align-self:center">该记录已作废，不可再操作</span>';
+    }
+    var html = '<button class="btn btn-ghost left" data-dact="close">关闭</button>';
+    if(r.status==='draft'){
+      html += '<button class="btn btn-danger" data-dact="void" data-id="'+r.id+'">作废</button>';
+      html += '<button class="btn" data-dact="reject" data-id="'+r.id+'">驳回</button>';
+      html += '<button class="btn btn-primary" data-dact="confirm" data-id="'+r.id+'">确认收款</button>';
+    } else if(r.status==='confirmed'){
+      html += '<button class="btn btn-danger" data-dact="void" data-id="'+r.id+'">作废</button>';
+      html += '<button class="btn btn-primary" data-dact="summary" data-id="'+r.id+'">生成汇总</button>';
+    } else {
+      html += '<button class="btn btn-primary" data-dact="goto-summary" data-id="'+r.id+'">查看数据汇总</button>';
+    }
+    return html;
+  }
+
+  function setStatus(id, status, reason){
+    var r = recById(id);
+    if(!r) return;
+    r.status = status;
+    if(reason) r.voidReason = reason;
+    renderAll();
+    if(state.detailId===id) openDetailDrawer(id);
+  }
+
+  // ---- Events ----
+  function bind(){
+    document.querySelectorAll('.tab').forEach(function(t){
+      t.addEventListener('click', function(){ switchView(t.getAttribute('data-view')); });
+    });
+
+    ['f-date-from','f-date-to','f-store','f-method','f-account','f-operator','f-status'].forEach(function(id){
+      el(id).addEventListener('change', function(){ renderTable(applyFilters()); });
+    });
+    el('f-keyword').addEventListener('input', function(){ renderTable(applyFilters()); });
+    el('btn-reset').addEventListener('click', function(){
+      el('f-date-from').value='2024-06-01'; el('f-date-to').value='2024-06-30';
+      ['f-store','f-method','f-account','f-operator','f-status'].forEach(function(id){ el(id).value=''; });
+      el('f-keyword').value='';
+      renderTable(applyFilters());
+      toast('已重置筛选条件');
+    });
+
+    el('collection-body').addEventListener('click', function(e){
+      var btn = e.target.closest('button[data-act]');
+      if(btn){
+        var act = btn.getAttribute('data-act'), id = btn.getAttribute('data-id');
+        if(act==='view'){ openDetailDrawer(id); }
+        else if(act==='review'){ openDetailDrawer(id); }
+        else if(act==='summary'){ doSummary(id); }
+        return;
+      }
+      var row = e.target.closest('tr[data-id]');
+      if(row) openDetailDrawer(row.getAttribute('data-id'));
+    });
+
+    el('btn-new-collection').addEventListener('click', openEditDrawer);
+    el('btn-batch-import').addEventListener('click', function(){
+      toast('批量导入：请下载模板后上传，本次为原型演示','warn');
+    });
+
+    el('edit-close').addEventListener('click', function(){ closeDrawer('drawer-edit'); });
+    el('edit-cancel').addEventListener('click', function(){ closeDrawer('drawer-edit'); });
+    el('edit-save-draft').addEventListener('click', function(){ addRecord('draft'); });
+    el('edit-save-submit').addEventListener('click', function(){ addRecord('confirmed'); });
+
+    el('e-method').addEventListener('change', recommendAccount);
+    el('e-invoice').addEventListener('change', function(){
+      el('invoice-label').textContent = this.checked ? '已开票' : '未开票';
+    });
+    el('e-amount').addEventListener('blur', function(){
+      var v = parseFloat(String(this.value).replace(/[,¥\s]/g,''));
+      if(!isNaN(v)) this.value = v.toFixed(2);
+    });
+
+    el('edit-attach-grid').addEventListener('click', function(e){
+      var addBtn = e.target.closest('#attach-add');
+      if(addBtn){ el('file-input').click(); return; }
+      var delBtn = e.target.closest('button[data-del]');
+      if(delBtn){
+        var i = parseInt(delBtn.getAttribute('data-del'),10);
+        openModal({
+          title:'删除该附件？', icon:'alert', danger:true,
+          text:'删除后需重新上传。确认删除 <span class="hl">'+esc(state.editAttachments[i].name)+'</span>？',
+          okText:'删除',
+          onOk:function(){ state.editAttachments.splice(i,1); renderEditAttachments(); toast('附件已删除'); }
+        });
+        return;
+      }
+      var img = e.target.closest('img[data-lb]');
+      if(img) showLightbox(img.getAttribute('data-lb'), img.getAttribute('data-lb-cap'));
+    });
+
+    el('file-input').addEventListener('change', function(){
+      var files = Array.prototype.slice.call(this.files);
+      files.forEach(function(f){
+        if(state.editAttachments.length>=10){ toast('单条记录最多 10 张附件','err'); return; }
+        if(f.size > 10*1024*1024){ toast('「'+f.name+'」超过 10MB，已跳过','err'); return; }
+        var ext = (f.name.split('.').pop()||'').toLowerCase();
+        if(['jpg','jpeg','png','webp','pdf'].indexOf(ext)===-1){ toast('「'+f.name+'」格式不支持','err'); return; }
+        state.editAttachments.push({src:URL.createObjectURL(f), name:f.name, ext:ext});
+      });
+      renderEditAttachments();
+      this.value='';
+    });
+
+    el('detail-close').addEventListener('click', function(){ closeDrawer('drawer-detail'); });
+    el('detail-body').addEventListener('click', function(e){
+      var img = e.target.closest('img[data-lb]');
+      if(img) showLightbox(img.getAttribute('data-lb'), img.getAttribute('data-lb-cap'));
+    });
+    el('detail-foot').addEventListener('click', function(e){
+      var btn = e.target.closest('button[data-dact]');
+      if(!btn) return;
+      var act = btn.getAttribute('data-dact'), id = btn.getAttribute('data-id');
+      if(act==='close'){ closeDrawer('drawer-detail'); }
+      else if(act==='confirm'){
+        setStatus(id,'confirmed'); toast('已确认收款，记录进入待汇总');
+      }
+      else if(act==='reject'){
+        openModal({
+          title:'驳回该收款记录', icon:'alert', danger:true,
+          text:'驳回后记录将退回门店经手人修改，请填写驳回原因。',
+          input:true, placeholder:'例如：附件缺失 / 金额与合同不符',
+          okText:'确认驳回',
+          onOk:function(){ setStatus(id,'draft'); toast('已驳回，等待门店修改','warn'); }
+        });
+      }
+      else if(act==='void'){
+        openModal({
+          title:'作废收款记录', icon:'alert', danger:true,
+          text:'作废后该记录不再计入合计，且不可恢复。请填写作废原因。',
+          input:true, placeholder:'例如：客户换卡，原记录作废重录',
+          okText:'确认作废',
+          onOk:function(){ setStatus(id,'voided','客户换卡，原记录作废重录'); toast('记录已作废','warn'); }
+        });
+      }
+      else if(act==='summary'){ doSummary(id); }
+      else if(act==='goto-summary'){ toast('正在跳转至「数据汇总」查看该笔归集…'); }
+    });
+
+    el('overlay').addEventListener('click', closeAllDrawers);
+    document.addEventListener('keydown', function(e){
+      if(e.key==='Escape'){
+        if(el('lightbox').classList.contains('show')){ hideLightbox(); return; }
+        if(el('modal-mask').classList.contains('show')){ closeModal(); return; }
+        closeAllDrawers();
+      }
+    });
+
+    el('modal-cancel').addEventListener('click', closeModal);
+    el('modal-ok').addEventListener('click', function(){
+      var input = el('modal-input');
+      if(input.style.display!=='none' && !input.value.trim()){
+        input.style.borderColor='var(--err)'; input.focus(); return;
+      }
+      var cb = modalCallback; closeModal(); if(cb) cb();
+    });
+    el('modal-mask').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+
+    el('lightbox-close').addEventListener('click', hideLightbox);
+    el('lightbox').addEventListener('click', function(e){ if(e.target===this) hideLightbox(); });
+  }
+
+  function doSummary(id){
+    var r = recById(id);
+    openModal({
+      title:'生成数据汇总', icon:'check',
+      text:'将按 <span class="hl">日期 + 门店</span> 归集：<br><span class="hl">'+ (r? r.date : '2024-06-17') +' · '+ (r? r.store : '望京旗舰店') +'</span><br>生成后将跳转至「数据汇总」模块，是否继续？',
+      okText:'生成并跳转',
+      onOk:function(){
+        if(r){ setStatus(id,'summarized'); }
+        toast('已生成汇总，正在跳转至「数据汇总」…');
+      }
+    });
+  }
+
+  function showLightbox(src, cap){
+    el('lightbox-img').src = src;
+    el('lightbox-cap').textContent = cap || '';
+    el('lightbox').classList.add('show');
+  }
+  function hideLightbox(){ el('lightbox').classList.remove('show'); el('lightbox-img').src=''; }
+
+  buildNav();
+  fillSelects();
+  renderAll();
+  bind();
+
+  try{
+    var saved = localStorage.getItem('finlite-collection-view');
+    if(saved==='recon') switchView('recon');
+  }catch(e){}
+})();
+</script>
+</body>
+</html>

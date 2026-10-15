@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-od-id="page-root">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>银行流水 · Finlite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* ---- Ant structural schema tokens ---- */
+  --text-xs:12px; --text-sm:14px; --text-base:16px; --text-lg:18px; --text-xl:22px; --text-2xl:32px;
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:20px; --space-6:24px; --space-8:32px;
+  --radius-sm:6px; --radius-md:10px; --radius-lg:16px; --radius-pill:9999px;
+  --motion-fast:140ms; --motion-base:220ms; --ease-standard:cubic-bezier(.2,0,0,1);
+  --font-display:'Inter',system-ui,-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --font-body:'Inter',system-ui,-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+
+  /* ---- Finlite brand bindings (per module brief) ---- */
+  --bg:#ffffff;
+  --surface:#f7f8fa;
+  --fg:#111111;
+  --fg-2:#374151;
+  --muted:#6b7280;
+  --border:#d9dee7;
+  --border-soft:#eceff4;
+  --accent:#1677ff;
+  --accent-on:#ffffff;
+  --accent-hover:color-mix(in oklab,var(--accent),black 8%);
+  --accent-active:color-mix(in oklab,var(--accent),black 15%);
+  --accent-soft:oklch(0.965 0.030 255);
+  --accent-border:oklch(0.86 0.085 255);
+  --accent-text:oklch(0.47 0.170 255);
+
+  /* ---- state colors (oklch) ---- */
+  --ok:oklch(0.62 0.17 145);
+  --ok-bg:oklch(0.965 0.035 145);
+  --ok-border:oklch(0.86 0.085 145);
+  --ok-text:oklch(0.42 0.130 145);
+  --warn:oklch(0.72 0.14 75);
+  --warn-bg:oklch(0.972 0.045 85);
+  --warn-border:oklch(0.88 0.095 80);
+  --warn-text:oklch(0.46 0.115 70);
+  --err:oklch(0.58 0.20 25);
+  --err-bg:oklch(0.968 0.035 25);
+  --err-border:oklch(0.87 0.095 25);
+  --err-text:oklch(0.46 0.185 25);
+  --skip-bg:#f1f3f7;
+  --skip-border:#dfe3ea;
+  --skip-text:#5b6472;
+
+  --focus-ring:0 0 0 3px oklch(0.60 0.19 257 / 0.30);
+  --shadow-pop:0 22px 60px rgba(17,17,17,.22);
+  --row-hover:color-mix(in oklab,var(--bg) 95%, var(--fg));
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  font-family:var(--font-body);
+  font-size:var(--text-sm);
+  line-height:1.5;
+  color:var(--fg);
+  background:var(--surface);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+button,input,select{font-family:inherit;font-size:inherit;color:inherit;}
+svg{display:block;flex:0 0 auto;}
+.mono{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;}
+
+/* ---------------- layout ---------------- */
+.app{display:flex;height:100vh;overflow:hidden;}
+
+/* ---------------- sidebar ---------------- */
+.sidebar{
+  width:220px;flex:0 0 220px;background:var(--bg);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+}
+.brand{
+  height:52px;flex:0 0 52px;display:flex;align-items:center;gap:10px;
+  padding:0 16px;border-bottom:1px solid var(--border-soft);
+}
+.brand-mark{
+  width:26px;height:26px;border-radius:7px;background:var(--accent);color:var(--accent-on);
+  display:grid;place-items:center;font-size:14px;font-weight:700;letter-spacing:-.02em;
+}
+.brand-name{font-size:15px;font-weight:700;letter-spacing:-.015em;}
+.brand-sub{font-size:11px;color:var(--muted);margin-top:-2px;}
+.nav{flex:1;overflow-y:auto;padding:10px 8px 16px;}
+.nav-group-label{
+  font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--muted);
+  padding:12px 10px 6px;text-transform:uppercase;
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;margin:1px 0;
+  border-radius:var(--radius-sm);color:var(--fg-2);font-size:13px;cursor:pointer;
+  border:1px solid transparent;user-select:none;
+  transition:background var(--motion-fast) var(--ease-standard),color var(--motion-fast) var(--ease-standard);
+}
+.nav-item svg{color:var(--muted);transition:color var(--motion-fast);}
+.nav-item:hover{background:var(--surface);color:var(--fg);}
+.nav-item:hover svg{color:var(--fg-2);}
+.nav-item:focus-visible{outline:none;box-shadow:var(--focus-ring);}
+.nav-item.active{background:var(--accent-soft);color:var(--accent-text);font-weight:600;border-color:var(--accent-border);}
+.nav-item.active svg{color:var(--accent);}
+.nav-badge{margin-left:auto;font-size:11px;font-weight:600;color:var(--err-text);background:var(--err-bg);border:1px solid var(--err-border);border-radius:9999px;padding:0 6px;line-height:16px;}
+
+/* ---------------- main ---------------- */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--surface);}
+.topbar{
+  height:52px;flex:0 0 52px;background:var(--bg);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:14px;padding:0 20px;
+}
+.crumb{font-size:12px;color:var(--muted);}
+.crumb b{color:var(--fg);font-weight:600;}
+.page-title{font-size:16px;font-weight:700;letter-spacing:-.015em;}
+.topbar .sep{width:1px;height:20px;background:var(--border);}
+.spacer{flex:1;}
+.period-pill{
+  display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px;
+  border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);
+  font-size:13px;color:var(--fg-2);cursor:pointer;transition:background var(--motion-fast),border-color var(--motion-fast);
+}
+.period-pill:hover{background:var(--surface);}
+.period-pill svg{color:var(--muted);}
+.content{flex:1;overflow-y:auto;padding:16px 20px 40px;}
+
+/* ---------------- buttons ---------------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 13px;
+  border:1px solid var(--border);background:var(--bg);color:var(--fg);border-radius:var(--radius-sm);
+  font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;
+  transition:background var(--motion-fast) var(--ease-standard),border-color var(--motion-fast) var(--ease-standard),color var(--motion-fast) var(--ease-standard),box-shadow var(--motion-fast);
+}
+.btn:hover{background:var(--surface);border-color:#c6cdd9;}
+.btn:active{background:color-mix(in oklab,var(--surface),var(--fg) 3%);}
+.btn:focus-visible{outline:none;box-shadow:var(--focus-ring);}
+.btn:disabled{opacity:.45;cursor:not-allowed;background:var(--bg);border-color:var(--border);}
+.btn svg{color:currentColor;}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-on);}
+.btn-primary:hover{background:var(--accent-hover);border-color:var(--accent-hover);color:var(--accent-on);}
+.btn-primary:active{background:var(--accent-active);border-color:var(--accent-active);}
+.btn-primary:disabled{background:color-mix(in oklab,var(--accent) 40%,white);border-color:transparent;color:#fff;}
+.btn-danger{background:var(--bg);border-color:var(--err);color:var(--err-text);}
+.btn-danger:hover{background:var(--err-bg);border-color:var(--err);}
+.btn-danger:disabled{background:var(--bg);border-color:var(--border);color:var(--muted);}
+.btn-sm{height:28px;padding:0 10px;font-size:12px;}
+.btn-ghost{border-color:transparent;background:transparent;color:var(--fg-2);}
+.btn-ghost:hover{background:var(--surface);border-color:transparent;color:var(--fg);}
+.btn-link{border:none;background:none;color:var(--accent-text);font-weight:500;padding:0 4px;height:auto;}
+.btn-link:hover{text-decoration:underline;background:none;}
+
+/* ---------------- alert bar ---------------- */
+.alert{
+  display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:var(--radius-md);
+  border:1px solid;font-size:13px;margin-bottom:12px;
+}
+.alert svg{margin-top:1px;}
+.alert .txt{flex:1;line-height:1.45;}
+.alert .close{background:none;border:none;cursor:pointer;color:inherit;opacity:.65;padding:2px;border-radius:4px;}
+.alert .close:hover{opacity:1;background:rgba(0,0,0,.05);}
+.alert-info{background:var(--accent-soft);border-color:var(--accent-border);color:var(--accent-text);}
+.alert-ok{background:var(--ok-bg);border-color:var(--ok-border);color:var(--ok-text);}
+.alert-warn{background:var(--warn-bg);border-color:var(--warn-border);color:var(--warn-text);}
+.alert-danger{background:var(--err-bg);border-color:var(--err-border);color:var(--err-text);}
+
+/* ---------------- batch bar ---------------- */
+.batch-bar{
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:14px 16px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+}
+.batch-main{min-width:0;flex:1 1 420px;}
+.batch-file{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;letter-spacing:-.01em;}
+.batch-file svg{color:var(--accent);}
+.batch-file .alllabel{color:var(--fg-2);font-weight:600;}
+.batch-meta{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:12.5px;color:var(--muted);}
+.batch-meta .kv{display:flex;align-items:center;gap:6px;}
+.batch-meta .kv b{color:var(--fg-2);font-weight:600;font-variant-numeric:tabular-nums;}
+.batch-meta .kv.fail b{color:var(--warn-text);}
+.chips{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.chip{
+  display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 9px;border-radius:9999px;
+  font-size:12px;font-weight:500;border:1px solid var(--border);background:var(--surface);color:var(--fg-2);
+  font-variant-numeric:tabular-nums;
+}
+.chip-ok{background:var(--ok-bg);border-color:var(--ok-border);color:var(--ok-text);}
+.chip-warn{background:var(--warn-bg);border-color:var(--warn-border);color:var(--warn-text);}
+.chip-err{background:var(--err-bg);border-color:var(--err-border);color:var(--err-text);}
+.chip-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+.batch-actions{display:flex;align-items:center;gap:10px;flex:0 0 auto;}
+
+/* ---------------- stats ---------------- */
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:12px;}
+.stat-card{
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:14px 16px;position:relative;overflow:hidden;
+}
+.stat-head{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);font-weight:500;}
+.stat-head svg{color:var(--muted);}
+.stat-val{font-size:26px;font-weight:700;letter-spacing:-.02em;margin-top:8px;font-variant-numeric:tabular-nums;line-height:1.1;}
+.stat-val .unit{font-size:13px;font-weight:500;color:var(--muted);margin-left:3px;}
+.stat-sub{font-size:12px;color:var(--muted);margin-top:5px;font-variant-numeric:tabular-nums;}
+.stat-card.is-warn{border-color:var(--warn-border);background:var(--warn-bg);}
+.stat-card.is-warn .stat-val,.stat-card.is-warn .stat-head{color:var(--warn-text);}
+.stat-card.is-warn .stat-head svg{color:var(--warn-text);}
+.stat-card.is-warn .stat-sub{color:var(--warn-text);opacity:.85;}
+.stat-card.is-ok .stat-val{color:var(--ok-text);}
+.stat-transfer .stat-val{color:var(--fg);}
+.stat-in .stat-val{color:oklch(0.46 0.13 145);}
+.stat-out .stat-val{color:oklch(0.48 0.14 25);}
+
+/* ---------------- filters ---------------- */
+.filters{
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:12px 16px;margin-top:12px;display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;
+}
+.ff{display:flex;flex-direction:column;gap:5px;}
+.ff label{font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:.02em;}
+.ff select,.ff input{
+  height:32px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);
+  padding:0 10px;font-size:13px;color:var(--fg);outline:none;
+  transition:border-color var(--motion-fast),box-shadow var(--motion-fast);
+}
+.ff select{min-width:230px;cursor:pointer;}
+.ff input[type=date]{width:150px;cursor:pointer;}
+.ff input[type=text]{width:230px;}
+.ff select:hover,.ff input:hover{border-color:#c6cdd9;}
+.ff select:focus,.ff input:focus{border-color:var(--accent);box-shadow:var(--focus-ring);}
+.ff .daterange{display:flex;align-items:center;gap:6px;color:var(--muted);}
+.filters .filters-right{margin-left:auto;display:flex;align-items:center;gap:12px;padding-bottom:5px;}
+.count-line{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;}
+.count-line b{color:var(--fg-2);font-weight:600;}
+
+/* ---------------- table ---------------- */
+.table-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);margin-top:12px;overflow:hidden;}
+.table-toolbar{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border-soft);flex-wrap:wrap;}
+.table-toolbar .tt-title{font-size:14px;font-weight:600;letter-spacing:-.01em;}
+.legend{display:flex;align-items:center;gap:14px;margin-left:auto;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
+.legend-key{width:12px;height:12px;border-radius:3px;border:1px solid;}
+.legend-ok{background:var(--ok-bg);border-color:var(--ok-border);}
+.legend-err{background:var(--err-bg);border-color:var(--err-border);}
+.legend-skip{background:var(--skip-bg);border-color:var(--skip-border);}
+.legend-conf{background:var(--ok-bg);border-color:var(--ok);}
+
+.table-scroll{overflow:auto;max-height:calc(100vh - 408px);min-height:200px;}
+table{width:100%;min-width:1120px;border-collapse:separate;border-spacing:0;font-size:13px;}
+thead th{
+  position:sticky;top:0;z-index:2;background:var(--surface);
+  font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:.03em;text-align:left;
+  padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap;
+}
+th.num{text-align:right;}
+td{padding:9px 12px;border-bottom:1px solid var(--border-soft);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr{--row-bg:var(--bg);background:var(--row-bg);cursor:pointer;transition:background var(--motion-fast);}
+tbody tr:hover{--row-bg:var(--row-hover);}
+td:first-child{border-left:3px solid transparent;}
+tr.row-mismatch{--row-bg:var(--err-bg);}
+tr.row-mismatch:hover{--row-bg:color-mix(in oklab,var(--err-bg),var(--err) 8%);}
+tr.row-mismatch td:first-child{border-left-color:var(--err);}
+tr.row-ok td:first-child{border-left-color:color-mix(in oklab,var(--ok) 45%,transparent);}
+tr.row-confirmed{--row-bg:var(--ok-bg);}
+tr.row-confirmed:hover{--row-bg:color-mix(in oklab,var(--ok-bg),var(--ok) 7%);}
+tr.row-confirmed td:first-child{border-left-color:var(--ok);}
+tr.row-skip td:first-child{border-left-color:var(--skip-border);}
+
+td.td-time{font-size:12.5px;color:var(--fg-2);font-variant-numeric:tabular-nums;white-space:nowrap;}
+td.td-acct{font-family:var(--font-mono);font-size:12px;color:var(--fg-2);letter-spacing:-.01em;white-space:nowrap;}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+td.num.in{color:var(--fg);font-weight:500;}
+td.num.out{color:var(--fg);font-weight:500;}
+td.num.bal{color:var(--fg);font-weight:600;}
+.cell-cp{display:flex;align-items:center;gap:8px;min-width:180px;}
+.cp-name{color:var(--fg);}
+.tag-pos{
+  display:inline-flex;align-items:center;gap:4px;flex:0 0 auto;
+  font-size:11px;font-weight:600;line-height:16px;padding:0 6px;border-radius:4px;
+  background:var(--accent-soft);color:var(--accent-text);border:1px solid var(--accent-border);
+}
+.memo-pos{color:var(--accent-text);background:var(--accent-soft);border-radius:4px;padding:1px 6px;font-family:var(--font-mono);font-size:11.5px;}
+.memo-empty{color:var(--muted);}
+
+.badge{
+  display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 8px;border-radius:9999px;
+  font-size:11.5px;font-weight:600;border:1px solid transparent;white-space:nowrap;line-height:1;
+}
+.badge svg{width:11px;height:11px;}
+.badge-ok{background:var(--ok-bg);border-color:var(--ok-border);color:var(--ok-text);}
+.badge-err{background:var(--err-bg);border-color:var(--err-border);color:var(--err-text);}
+.badge-skip{background:var(--skip-bg);border-color:var(--skip-border);color:var(--skip-text);}
+.badge-conf{background:var(--ok-text);border-color:var(--ok-text);color:#fff;}
+.row-checked-tag{font-size:11px;color:var(--accent-text);background:var(--accent-soft);border:1px solid var(--accent-border);border-radius:9999px;padding:0 7px;line-height:16px;margin-left:6px;font-weight:500;}
+
+.expand-btn{
+  width:22px;height:22px;border-radius:5px;border:1px solid transparent;background:none;color:var(--muted);
+  display:grid;place-items:center;cursor:pointer;transition:background var(--motion-fast),color var(--motion-fast),transform var(--motion-fast);
+}
+.expand-btn:hover{background:color-mix(in oklab,var(--surface),var(--fg) 4%);color:var(--fg);}
+.expand-btn:focus-visible{outline:none;box-shadow:var(--focus-ring);}
+.expand-btn.open{transform:rotate(90deg);color:var(--accent);}
+td.td-expand{padding-right:0;width:36px;}
+
+/* detail row */
+tr.detail-row{background:color-mix(in oklab,var(--surface) 70%, var(--bg));cursor:default;}
+tr.detail-row:hover{--row-bg:color-mix(in oklab,var(--surface) 70%, var(--bg));}
+tr.detail-row td{padding:0;border-bottom:1px solid var(--border-soft);}
+.eq-wrap{padding:14px 20px 16px 52px;display:flex;flex-direction:column;gap:12px;}
+.eq-title{font-size:12px;font-weight:600;color:var(--fg-2);display:flex;align-items:center;gap:7px;}
+.eq-title svg{color:var(--accent);}
+.eq-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;font-variant-numeric:tabular-nums;}
+.eq-term{padding:3px 10px;border-radius:var(--radius-sm);background:var(--bg);border:1px solid var(--border);color:var(--fg);}
+.eq-term .lbl{font-size:11px;color:var(--muted);margin-right:6px;font-variant-numeric:normal;}
+.eq-op{color:var(--muted);font-weight:600;font-size:15px;}
+.eq-eq{color:var(--fg-2);font-weight:700;}
+.eq-term.is-err{background:var(--err-bg);border-color:var(--err-border);color:var(--err-text);}
+.eq-term.is-ok{background:var(--ok-bg);border-color:var(--ok-border);color:var(--ok-text);}
+.eq-verdict{font-size:12.5px;}
+.eq-verdict.err{color:var(--err-text);font-weight:500;}
+.eq-verdict.ok{color:var(--ok-text);font-weight:500;}
+.eq-verdict.skip{color:var(--muted);}
+.eq-actions{display:flex;align-items:center;gap:10px;margin-top:2px;}
+.eq-actions .divider{width:1px;height:16px;background:var(--border);}
+
+.flash{animation:flash 1.4s var(--ease-standard);}
+@keyframes flash{0%{background:var(--accent-soft);}100%{background:var(--row-bg);}}
+
+/* empty state */
+.empty{display:none;flex-direction:column;align-items:center;justify-content:center;padding:64px 20px;text-align:center;}
+.empty.show{display:flex;}
+.empty-icon{width:52px;height:52px;border-radius:14px;background:var(--surface);border:1px solid var(--border);display:grid;place-items:center;color:var(--muted);margin-bottom:16px;}
+.empty h3{font-size:15px;font-weight:600;margin-bottom:6px;}
+.empty p{font-size:13px;color:var(--muted);margin-bottom:18px;}
+
+/* ---------------- drawer ---------------- */
+.drawer-overlay{position:fixed;inset:0;background:rgba(17,17,17,.30);opacity:0;visibility:hidden;transition:opacity var(--motion-base) var(--ease-standard);z-index:50;}
+.drawer-overlay.open{opacity:1;visibility:visible;}
+.drawer{
+  position:fixed;top:0;right:0;height:100vh;width:460px;max-width:94vw;background:var(--bg);
+  border-left:1px solid var(--border);box-shadow:-18px 0 52px rgba(17,17,17,.14);
+  transform:translateX(100%);transition:transform var(--motion-base) var(--ease-standard);
+  z-index:55;display:flex;flex-direction:column;
+}
+.drawer.open{transform:translateX(0);}
+.drawer-head{height:56px;flex:0 0 56px;display:flex;align-items:center;gap:10px;padding:0 18px;border-bottom:1px solid var(--border);}
+.drawer-head h2{font-size:15px;font-weight:700;letter-spacing:-.01em;}
+.drawer-head .close{margin-left:auto;width:30px;height:30px;border-radius:var(--radius-sm);border:1px solid transparent;background:none;color:var(--muted);cursor:pointer;display:grid;place-items:center;}
+.drawer-head .close:hover{background:var(--surface);color:var(--fg);}
+.drawer-body{flex:1;overflow-y:auto;padding:16px 18px 32px;}
+.dsection{margin-bottom:22px;}
+.dsection h3{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.dlist{border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;}
+.drow{display:flex;gap:14px;padding:9px 12px;border-bottom:1px solid var(--border-soft);font-size:13px;}
+.drow:last-child{border-bottom:none;}
+.drow .dk{width:96px;flex:0 0 96px;color:var(--muted);font-size:12.5px;}
+.drow .dv{flex:1;color:var(--fg);word-break:break-all;}
+.drow .dv.mono-num{font-variant-numeric:tabular-nums;}
+.drow .dv.amt-in{color:oklch(0.46 0.13 145);font-weight:600;}
+.drow .dv.amt-out{color:oklch(0.48 0.14 25);font-weight:600;}
+.json{background:#0f1420;color:#d6deeb;border-radius:var(--radius-md);padding:12px 14px;font-family:var(--font-mono);font-size:12px;line-height:1.7;overflow:auto;}
+.json .k{color:#7f9cf5;}
+.json .s{color:#a3d6a3;}
+.json .n{color:#f0b07c;}
+.json .b{color:#e0a0d0;}
+.ctx{border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;}
+.ctx-row{display:grid;grid-template-columns:64px 1fr auto;gap:10px;padding:9px 12px;border-bottom:1px solid var(--border-soft);font-size:12.5px;align-items:center;}
+.ctx-row:last-child{border-bottom:none;}
+.ctx-row.current{background:var(--accent-soft);}
+.ctx-row .cmark{font-size:11px;color:var(--muted);font-weight:600;}
+.ctx-row.current .cmark{color:var(--accent-text);}
+.ctx-row .cdesc{color:var(--fg-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ctx-row .cbal{font-variant-numeric:tabular-nums;color:var(--fg);font-weight:600;}
+.voucher-link{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--accent-border);background:var(--accent-soft);border-radius:var(--radius-md);color:var(--accent-text);font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;}
+.voucher-link:hover{background:color-mix(in oklab,var(--accent-soft),var(--accent) 6%);}
+.dnone{color:var(--muted);font-size:12.5px;font-style:normal;}
+
+/* ---------------- modal ---------------- */
+.overlay{position:fixed;inset:0;background:rgba(17,17,17,.34);display:none;align-items:center;justify-content:center;z-index:70;padding:20px;}
+.overlay.open{display:flex;}
+.modal{width:420px;max-width:100%;background:var(--bg);border-radius:var(--radius-lg);box-shadow:var(--shadow-pop);overflow:hidden;animation:pop var(--motion-base) var(--ease-standard);}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.99);}to{opacity:1;transform:none;}}
+.modal-head{display:flex;align-items:center;gap:10px;padding:18px 20px 0;}
+.modal-ico{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;flex:0 0 34px;}
+.modal-ico.info{background:var(--accent-soft);color:var(--accent-text);border:1px solid var(--accent-border);}
+.modal-ico.danger{background:var(--err-bg);color:var(--err-text);border:1px solid var(--err-border);}
+.modal h3{font-size:15px;font-weight:700;letter-spacing:-.01em;}
+.modal-body{padding:12px 20px 4px;font-size:13px;color:var(--fg-2);line-height:1.6;}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:16px 20px 20px;}
+
+/* ---------------- toasts ---------------- */
+.toasts{position:fixed;top:64px;right:20px;z-index:90;display:flex;flex-direction:column;gap:8px;width:340px;max-width:calc(100vw - 32px);}
+.toast{
+  display:flex;align-items:flex-start;gap:9px;padding:11px 12px;border-radius:var(--radius-md);
+  background:var(--bg);border:1px solid var(--border);box-shadow:0 12px 32px rgba(17,17,17,.14);
+  font-size:13px;animation:slidein var(--motion-base) var(--ease-standard);
+}
+@keyframes slidein{from{opacity:0;transform:translateX(16px);}to{opacity:1;transform:none;}}
+.toast.leaving{opacity:0;transform:translateX(16px);transition:opacity var(--motion-base),transform var(--motion-base);}
+.toast .tbar{width:3px;align-self:stretch;border-radius:2px;}
+.toast.info .tbar{background:var(--accent);}
+.toast.ok .tbar{background:var(--ok);}
+.toast.warn .tbar{background:var(--warn);}
+.toast.danger .tbar{background:var(--err);}
+.toast .tbody{flex:1;color:var(--fg-2);}
+.toast .tbody b{color:var(--fg);}
+.toast .tclose{background:none;border:none;color:var(--muted);cursor:pointer;padding:0;line-height:1;}
+.toast .tclose:hover{color:var(--fg);}
+:focus-visible{outline:none;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar" data-od-id="sidebar">
+    <div class="brand" data-od-id="brand">
+      <div class="brand-mark">F</div>
+      <div>
+        <div class="brand-name">Finlite</div>
+        <div class="brand-sub">财务助手 · 单账套</div>
+      </div>
+    </div>
+    <nav class="nav" data-od-id="nav">
+      <div class="nav-group-label">数据</div>
+      <div class="nav-item" tabindex="0" data-od-id="nav-import">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        导入中心
+      </div>
+      <div class="nav-item active" tabindex="0" data-od-id="nav-bank-flow" data-current="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        银行流水
+        <span class="nav-badge" id="navMismatchBadge">1</span>
+      </div>
+      <div class="nav-item" tabindex="0" data-od-id="nav-orders">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        订单流水
+      </div>
+      <div class="nav-item" tabindex="0" data-od-id="nav-store">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        店面收款
+      </div>
+      <div class="nav-group-label">核对</div>
+      <div class="nav-item" tabindex="0" data-od-id="nav-recon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v6a3 3 0 0 0 3 3h6"/><path d="M18 15V9a3 3 0 0 0-3-3H9"/></svg>
+        对账中心
+      </div>
+      <div class="nav-item" tabindex="0" data-od-id="nav-summary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+        数据汇总
+      </div>
+      <div class="nav-group-label">账务</div>
+      <div class="nav-item" tabindex="0" data-od-id="nav-vouchers">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+        凭证管理
+      </div>
+      <div class="nav-item" tabindex="0" data-od-id="nav-balances">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3h13a3 3 0 0 1 3 3v15H7a3 3 0 0 1-3-3z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="16" y2="11"/></svg>
+        科目余额表
+      </div>
+      <div class="nav-group-label">系统</div>
+      <div class="nav-item" tabindex="0" data-od-id="nav-settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        基础设置
+      </div>
+    </nav>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <div class="main">
+    <header class="topbar" data-od-id="topbar">
+      <div>
+        <div class="crumb">数据 / <b>银行流水</b></div>
+      </div>
+      <span class="sep"></span>
+      <div class="page-title">银行流水</div>
+      <span class="sep"></span>
+      <button class="period-pill" data-od-id="period-pill" title="当前会计期间">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        会计期间 2026-07
+      </button>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost" id="btnRefresh" data-od-id="btn-refresh">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        刷新
+      </button>
+      <button class="btn" id="btnExport" data-od-id="btn-export">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        导出 TSV
+      </button>
+    </header>
+
+    <div class="content" id="content">
+      <div id="alertBar" data-od-id="alert-bar"></div>
+
+      <!-- ============ BATCH INFO BAR ============ -->
+      <section class="batch-bar" data-od-id="batch-info-bar">
+        <div class="batch-main">
+          <div class="batch-file" id="batchFile">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span id="batchFileName">银行流水_20260713.tsv</span>
+          </div>
+          <div class="batch-meta" id="batchMeta"></div>
+          <div class="chips" id="batchChips"></div>
+        </div>
+        <div class="batch-actions" data-od-id="batch-actions">
+          <button class="btn btn-primary" id="btnConfirm" data-od-id="btn-confirm-batch">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            确认本批余额
+          </button>
+          <button class="btn btn-danger" id="btnRevoke" data-od-id="btn-revoke-batch">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            撤销确认
+          </button>
+        </div>
+      </section>
+
+      <!-- ============ STAT CARDS ============ -->
+      <section class="stats" data-od-id="stat-cards">
+        <div class="stat-card" data-od-id="stat-count">
+          <div class="stat-head">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            本批记录数
+          </div>
+          <div class="stat-val" id="statCount">0<span class="unit">行</span></div>
+          <div class="stat-sub" id="statCountSub">—</div>
+        </div>
+        <div class="stat-card stat-in" data-od-id="stat-inflow">
+          <div class="stat-head">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            转入合计
+          </div>
+          <div class="stat-val" id="statIn">0.00</div>
+          <div class="stat-sub" id="statInSub">—</div>
+        </div>
+        <div class="stat-card stat-out" data-od-id="stat-outflow">
+          <div class="stat-head">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+            转出合计
+          </div>
+          <div class="stat-val" id="statOut">0.00</div>
+          <div class="stat-sub" id="statOutSub">—</div>
+        </div>
+        <div class="stat-card" id="statMismatchCard" data-od-id="stat-mismatch">
+          <div class="stat-head">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            余额不平笔数
+          </div>
+          <div class="stat-val" id="statMismatch">0<span class="unit">笔</span></div>
+          <div class="stat-sub" id="statMismatchSub">—</div>
+        </div>
+      </section>
+
+      <!-- ============ FILTERS ============ -->
+      <section class="filters" data-od-id="filter-bar">
+        <div class="ff">
+          <label for="fBatch">批次</label>
+          <select id="fBatch" data-od-id="filter-batch"></select>
+        </div>
+        <div class="ff">
+          <label>交易日期区间</label>
+          <div class="daterange">
+            <input type="date" id="fFrom" value="2026-07-12" data-od-id="filter-date-from" />
+            <span>至</span>
+            <input type="date" id="fTo" value="2026-07-13" data-od-id="filter-date-to" />
+          </div>
+        </div>
+        <div class="ff">
+          <label for="fKw">关键字</label>
+          <input type="text" id="fKw" placeholder="对方单位 / 摘要 / 附言" data-od-id="filter-keyword" />
+        </div>
+        <button class="btn" id="btnQuery" data-od-id="filter-query">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          查询
+        </button>
+        <button class="btn btn-ghost" id="btnReset" data-od-id="filter-reset">重置</button>
+        <div class="filters-right">
+          <span class="count-line" id="countLine" data-od-id="result-count">共 <b>0</b> 条 · 全部展示</span>
+        </div>
+      </section>
+
+      <!-- ============ TABLE ============ -->
+      <section class="table-card" data-od-id="flow-table">
+        <div class="table-toolbar">
+          <span class="tt-title">流水明细</span>
+          <span class="chip" id="tableScopeChip">银行流水_20260713.tsv</span>
+          <div class="legend" data-od-id="table-legend">
+            <span class="legend-item"><span class="legend-key legend-ok"></span>正常</span>
+            <span class="legend-item"><span class="legend-key legend-err"></span>不平</span>
+            <span class="legend-item"><span class="legend-key legend-skip"></span>跳过</span>
+            <span class="legend-item"><span class="legend-key legend-conf"></span>已确认</span>
+          </div>
+        </div>
+        <div class="table-scroll" id="tableScroll">
+          <table data-od-id="flow-table-el">
+            <thead>
+              <tr>
+                <th class="td-expand"></th>
+                <th>交易时间</th>
+                <th>对方账号</th>
+                <th>对方单位</th>
+                <th>摘要 / 用途</th>
+                <th>附言</th>
+                <th class="num">转入</th>
+                <th class="num">转出</th>
+                <th class="num">余额</th>
+                <th>校验状态</th>
+              </tr>
+            </thead>
+            <tbody id="tbody" data-od-id="flow-tbody"></tbody>
+          </table>
+          <div class="empty" id="emptyState" data-od-id="empty-state">
+            <div class="empty-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            </div>
+            <h3>暂无数据</h3>
+            <p>暂无数据，请先在导入中心导入银行流水。</p>
+            <button class="btn btn-primary" id="btnGoImport">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              前往导入中心
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DRAWER ============ -->
+<div class="drawer-overlay" id="drawerOverlay" data-od-id="drawer-overlay"></div>
+<aside class="drawer" id="drawer" data-od-id="row-detail-drawer" aria-hidden="true">
+  <div class="drawer-head">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    <h2>行详情</h2>
+    <button class="close" id="drawerClose" aria-label="关闭">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</aside>
+
+<!-- ============ MODAL ============ -->
+<div class="overlay" id="overlay" data-od-id="confirm-modal">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <div class="modal-ico info" id="modalIco"></div>
+      <h3 id="modalTitle">确认操作</h3>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot">
+      <button class="btn" id="modalCancel">取消</button>
+      <button class="btn btn-primary" id="modalConfirm">确认</button>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts" data-od-id="toasts"></div>
+
+<script>
+/* =========================================================
+   Finlite · 银行流水模块 (F2)  — 原生 JS 原型
+   数据只读；唯一人工写操作为「按批次确认余额」(可撤销)
+   ========================================================= */
+
+/* ---------------- 示例数据 (全部脱敏) ---------------- */
+var BATCHES = [
+  { id:'b20260712', file:'银行流水_20260712.tsv', importedAt:'2026-07-12 09:02:14', total:8, ok:8, fail:0, confirmed:true,  confirmedAt:'2026-07-12 09:40:22' },
+  { id:'b20260713', file:'银行流水_20260713.tsv', importedAt:'2026-07-13 09:05:31', total:12, ok:11, fail:1, confirmed:false, confirmedAt:null }
+];
+
+var ROWS = [
+  /* ---- 批次 20260712（已确认） ---- */
+  { id:'r012', batchId:'b20260712', line:2,  time:'2026-07-12 08:10:02', account:'1001****7575', counterparty:'（期初）承前余额', summary:'期初余额', memo:'', influx:0, outflux:0, balance:38000.00 },
+  { id:'r013', batchId:'b20260712', line:3,  time:'2026-07-12 09:15:44', account:'6222****3311', counterparty:'某某医疗科技有限公司', summary:'货款', memo:'', influx:3500.00, outflux:0, balance:41500.00, voucher:'记-2026-0712-001' },
+  { id:'r014', batchId:'b20260712', line:4,  time:'2026-07-12 10:22:08', account:'1001****7575', counterparty:'待清算商户银行卡POS净收暂收销账户', summary:'货款', memo:'202607120001', influx:2180.00, outflux:0, balance:43680.00, pos:true },
+  { id:'r015', batchId:'b20260712', line:5,  time:'2026-07-12 11:40:31', account:'6222****3311', counterparty:'某某酒店管理公司', summary:'货款', memo:'', influx:5120.00, outflux:0, balance:48800.00 },
+  { id:'r016', batchId:'b20260712', line:6,  time:'2026-07-12 14:05:12', account:'1001****7575', counterparty:'某某银行（脱敏）', summary:'跨行汇款手续费', memo:'', influx:0, outflux:120.00, balance:48680.45 },
+  { id:'r017', batchId:'b20260712', line:7,  time:'2026-07-12 15:12:59', account:'1001****7575', counterparty:'某某银行（脱敏）', summary:'跨行汇款手续费', memo:'', influx:0, outflux:1.12, balance:48679.33 },
+  { id:'r018', batchId:'b20260712', line:8,  time:'2026-07-12 16:20:17', account:'6222****3311', counterparty:'某某医疗科技有限公司', summary:'报销', memo:'', influx:500.00, outflux:0, balance:49179.33 },
+  { id:'r019', batchId:'b20260712', line:9,  time:'2026-07-12 17:33:40', account:'6222****3311', counterparty:'某某医疗科技有限公司', summary:'货款', memo:'', influx:3138.67, outflux:0, balance:52318.00, voucher:'记-2026-0712-004' },
+
+  /* ---- 批次 20260713（未确认，含 1 行不平） ---- */
+  { id:'r020', batchId:'b20260713', line:2,  time:'2026-07-13 08:15:03', account:'1001****7575', counterparty:'（期初）承前余额', summary:'期初余额', memo:'', influx:0, outflux:0, balance:52318.00 },
+  { id:'r021', batchId:'b20260713', line:3,  time:'2026-07-13 09:12:44', account:'6222****3311', counterparty:'某某医疗科技有限公司', summary:'货款', memo:'', influx:11970.00, outflux:0, balance:64288.00, voucher:'记-2026-0713-001' },
+  { id:'r022', batchId:'b20260713', line:4,  time:'2026-07-13 10:03:21', account:'1001****7575', counterparty:'待清算商户银行卡POS净收暂收销账户', summary:'货款', memo:'202607130001', influx:9256.80, outflux:0, balance:73544.80, pos:true },
+  { id:'r023', batchId:'b20260713', line:5,  time:'2026-07-13 11:20:15', account:'6222****3311', counterparty:'某某医疗科技有限公司', summary:'货款', memo:'', influx:446.88, outflux:0, balance:73991.68 },
+  { id:'r024', batchId:'b20260713', line:6,  time:'2026-07-13 13:05:42', account:'1001****7575', counterparty:'待清算商户银行卡POS净收暂收销账户', summary:'货款', memo:'202607130002', influx:5314.68, outflux:0, balance:79306.36, pos:true },
+  { id:'r025', batchId:'b20260713', line:7,  time:'2026-07-13 14:12:30', account:'1001****7575', counterparty:'某某银行（脱敏）', summary:'跨行汇款手续费', memo:'', influx:0, outflux:30.00, balance:79276.36 },
+  { id:'r026', batchId:'b20260713', line:8,  time:'2026-07-13 15:20:11', account:'1001****7575', counterparty:'某某银行（脱敏）', summary:'跨行汇款手续费', memo:'', influx:0, outflux:21.70, balance:79254.66 },
+  { id:'r027', batchId:'b20260713', line:9,  time:'2026-07-13 16:05:55', account:'1001****7575', counterparty:'某某银行（脱敏）', summary:'跨行汇款手续费', memo:'', influx:0, outflux:1.12, balance:79253.54 },
+  { id:'r028', batchId:'b20260713', line:10, time:'2026-07-13 16:30:08', account:'1001****7575', counterparty:'某某银行（脱敏）', summary:'跨行汇款手续费', memo:'', influx:0, outflux:5.32, balance:79248.22 },
+  { id:'r029', batchId:'b20260713', line:11, time:'2026-07-13 17:01:23', account:'6222****3311', counterparty:'某某酒店管理公司', summary:'拨款', memo:'', influx:0, outflux:120.00, balance:79128.67 },
+  { id:'r030', batchId:'b20260713', line:12, time:'2026-07-13 17:21:09', account:'6222****3311', counterparty:'某某医疗科技有限公司', summary:'报销', memo:'', influx:0, outflux:2600.00, balance:76528.67 }
+];
+
+/* ---- 派生：余额衔接校验 ---- */
+(function derive(){
+  var last = null, lastBatch = null;
+  for (var i=0;i<ROWS.length;i++){
+    var r = ROWS[i];
+    if (r.batchId !== lastBatch){ last = null; lastBatch = r.batchId; }
+    r.prevBalance = last;
+    r.expected = (last === null) ? null : round2(last + r.influx - r.outflux);
+    r.diff = (last === null) ? null : round2(r.balance - r.expected);
+    r.skip = (last === null);
+    r.mismatch = (last !== null) && Math.abs(r.diff) >= 0.005;
+    r.checked = false;
+    last = r.balance;
+  }
+})();
+
+function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
+function fmt(n){ return Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2, maximumFractionDigits:2}); }
+function fmtSigned(n){ return (n>0?'+':n<0?'-':'') + fmt(Math.abs(n)); }
+function moneyInOut(n){ return n ? fmt(n) : ''; }
+function batchOf(id){ for (var i=0;i<BATCHES.length;i++){ if (BATCHES[i].id===id) return BATCHES[i]; } return null; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+function displayState(r){
+  if (r.skip) return 'skip';
+  var b = batchOf(r.batchId);
+  if (b && b.confirmed) return r.mismatch ? 'confirmed' : 'ok';
+  return r.mismatch ? 'mismatch' : 'ok';
+}
+function stateMeta(s){
+  switch(s){
+    case 'ok': return {rowClass:'row-ok', badge:'<span class="badge badge-ok">'+ICO.check+'正常</span>'};
+    case 'mismatch': return {rowClass:'row-mismatch', badge:'<span class="badge badge-err">'+ICO.alert+'不平</span>'};
+    case 'skip': return {rowClass:'row-skip', badge:'<span class="badge badge-skip">跳过</span>'};
+    case 'confirmed': return {rowClass:'row-confirmed', badge:'<span class="badge badge-conf">'+ICO.check+'已确认</span>'};
+  }
+}
+var ICO = {
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  alert:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  chev:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>'
+};
+
+/* ---------------- App state ---------------- */
+var state = {
+  batchFilter: 'b20260713',
+  from: '2026-07-12',
+  to: '2026-07-13',
+  kw: '',
+  expanded: {}
+};
+
+function persist(){
+  try{ localStorage.setItem('finlite.bankflow', JSON.stringify({batchFilter:state.batchFilter, from:state.from, to:state.to})); }catch(e){}
+}
+function restore(){
+  try{
+    var raw = localStorage.getItem('finlite.bankflow');
+    if(!raw) return;
+    var s = JSON.parse(raw);
+    if(s.batchFilter) state.batchFilter = s.batchFilter;
+    if(s.from) state.from = s.from;
+    if(s.to) state.to = s.to;
+  }catch(e){}
+}
+
+function filtered(){
+  var rows = (state.batchFilter === 'all') ? ROWS.slice() : ROWS.filter(function(r){return r.batchId===state.batchFilter;});
+  if (state.from) rows = rows.filter(function(r){ return r.time.slice(0,10) >= state.from; });
+  if (state.to) rows = rows.filter(function(r){ return r.time.slice(0,10) <= state.to; });
+  if (state.kw){
+    var k = state.kw.toLowerCase();
+    rows = rows.filter(function(r){
+      return (r.counterparty+' '+r.summary+' '+r.memo).toLowerCase().indexOf(k) !== -1;
+    });
+  }
+  return rows;
+}
+
+/* ---------------- Render: batch bar ---------------- */
+function renderBatchBar(){
+  var el = document.getElementById('batchFileName');
+  var meta = document.getElementById('batchMeta');
+  var chips = document.getElementById('batchChips');
+  var sel = (state.batchFilter === 'all') ? null : batchOf(state.batchFilter);
+  var batchRows = ROWS.filter(function(r){ return state.batchFilter==='all' ? true : r.batchId===state.batchFilter; });
+
+  var mismatchCount = batchRows.filter(function(r){ return displayState(r)==='mismatch'; }).length;
+  var confirmedCount = batchRows.filter(function(r){ return displayState(r)==='confirmed'; }).length;
+
+  if (sel){
+    el.textContent = sel.file;
+    meta.innerHTML =
+      kv('导入时间', sel.importedAt) +
+      kv('导入行数', sel.total + ' 行') +
+      kv('成功', sel.ok + ' 行') +
+      kvFail(sel.fail) +
+      '<span class="kv">余额不平 <b style="color:'+(mismatchCount>0?'var(--err-text)':'var(--fg-2)')+'">'+ mismatchCount +' 笔</b></span>';
+  } else {
+    el.innerHTML = '<span class="alllabel">全部批次</span> · ' + BATCHES.length + ' 个文件';
+    meta.innerHTML =
+      kv('银行流水批次', BATCHES.length + ' 个') +
+      kv('合计记录', batchRows.length + ' 行') +
+      '<span class="kv">余额不平 <b style="color:'+(mismatchCount>0?'var(--err-text)':'var(--fg-2)')+'">'+ mismatchCount +' 笔</b></span>';
+  }
+
+  var cc = '';
+  if (sel && sel.confirmed){
+    cc = '<span class="chip chip-ok"><span class="chip-dot"></span>已确认 · ' + sel.confirmedAt + '</span>';
+    if (confirmedCount > 0) cc += '<span class="chip">人工确认 ' + confirmedCount + ' 行（原不平）</span>';
+  } else if (sel){
+    cc = '<span class="chip chip-warn"><span class="chip-dot"></span>未确认</span>';
+    if (mismatchCount > 0) cc += '<span class="chip chip-err"><span class="chip-dot"></span>存在 ' + mismatchCount + ' 行余额不平</span>';
+  } else {
+    cc = '<span class="chip">汇总视图（不可确认）</span>';
+    if (mismatchCount > 0) cc += '<span class="chip chip-err"><span class="chip-dot"></span>存在 ' + mismatchCount + ' 行余额不平</span>';
+  }
+  chips.innerHTML = cc;
+
+  var btnConfirm = document.getElementById('btnConfirm');
+  var btnRevoke = document.getElementById('btnRevoke');
+  var isBatch = !!sel;
+  btnConfirm.disabled = !isBatch || sel.confirmed;
+  btnRevoke.disabled = !isBatch || !sel.confirmed;
+  btnConfirm.title = isBatch ? (sel.confirmed ? '本批次已确认' : '确认本批次余额连续性') : '请先选择具体批次';
+  btnRevoke.title = isBatch ? (sel.confirmed ? '撤销本批次确认' : '本批次尚未确认') : '请先选择具体批次';
+
+  document.getElementById('tableScopeChip').textContent = sel ? sel.file : '全部批次';
+}
+function kv(k,v){ return '<span class="kv">'+k+' <b>'+esc(v)+'</b></span>'; }
+function kvFail(n){ return '<span class="kv'+(n>0?' fail':'')+'">失败 <b>'+n+' 行</b></span>'; }
+
+/* ---------------- Render: stats ---------------- */
+function renderStats(){
+  var rows = filtered();
+  var inSum = rows.reduce(function(a,r){return a + r.influx;},0);
+  var outSum = rows.reduce(function(a,r){return a + r.outflux;},0);
+  var mis = rows.filter(function(r){ return displayState(r)==='mismatch'; }).length;
+  var confirmedInView = rows.filter(function(r){ return displayState(r)==='confirmed'; }).length;
+  var skipN = rows.filter(function(r){ return displayState(r)==='skip'; }).length;
+
+  document.getElementById('statCount').innerHTML = rows.length + '<span class="unit">行</span>';
+  document.getElementById('statCountSub').textContent = '完整展示全部明细 · 首行跳过 ' + skipN + ' 行';
+  document.getElementById('statIn').textContent = fmt(inSum);
+  document.getElementById('statInSub').textContent = inCount(rows) + ' 笔转入';
+  document.getElementById('statOut').textContent = fmt(outSum);
+  document.getElementById('statOutSub').textContent = outCount(rows) + ' 笔转出';
+
+  var card = document.getElementById('statMismatchCard');
+  document.getElementById('statMismatch').innerHTML = mis + '<span class="unit">笔</span>';
+  card.classList.remove('is-warn','is-ok');
+  if (mis > 0){
+    card.classList.add('is-warn');
+    document.getElementById('statMismatchSub').textContent = '需确认或核对，红底行';
+  } else if (confirmedInView > 0){
+    card.classList.add('is-ok');
+    document.getElementById('statMismatchSub').textContent = '已人工确认 ' + confirmedInView + ' 行';
+  } else {
+    document.getElementById('statMismatchSub').textContent = '余额衔接全部正常';
+  }
+
+  document.getElementById('countLine').innerHTML =
+    '共 <b>' + rows.length + '</b> 条 · 全部展示';
+}
+function inCount(rows){ return rows.filter(function(r){return r.influx>0;}).length; }
+function outCount(rows){ return rows.filter(function(r){return r.outflux>0;}).length; }
+
+/* ---------------- Render: table ---------------- */
+function renderTable(){
+  var rows = filtered();
+
+  var tbody = document.getElementById('tbody');
+  var empty = document.getElementById('emptyState');
+  var scroll = document.getElementById('tableScroll');
+
+  if (!rows.length){
+    tbody.innerHTML = '';
+    empty.classList.add('show');
+    var tbl = document.querySelector('table');
+    tbl.style.display = 'none';
+    scroll.style.maxHeight = 'none';
+    return;
+  }
+  empty.classList.remove('show');
+  document.querySelector('table').style.display = '';
+  scroll.style.maxHeight = '';
+
+  var html = '';
+  for (var i=0;i<rows.length;i++){
+    var r = rows[i];
+    var st = displayState(r);
+    var meta = stateMeta(st);
+    var isOpen = !!state.expanded[r.id];
+    var cpTag = r.pos ? '<span class="tag-pos">POS 清算</span>' : '';
+    var checkedTag = r.checked ? '<span class="row-checked-tag">已核对</span>' : '';
+    var memoCell = r.memo
+      ? (r.pos ? '<span class="memo-pos">'+esc(r.memo)+'</span>' : esc(r.memo))
+      : '<span class="memo-empty">—</span>';
+
+    html += '<tr class="'+meta.rowClass+'" data-row="'+r.id+'" data-od-id="flow-row-'+r.id+'">'
+      + '<td class="td-expand"><button class="expand-btn'+(isOpen?' open':'')+'" data-expand="'+r.id+'" aria-label="展开余额衔接">'+ICO.chev+'</button></td>'
+      + '<td class="td-time mono">'+esc(r.time)+'</td>'
+      + '<td class="td-acct">'+esc(r.account)+'</td>'
+      + '<td><div class="cell-cp"><span class="cp-name">'+esc(r.counterparty)+'</span>'+cpTag+checkedTag+'</div></td>'
+      + '<td>'+esc(r.summary)+'</td>'
+      + '<td>'+memoCell+'</td>'
+      + '<td class="num in mono">'+moneyInOut(r.influx)+'</td>'
+      + '<td class="num out mono">'+moneyInOut(r.outflux)+'</td>'
+      + '<td class="num bal mono">'+fmt(r.balance)+'</td>'
+      + '<td>'+meta.badge+'</td>'
+      + '</tr>';
+
+    if (isOpen) html += detailRow(r);
+  }
+  tbody.innerHTML = html;
+  renderStats();
+  document.getElementById('countLine').innerHTML =
+    '共 <b>' + rows.length + '</b> 条 · 全部展示';
+}
+
+function detailRow(r){
+  var st = displayState(r);
+  var prev = r.prevBalance;
+  var eq;
+  if (r.skip){
+    eq = '<div class="eq-line"><span class="eq-verdict skip">本行为批次首行，无上行余额可校验。</span></div>';
+  } else {
+    var terms = ''
+      + '<span class="eq-term"><span class="lbl">上行余额</span>'+fmt(prev)+'</span>'
+      + '<span class="eq-op">+</span>'
+      + '<span class="eq-term"><span class="lbl">转入</span>'+fmt(r.influx)+'</span>'
+      + '<span class="eq-op">−</span>'
+      + '<span class="eq-term"><span class="lbl">转出</span>'+fmt(r.outflux)+'</span>'
+      + '<span class="eq-eq">=</span>'
+      + '<span class="eq-term"><span class="lbl">应到余额</span>'+fmt(r.expected)+'</span>';
+    var verdict;
+    if (r.mismatch && st==='mismatch'){
+      verdict = '<span class="eq-verdict err">余额衔接断开：本行余额 ' + fmt(r.balance) + '，差额 ' + fmtSigned(r.diff) + '</span>';
+    } else if (r.mismatch && st==='confirmed'){
+      verdict = '<span class="eq-verdict ok">人工确认前余额衔接断开：差额 ' + fmtSigned(r.diff) + '，本批次已确认。</span>';
+    } else {
+      verdict = '<span class="eq-verdict ok">衔接正常：本行余额 ' + fmt(r.balance) + ' = 应到余额。</span>';
+    }
+    eq = '<div class="eq-line">'+terms+'</div>' + verdict;
+  }
+  return '<tr class="detail-row" data-od-id="balance-detail-'+r.id+'"><td colspan="10"><div class="eq-wrap">'
+    + '<div class="eq-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4"/><path d="M15 21h4a2 2 0 0 0 2-2v-4"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>余额衔接校验</div>'
+    + eq
+    + '<div class="eq-actions">'
+      + '<button class="btn btn-sm" data-locate="'+r.id+'">定位相邻行</button>'
+      + '<button class="btn btn-sm'+(r.checked?' btn-primary':'')+'" data-check="'+r.id+'">'+(r.checked?'已标记核对':'标记已核对')+'</button>'
+      + '<span class="divider"></span>'
+      + '<button class="btn btn-link" data-detail="'+r.id+'">查看完整详情 →</button>'
+    + '</div>'
+  + '</div></td></tr>';
+}
+
+/* ---------------- Drawer ---------------- */
+function openDrawer(id){
+  var r = null;
+  for (var i=0;i<ROWS.length;i++){ if(ROWS[i].id===id) r = ROWS[i]; }
+  if (!r) return;
+  var b = batchOf(r.batchId);
+  var st = displayState(r);
+
+  var amountHtml = (r.influx>0)
+    ? '<div class="drow"><span class="dk">转入金额</span><span class="dv amt-in mono-num">+ '+fmt(r.influx)+'</span></div>'
+    : '<div class="drow"><span class="dk">转出金额</span><span class="dv amt-out mono-num">− '+fmt(r.outflux)+'</span></div>';
+
+  var body = ''
+    + '<div class="dsection"><h3>核心字段</h3><div class="dlist">'
+      + drow('交易时间', esc(r.time))
+      + drow('对方账号', '<span style="font-family:var(--font-mono)">'+esc(r.account)+'</span>')
+      + drow('对方单位', esc(r.counterparty) + (r.pos?' <span class="tag-pos">POS 清算</span>':''))
+      + drow('摘要 / 用途', esc(r.summary))
+      + drow('附言', r.memo ? (r.pos?'<span class="memo-pos">'+esc(r.memo)+'</span>':esc(r.memo)) : '<span class="dnone">无</span>')
+      + amountHtml
+      + drow('余额（交易后）', '<span class="mono-num" style="font-weight:600">'+fmt(r.balance)+'</span>')
+      + drow('校验状态', stateMeta(st).badge)
+    + '</div></div>'
+
+    + '<div class="dsection"><h3>来源</h3><div class="dlist">'
+      + drow('来源文件', esc(b.file))
+      + drow('批次', esc(b.id))
+      + drow('原始行号', '第 ' + r.line + ' 行')
+      + drow('导入时间', esc(b.importedAt))
+    + '</div></div>'
+
+    + '<div class="dsection"><h3>原始 JSON 摘要</h3><div class="json">' + rawJson(r) + '</div></div>'
+
+    + '<div class="dsection"><h3>余额衔接上下文</h3>' + contextBlock(r) + '</div>'
+
+    + '<div class="dsection"><h3>关联凭证</h3>'
+      + (r.voucher
+          ? '<a class="voucher-link" href="#" onclick="return false;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'+esc(r.voucher)+'</a>'
+          : '<div class="dnone">该流水行未关联凭证。</div>')
+    + '</div>';
+
+  document.getElementById('drawerBody').innerHTML = body;
+  var d = document.getElementById('drawer');
+  d.classList.add('open'); d.setAttribute('aria-hidden','false');
+  document.getElementById('drawerOverlay').classList.add('open');
+}
+function drow(k,v){ return '<div class="drow"><span class="dk">'+k+'</span><span class="dv">'+v+'</span></div>'; }
+
+function rawJson(r){
+  var obj = {
+    trade_time: r.time,
+    opp_account: r.account,
+    opp_name: r.counterparty,
+    summary: r.summary,
+    memo: r.memo || null,
+    credit: r.influx,
+    debit: r.outflux,
+    balance: r.balance,
+    batch_id: r.batchId,
+    src_line: r.line
+  };
+  var s = esc(JSON.stringify(obj, null, 2));
+  s = s.replace(/"([^"]+)":/g, '<span class="k">"$1"</span>:');
+  s = s.replace(/: "([^"]*)"/g, ': <span class="s">"$1"</span>');
+  s = s.replace(/: (\d+(?:\.\d+)?)/g, ': <span class="n">$1</span>');
+  s = s.replace(/: (null|true|false)/g, ': <span class="b">$1</span>');
+  return s;
+}
+function contextBlock(r){
+  var i = ROWS.indexOf(r);
+  var batchRows = ROWS.filter(function(x){ return x.batchId===r.batchId; });
+  var bi = batchRows.indexOf(r);
+  var prevRow = bi>0 ? batchRows[bi-1] : null;
+  var nextRow = bi<batchRows.length-1 ? batchRows[bi+1] : null;
+  function row(label, rr, current){
+    if (!rr) return '<div class="ctx-row"><span class="cmark">'+label+'</span><span class="cdesc dnone">无</span><span class="cbal dnone">—</span></div>';
+    return '<div class="ctx-row'+(current?' current':'')+'">'
+      + '<span class="cmark">'+label+'</span>'
+      + '<span class="cdesc">'+esc(rr.summary+' · '+rr.counterparty)+'</span>'
+      + '<span class="cbal">'+fmt(rr.balance)+'</span>'
+    + '</div>';
+  }
+  var eq = r.skip
+    ? '<div class="eq-verdict skip" style="margin-top:8px">首行无上行余额。</div>'
+    : '<div class="eq-verdict '+(r.mismatch?'err':'ok')+'" style="margin-top:8px">'
+        + (r.mismatch ? '差额 '+fmtSigned(r.diff) : '衔接正常')
+      + '</div>';
+  return '<div class="ctx">' + row('上一行', prevRow, false) + row('当前行', r, true) + row('下一行', nextRow, false) + '</div>' + eq;
+}
+function closeDrawer(){
+  var d = document.getElementById('drawer');
+  d.classList.remove('open'); d.setAttribute('aria-hidden','true');
+  document.getElementById('drawerOverlay').classList.remove('open');
+}
+
+/* ---------------- Modal ---------------- */
+var modalHandler = null;
+function openModal(opts){
+  document.getElementById('modalTitle').textContent = opts.title;
+  document.getElementById('modalBody').innerHTML = opts.body;
+  var ico = document.getElementById('modalIco');
+  ico.className = 'modal-ico ' + (opts.variant === 'danger' ? 'danger' : 'info');
+  ico.innerHTML = opts.variant === 'danger'
+    ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+    : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+  var btn = document.getElementById('modalConfirm');
+  btn.textContent = opts.confirmLabel || '确认';
+  btn.className = 'btn ' + (opts.variant === 'danger' ? 'btn-danger' : 'btn-primary');
+  modalHandler = opts.onConfirm;
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); modalHandler = null; }
+
+/* ---------------- Alert bar ---------------- */
+var alertIcon = {
+  info:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+  ok:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+  warn:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  danger:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+};
+function showAlert(tone, msg){
+  document.getElementById('alertBar').innerHTML =
+    '<div class="alert alert-'+tone+'">'+alertIcon[tone]+'<span class="txt">'+msg+'</span>'
+    + '<button class="close" onclick="this.parentNode.parentNode.innerHTML=\'\'" aria-label="关闭">'
+    + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>';
+}
+
+/* ---------------- Toast ---------------- */
+function toast(tone, msg){
+  var el = document.createElement('div');
+  el.className = 'toast ' + tone;
+  el.innerHTML = '<span class="tbar"></span><div class="tbody">'+msg+'</div>'
+    + '<button class="tclose" aria-label="关闭"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+  document.getElementById('toasts').appendChild(el);
+  function dismiss(){ el.classList.add('leaving'); setTimeout(function(){ el.remove(); }, 240); }
+  el.querySelector('.tclose').addEventListener('click', dismiss);
+  setTimeout(dismiss, 4200);
+}
+
+/* ---------------- Actions ---------------- */
+function confirmBatch(){
+  var b = batchOf(state.batchFilter);
+  if (!b || b.confirmed) return;
+  var mis = ROWS.filter(function(r){ return r.batchId===b.id && r.mismatch; }).length;
+  openModal({
+    title:'确认本批次余额',
+    variant:'info',
+    confirmLabel:'确认本批余额',
+    body:'确认本批次余额连续性吗？<br>确认后不平行的红底将消除，之后可撤销。'
+       + '<br><br><span style="color:var(--muted)">批次：'+esc(b.file)+' · 将消除 '+mis+' 行红底。</span>',
+    onConfirm:function(){
+      b.confirmed = true;
+      b.confirmedAt = nowStamp();
+      closeModal();
+      renderBatchBar(); renderTable(); renderStats(); updateNavBadge();
+      showAlert('ok','已确认批次余额（'+mis+' 行红底消除），可撤销。');
+      toast('ok','<b>'+esc(b.file)+'</b> 已确认，'+mis+' 行不平改为「已确认」。');
+    }
+  });
+}
+function revokeBatch(){
+  var b = batchOf(state.batchFilter);
+  if (!b || !b.confirmed) return;
+  var mis = ROWS.filter(function(r){ return r.batchId===b.id && r.mismatch; }).length;
+  openModal({
+    title:'撤销批次余额确认',
+    variant:'danger',
+    confirmLabel:'撤销确认',
+    body:'撤销本批次的余额确认吗？<br>不平行的行将恢复红底显示。'
+       + '<br><br><span style="color:var(--muted)">批次：'+esc(b.file)+' · 将恢复 '+mis+' 行红底。</span>',
+    onConfirm:function(){
+      b.confirmed = false;
+      b.confirmedAt = null;
+      closeModal();
+      renderBatchBar(); renderTable(); renderStats(); updateNavBadge();
+      showAlert('warn','已撤销本批次余额确认，'+mis+' 行不平恢复红底显示。');
+      toast('warn','<b>'+esc(b.file)+'</b> 已撤销确认。');
+    }
+  });
+}
+function nowStamp(){
+  var d = new Date();
+  function p(n){ return (n<10?'0':'')+n; }
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
+}
+function updateNavBadge(){
+  var mis = ROWS.filter(function(r){ return displayState(r)==='mismatch'; }).length;
+  var badge = document.getElementById('navMismatchBadge');
+  if (mis>0){ badge.style.display=''; badge.textContent = mis; }
+  else badge.style.display = 'none';
+}
+
+function buildBatchOptions(){
+  var sel = document.getElementById('fBatch');
+  var total = ROWS.length;
+  var opts = '<option value="all">全部批次（'+total+' 行）</option>';
+  for (var i=0;i<BATCHES.length;i++){
+    var b = BATCHES[i];
+    var n = ROWS.filter(function(r){ return r.batchId===b.id; }).length;
+    opts += '<option value="'+b.id+'">'+esc(b.file)+'（'+n+' 行）</option>';
+  }
+  sel.innerHTML = opts;
+  sel.value = state.batchFilter;
+}
+
+/* ---------------- Wire events ---------------- */
+function bind(){
+  document.getElementById('fBatch').addEventListener('change', function(e){
+    state.batchFilter = e.target.value; state.expanded = {};
+    persist(); renderBatchBar(); renderTable(); renderStats();
+  });
+  document.getElementById('btnQuery').addEventListener('click', function(){
+    state.from = document.getElementById('fFrom').value || '';
+    state.to = document.getElementById('fTo').value || '';
+    state.kw = document.getElementById('fKw').value.trim();
+    persist(); renderBatchBar(); renderTable(); renderStats();
+    var n = filtered().length;
+    toast('info','查询完成，命中 '+n+' 条记录。');
+  });
+  document.getElementById('fKw').addEventListener('keydown', function(e){ if(e.key==='Enter'){ document.getElementById('btnQuery').click(); } });
+  document.getElementById('btnReset').addEventListener('click', function(){
+    state.from=''; state.to=''; state.kw='';
+    document.getElementById('fFrom').value=''; document.getElementById('fTo').value=''; document.getElementById('fKw').value='';
+    persist(); renderBatchBar(); renderTable(); renderStats();
+  });
+
+  document.getElementById('btnConfirm').addEventListener('click', confirmBatch);
+  document.getElementById('btnRevoke').addEventListener('click', revokeBatch);
+  document.getElementById('btnRefresh').addEventListener('click', function(){ renderBatchBar(); renderTable(); renderStats(); updateNavBadge(); toast('info','已刷新当前视图。'); });
+  document.getElementById('btnExport').addEventListener('click', function(){ toast('info','已按当前筛选导出 TSV（原型演示，不产生文件）。'); });
+  document.getElementById('btnGoImport').addEventListener('click', function(){ toast('info','跳转导入中心（原型演示）。'); });
+
+  /* table interactions (delegated) */
+  document.getElementById('tbody').addEventListener('click', function(e){
+    var expBtn = e.target.closest('[data-expand]');
+    if (expBtn){ e.stopPropagation(); var id=expBtn.getAttribute('data-expand'); state.expanded[id]=!state.expanded[id]; renderTable(); return; }
+    var locBtn = e.target.closest('[data-locate]');
+    if (locBtn){ e.stopPropagation(); locateNeighbor(locBtn.getAttribute('data-locate')); return; }
+    var chkBtn = e.target.closest('[data-check]');
+    if (chkBtn){ e.stopPropagation(); var cid=chkBtn.getAttribute('data-check'); var rr=findRow(cid); rr.checked=!rr.checked; renderTable(); toast('ok', rr.checked?'已标记该行为「已核对」（本地标注）。':'已取消「已核对」标记。'); return; }
+    var detBtn = e.target.closest('[data-detail]');
+    if (detBtn){ e.stopPropagation(); openDrawer(detBtn.getAttribute('data-detail')); return; }
+    var tr = e.target.closest('tr[data-row]');
+    if (tr){ openDrawer(tr.getAttribute('data-row')); }
+  });
+
+  document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+  document.getElementById('drawerOverlay').addEventListener('click', closeDrawer);
+
+  document.getElementById('modalCancel').addEventListener('click', closeModal);
+  document.getElementById('overlay').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+  document.getElementById('modalConfirm').addEventListener('click', function(){ if(modalHandler) modalHandler(); });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key==='Escape'){ if(document.getElementById('overlay').classList.contains('open')) closeModal(); else closeDrawer(); }
+  });
+}
+function findRow(id){ for(var i=0;i<ROWS.length;i++){ if(ROWS[i].id===id) return ROWS[i]; } return null; }
+function locateNeighbor(id){
+  var r = findRow(id);
+  var batchRows = ROWS.filter(function(x){ return x.batchId===r.batchId; });
+  var bi = batchRows.indexOf(r);
+  var target = bi>0 ? batchRows[bi-1] : batchRows[bi+1];
+  if (!target) return;
+  var tr = document.querySelector('tr[data-row="'+target.id+'"]');
+  if (tr){
+    tr.classList.remove('flash'); void tr.offsetWidth; tr.classList.add('flash');
+    var sc = document.getElementById('tableScroll');
+    sc.scrollTop = Math.max(0, tr.offsetTop - sc.clientHeight/2);
+  }
+  toast('info','已定位到相邻行：'+target.time+' · 余额 '+fmt(target.balance));
+}
+
+/* ---------------- Init ---------------- */
+restore();
+document.getElementById('fFrom').value = state.from || '';
+document.getElementById('fTo').value = state.to || '';
+buildBatchOptions();
+updateNavBadge();
+renderBatchBar();
+renderTable();
+renderStats();
+bind();
+showAlert('info','本页为网银次日导出的原始流水（只读）。已选批次含 '+ROWS.filter(function(r){return displayState(r)==='mismatch';}).length+' 笔余额不平，请确认后继续。');
+</script>
+</body>
+</html>

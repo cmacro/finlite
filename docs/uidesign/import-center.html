@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Finlite · 导入中心</title>
+<style>
+  /* ============================================================
+     Finlite design tokens  (shared with 银行流水 / 订单流水 /
+     店面收款 / 对账中心 pages) — do not redefine outside :root
+     ============================================================ */
+  :root {
+    --bg: #ffffff;
+    --surface: #f7f8fa;
+    --surface-2: #fbfcfe;
+    --fg: #111111;
+    --fg-2: #374151;
+    --muted: #6b7280;
+    --border: #d9dee7;
+    --border-soft: #eceff4;
+    --border-strong: #c3ccd9;
+
+    --accent: #1677ff;
+    --accent-hover: #0f66e6;
+    --accent-active: #0b52c4;
+    --accent-soft: #eaf2ff;
+    --accent-on: #ffffff;
+    --focus-ring: 0 0 0 3px rgba(22, 119, 255, 0.24);
+
+    --ok: oklch(0.62 0.17 145);
+    --ok-bg: oklch(0.965 0.03 145);
+    --ok-border: oklch(0.86 0.07 145);
+    --ok-fg: oklch(0.45 0.13 145);
+
+    --warn: oklch(0.72 0.14 75);
+    --warn-bg: oklch(0.975 0.045 75);
+    --warn-border: oklch(0.87 0.10 75);
+    --warn-fg: oklch(0.48 0.11 75);
+
+    --err: oklch(0.58 0.20 25);
+    --err-bg: oklch(0.965 0.035 25);
+    --err-border: oklch(0.86 0.09 25);
+    --err-fg: oklch(0.46 0.17 25);
+
+    --font: Inter, system-ui, -apple-system, "Segoe UI", "PingFang SC",
+      "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    --mono: "SF Mono", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
+
+    --radius-xs: 4px;
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+
+    --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.06);
+    --shadow-md: 0 10px 30px rgba(17, 24, 39, 0.10);
+    --shadow-lg: 0 24px 64px rgba(17, 24, 39, 0.20);
+
+    --sidebar-w: 220px;
+    --topbar-h: 52px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--fg);
+    background: var(--surface);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, h4, p { margin: 0; }
+  button { font-family: inherit; }
+  .num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+  .mono { font-family: var(--mono); }
+
+  /* ============================== Sidebar ============================== */
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: var(--sidebar-w);
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    z-index: 30;
+  }
+  .brand {
+    height: var(--topbar-h);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border-soft);
+    flex: 0 0 auto;
+  }
+  .brand-mark {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    display: grid;
+    place-items: center;
+    letter-spacing: -0.02em;
+    flex: 0 0 auto;
+  }
+  .brand-name { font-size: 15px; font-weight: 650; letter-spacing: -0.01em; }
+  .brand-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+  .nav { flex: 1 1 auto; overflow-y: auto; padding: 12px 10px 20px; }
+  .nav-group { margin-bottom: 16px; }
+  .nav-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: #9aa3b2;
+    text-transform: none;
+    padding: 4px 8px 6px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 34px;
+    padding: 0 8px;
+    border-radius: var(--radius-sm);
+    color: var(--fg-2);
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.12s, color 0.12s;
+    position: relative;
+  }
+  .nav-item .ico { color: #98a2b3; flex: 0 0 auto; display: grid; place-items: center; }
+  .nav-item:hover { background: var(--surface); color: var(--fg); }
+  .nav-item:hover .ico { color: var(--fg-2); }
+  .nav-item:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  .nav-item.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .nav-item.active .ico { color: var(--accent); }
+
+  .sidebar-foot {
+    flex: 0 0 auto;
+    border-top: 1px solid var(--border-soft);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #eef2f8; color: var(--fg-2);
+    display: grid; place-items: center; font-size: 12px; font-weight: 600;
+    flex: 0 0 auto;
+  }
+  .foot-name { font-size: 12.5px; font-weight: 600; }
+  .foot-role { font-size: 11px; color: var(--muted); }
+
+  /* ============================== Main ============================== */
+  .main { margin-left: var(--sidebar-w); min-height: 100vh; display: flex; flex-direction: column; }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    height: var(--topbar-h);
+    flex: 0 0 auto;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: saturate(1.4) blur(6px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 22px;
+  }
+  .crumb { font-size: 12.5px; color: var(--muted); }
+  .topbar h1 { font-size: 16px; font-weight: 650; letter-spacing: -0.01em; }
+  .topbar .divider { width: 1px; height: 20px; background: var(--border); }
+  .topbar-spacer { flex: 1 1 auto; }
+  .topbar-actions { display: flex; align-items: center; gap: 8px; }
+
+  .period-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    height: 30px; padding: 0 11px;
+    border: 1px solid var(--border); background: var(--bg);
+    border-radius: var(--radius-sm); font-size: 12.5px; color: var(--fg-2);
+    cursor: pointer; transition: background 0.12s, border-color 0.12s;
+  }
+  .period-btn:hover { background: var(--surface); border-color: var(--border-strong); }
+  .period-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); border-color: var(--accent); }
+  .period-btn b { font-weight: 600; color: var(--fg); }
+
+  .icon-btn {
+    width: 30px; height: 30px; display: grid; place-items: center;
+    border: 1px solid var(--border); background: var(--bg);
+    border-radius: var(--radius-sm); color: var(--fg-2); cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .icon-btn:hover { background: var(--surface); border-color: var(--border-strong); }
+  .icon-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); border-color: var(--accent); }
+
+  .content { padding: 20px 22px 56px; }
+
+  /* ============================== Buttons ============================== */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    height: 32px; padding: 0 14px;
+    font-size: 13px; font-weight: 500; line-height: 1;
+    border: 1px solid var(--border); background: var(--bg); color: var(--fg);
+    border-radius: var(--radius-sm); cursor: pointer;
+    transition: background 0.14s, border-color 0.14s, color 0.14s, box-shadow 0.14s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--surface); border-color: var(--border-strong); }
+  .btn:focus-visible { outline: none; box-shadow: var(--focus-ring); border-color: var(--accent); }
+  .btn-primary {
+    background: var(--accent); border-color: var(--accent); color: var(--accent-on);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  .btn-primary:active { background: var(--accent-active); border-color: var(--accent-active); }
+  .btn-primary:focus-visible { box-shadow: var(--focus-ring); }
+  .btn-lg { height: 36px; padding: 0 18px; font-size: 13.5px; }
+
+  .link {
+    color: var(--accent); text-decoration: none; font-weight: 500; cursor: pointer;
+    border-bottom: 1px solid transparent; transition: border-color 0.12s;
+  }
+  .link:hover { border-bottom-color: currentColor; }
+  .link:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 3px; }
+
+  /* ============================== Cards / sections ============================== */
+  .card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+  }
+  .card-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 18px; border-bottom: 1px solid var(--border-soft);
+  }
+  .card-title { font-size: 14px; font-weight: 650; letter-spacing: -0.01em; }
+  .card-title .ico { color: var(--muted); vertical-align: -2px; margin-right: 7px; }
+  .card-head .spacer { flex: 1 1 auto; }
+  .card-body { padding: 18px; }
+  .section { margin-top: 18px; }
+  .section-head { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 10px; }
+  .section-head h2 { font-size: 14.5px; font-weight: 650; letter-spacing: -0.01em; }
+  .section-head .count { font-size: 12.5px; color: var(--muted); }
+
+  /* ============================== Info banner ============================== */
+  .info-banner {
+    display: flex; gap: 11px; align-items: flex-start;
+    background: var(--accent-soft);
+    border: 1px solid #cfe0ff;
+    border-radius: var(--radius-md);
+    padding: 12px 15px;
+  }
+  .info-banner .ico { color: var(--accent); flex: 0 0 auto; margin-top: 1px; }
+  .info-banner .body { font-size: 13px; color: #26476f; line-height: 1.62; }
+  .info-banner .body strong { color: #12314f; font-weight: 650; }
+  .info-banner .body .sep { color: #9db8dc; margin: 0 6px; }
+
+  /* ============================== Stepper ============================== */
+  .stepper {
+    display: flex; align-items: center;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+    padding: 14px 20px; margin-top: 14px;
+    overflow-x: auto;
+  }
+  .step { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+  .step-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 12.5px; font-weight: 650;
+    background: var(--surface); color: var(--muted);
+    border: 1px solid var(--border); transition: all 0.16s;
+  }
+  .step-text { display: flex; flex-direction: column; line-height: 1.25; }
+  .step-text .t { font-size: 13px; font-weight: 600; color: var(--muted); }
+  .step-text .s { font-size: 11px; color: #9aa3b2; }
+  .step.done .step-num { background: var(--ok-bg); border-color: var(--ok-border); color: var(--ok-fg); }
+  .step.done .step-text .t { color: var(--fg-2); }
+  .step.active .step-num { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 0 0 4px rgba(22, 119, 255, 0.14); }
+  .step.active .step-text .t { color: var(--fg); }
+  .step.active .step-text .s { color: var(--accent); }
+  .step-line { flex: 1 1 auto; min-width: 32px; height: 2px; background: var(--border); margin: 0 14px; border-radius: 2px; }
+  .step-line.done { background: var(--ok-border); }
+
+  /* ============================== Stat cards ============================== */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 14px; }
+  .stat {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+    padding: 14px 16px; position: relative; overflow: hidden;
+  }
+  .stat-label { font-size: 12px; color: var(--muted); font-weight: 500; display: flex; align-items: center; gap: 6px; }
+  .stat-value { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin-top: 8px; line-height: 1; }
+  .stat-value .unit { font-size: 13px; font-weight: 600; color: var(--muted); margin-left: 4px; letter-spacing: 0; }
+  .stat-sub { font-size: 11.5px; color: #9aa3b2; margin-top: 7px; }
+  .stat.warn { background: var(--warn-bg); border-color: var(--warn-border); }
+  .stat.warn .stat-label { color: var(--warn-fg); }
+  .stat.warn .stat-value { color: var(--warn-fg); }
+  .stat.warn .stat-sub { color: var(--warn-fg); opacity: 0.85; }
+
+  /* ============================== Dropzone ============================== */
+  .dropzone {
+    border: 2px dashed var(--border-strong);
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
+    padding: 34px 24px 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.16s, background 0.16s, box-shadow 0.16s;
+  }
+  .dropzone:hover { border-color: #a9bcd6; background: #f4f8ff; }
+  .dropzone:focus-visible { outline: none; box-shadow: var(--focus-ring); border-color: var(--accent); }
+  .dropzone.dragover { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px rgba(22,119,255,0.18); }
+  .dz-icon {
+    width: 56px; height: 56px; margin: 0 auto 14px;
+    display: grid; place-items: center; border-radius: 14px;
+    background: #fff; border: 1px solid var(--border); color: var(--muted);
+    transition: color 0.16s, transform 0.16s, background 0.16s;
+  }
+  .dropzone.dragover .dz-icon { color: var(--accent); transform: translateY(-2px); background: #fff; }
+  .dz-title { font-size: 15px; font-weight: 600; color: var(--fg); }
+  .dz-title .accent { color: var(--accent); }
+  .dz-sub { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+  .dz-tags { display: flex; gap: 6px; justify-content: center; margin: 14px 0 16px; }
+  .fmt {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+    font-family: var(--mono);
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--fg-2); border-radius: var(--radius-xs); padding: 3px 8px;
+  }
+  .dz-samples { margin-top: 16px; font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; align-items: center; }
+  .sample { color: var(--fg-2); font-family: var(--mono); font-size: 11.5px; padding: 2px 7px; border-radius: var(--radius-xs); background: var(--surface); border: 1px solid var(--border); cursor: pointer; transition: color .12s, border-color .12s, background .12s; }
+  .sample:hover { color: var(--accent); border-color: #bdd4f7; background: var(--accent-soft); }
+  .sample:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+  /* ============================== Result banners ============================== */
+  .results { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .results:empty { display: none; }
+  .banner {
+    display: flex; gap: 11px; align-items: flex-start;
+    border-radius: var(--radius-md); padding: 13px 15px;
+    border: 1px solid var(--border);
+    animation: rise 0.28s cubic-bezier(0.2, 0, 0, 1);
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .banner .ico { flex: 0 0 auto; margin-top: 1px; }
+  .banner .body { font-size: 13px; line-height: 1.6; }
+  .banner .body strong { font-weight: 650; }
+  .banner.success { background: var(--ok-bg); border-color: var(--ok-border); color: var(--ok-fg); }
+  .banner.success .ico { color: var(--ok-fg); }
+  .banner.success .body strong { color: var(--ok-fg); }
+  .banner.warn { background: var(--warn-bg); border-color: var(--warn-border); color: var(--warn-fg); }
+  .banner.warn .ico { color: var(--warn-fg); }
+  .banner.warn .body strong { color: var(--warn-fg); }
+  .banner.warn .body a { color: var(--warn-fg); font-weight: 650; text-decoration: underline; text-underline-offset: 2px; }
+  .banner.err { background: var(--err-bg); border-color: var(--err-border); color: var(--err-fg); }
+  .banner.err .ico { color: var(--err-fg); }
+  .banner.err .body strong { color: var(--err-fg); }
+  .banner .body .em { font-weight: 650; }
+
+  /* ============================== Tables ============================== */
+  /* Keep the batch table wrapper non-scrolling on desktop so the sticky
+     thead sticks to the page; only fall back to x-scroll on narrow widths. */
+  .table-wrap { overflow: visible; }
+  @media (max-width: 980px) { .table-wrap { overflow-x: auto; } }
+  table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+  table.tbl thead th {
+    position: sticky; top: var(--topbar-h); z-index: 5;
+    text-align: left; font-weight: 600; font-size: 12px; color: var(--muted);
+    background: var(--surface);
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  table.tbl tbody td {
+    padding: 11px 14px; border-bottom: 1px solid var(--border-soft);
+    color: var(--fg); vertical-align: middle;
+  }
+  table.tbl tbody tr:last-child td { border-bottom: none; }
+  table.tbl tbody tr { transition: background 0.1s; }
+  table.tbl tbody tr:hover { background: var(--surface-2); }
+  table.tbl .right { text-align: right; }
+  table.tbl .file { font-family: var(--mono); font-size: 12.5px; color: var(--fg-2); }
+  table.tbl .muted { color: var(--muted); }
+  .tbl-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 22px; padding: 0 9px; border-radius: 999px;
+    font-size: 12px; font-weight: 550; white-space: nowrap;
+    border: 1px solid var(--border); background: var(--surface); color: var(--fg-2);
+  }
+  .tbl-tag .dot { width: 6px; height: 6px; border-radius: 50%; background: #a7b0bf; }
+  .tbl-tag.bank { background: var(--accent-soft); border-color: #cfe0ff; color: #1457b8; }
+  .tbl-tag.bank .dot { background: var(--accent); }
+  .warn-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600;
+    background: var(--warn-bg); border: 1px solid var(--warn-border); color: var(--warn-fg);
+    white-space: nowrap;
+  }
+  .warn-badge .ico { flex: 0 0 auto; }
+  .link-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: none; border: none; padding: 4px 6px; margin: -4px -6px;
+    color: var(--accent); font-size: 12.5px; font-weight: 550; cursor: pointer;
+    border-radius: var(--radius-xs);
+  }
+  .link-btn:hover { background: var(--accent-soft); }
+  .link-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  .link-btn[disabled] { color: var(--muted); cursor: default; background: none; }
+
+  .table-foot {
+    display: flex; align-items: center; gap: 8px;
+    padding: 11px 16px; border-top: 1px solid var(--border-soft);
+    font-size: 12.5px; color: var(--muted); background: var(--surface-2);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  }
+  .table-foot .lock { color: #9aa3b2; }
+
+  /* ============================== Empty state ============================== */
+  .empty {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; padding: 40px 20px; text-align: center; color: var(--muted);
+  }
+  .empty .ico { color: #b6bfcd; }
+  .empty .t { font-size: 13.5px; font-weight: 600; color: var(--fg-2); }
+  .empty .s { font-size: 12px; }
+
+  /* ============================== Modal ============================== */
+  .overlay {
+    position: fixed; inset: 0; z-index: 60;
+    background: rgba(17, 24, 39, 0.42);
+    backdrop-filter: blur(1.5px);
+    display: none; align-items: center; justify-content: center;
+    padding: 28px;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    width: 880px; max-width: 100%; max-height: calc(100vh - 56px);
+    background: var(--bg); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg); border: 1px solid var(--border);
+    display: flex; flex-direction: column; overflow: hidden;
+    animation: pop 0.2s cubic-bezier(0.2, 0, 0, 1);
+  }
+  @keyframes pop { from { opacity: 0; transform: translateY(10px) scale(0.99); } to { opacity: 1; transform: none; } }
+  .modal-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 15px 18px; border-bottom: 1px solid var(--border-soft);
+    flex: 0 0 auto;
+  }
+  .modal-head h3 { font-size: 15px; font-weight: 650; letter-spacing: -0.01em; }
+  .modal-head .x {
+    margin-left: auto; width: 30px; height: 30px; border: none; background: none;
+    border-radius: var(--radius-sm); color: var(--muted); cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .modal-head .x:hover { background: var(--surface); color: var(--fg); }
+  .modal-head .x:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  .modal-body { padding: 18px; overflow-y: auto; flex: 1 1 auto; }
+  .modal-foot {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 18px; border-top: 1px solid var(--border-soft);
+    background: var(--surface-2); flex: 0 0 auto;
+  }
+  .modal-foot .spacer { flex: 1 1 auto; }
+  .modal-foot .hint { font-size: 12px; color: var(--muted); }
+
+  .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+  .meta {
+    background: var(--surface); border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md); padding: 10px 13px;
+  }
+  .meta .k { font-size: 11.5px; color: var(--muted); margin-bottom: 5px; }
+  .meta .v { font-size: 13.5px; font-weight: 600; color: var(--fg); }
+  .meta .v.mono { font-family: var(--mono); font-size: 12.5px; }
+
+  .field-block { margin-bottom: 16px; }
+  .field-block .label {
+    font-size: 12px; font-weight: 600; color: var(--fg-2);
+    display: flex; align-items: center; gap: 7px; margin-bottom: 9px;
+  }
+  .field-block .label .tally { color: var(--muted); font-weight: 500; }
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12.5px; font-weight: 500;
+    padding: 5px 10px; border-radius: 999px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--fg-2);
+  }
+  .chip.ok { background: var(--ok-bg); border-color: var(--ok-border); color: var(--ok-fg); }
+  .chip.err { background: var(--err-bg); border-color: var(--err-border); color: var(--err-fg); }
+  .chip .ico { flex: 0 0 auto; }
+  .field-note {
+    margin-top: 10px; font-size: 12.5px; color: var(--err-fg);
+    background: var(--err-bg); border: 1px solid var(--err-border);
+    border-radius: var(--radius-sm); padding: 9px 12px;
+    display: flex; gap: 8px; align-items: flex-start;
+  }
+  .field-note.ok { color: var(--ok-fg); background: var(--ok-bg); border-color: var(--ok-border); }
+
+  .raw-head {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 9px;
+  }
+  .raw-head .label { font-size: 12px; font-weight: 600; color: var(--fg-2); }
+  .raw-head .tag { font-size: 11px; color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 2px 7px; border-radius: var(--radius-xs); }
+  .raw-scroll {
+    border: 1px solid var(--border); border-radius: var(--radius-md);
+    overflow: auto; max-height: 300px; background: var(--bg);
+  }
+  table.raw { border-collapse: separate; border-spacing: 0; font-size: 12.5px; min-width: 100%; }
+  table.raw th {
+    position: sticky; top: 0; z-index: 2;
+    background: var(--surface); text-align: left; font-weight: 600; font-size: 11.5px;
+    color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  table.raw td {
+    padding: 8px 12px; border-bottom: 1px solid var(--border-soft);
+    white-space: nowrap; color: var(--fg-2);
+  }
+  table.raw tbody tr:last-child td { border-bottom: none; }
+  table.raw .n { font-variant-numeric: tabular-nums; text-align: right; font-feature-settings: "tnum" 1; }
+  table.raw th.n { text-align: right; }
+  table.raw .mono { font-family: var(--mono); font-size: 12px; }
+
+  /* parsing skeleton */
+  .parsing { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 46px 0; color: var(--muted); }
+  .spinner {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 3px solid var(--accent-soft); border-top-color: var(--accent);
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ============================== Drawer ============================== */
+  .drawer-scrim {
+    position: fixed; inset: 0; z-index: 55; background: rgba(17, 24, 39, 0.32);
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .drawer-scrim.open { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; width: 600px; max-width: 100%;
+    background: var(--bg); border-left: 1px solid var(--border); z-index: 56;
+    box-shadow: var(--shadow-lg); display: flex; flex-direction: column;
+    transform: translateX(102%); transition: transform 0.24s cubic-bezier(0.2, 0, 0, 1);
+  }
+  .drawer.open { transform: none; }
+  .drawer-head { padding: 15px 18px; border-bottom: 1px solid var(--border-soft); display: flex; align-items: flex-start; gap: 12px; flex: 0 0 auto; }
+  .drawer-head h3 { font-size: 15px; font-weight: 650; letter-spacing: -0.01em; }
+  .drawer-head .sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .drawer-head .sub .file { font-family: var(--mono); }
+  .drawer-head .x { margin-left: auto; width: 30px; height: 30px; border: none; background: none; border-radius: var(--radius-sm); color: var(--muted); cursor: pointer; display: grid; place-items: center; flex: 0 0 auto; }
+  .drawer-head .x:hover { background: var(--surface); color: var(--fg); }
+  .drawer-head .x:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  .drawer-body { flex: 1 1 auto; overflow-y: auto; padding: 16px 18px 24px; }
+  .err-summary { display: flex; gap: 10px; margin-bottom: 14px; }
+  .err-pill { flex: 1 1 0; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 9px 12px; background: var(--surface); }
+  .err-pill .k { font-size: 11.5px; color: var(--muted); }
+  .err-pill .v { font-size: 18px; font-weight: 700; margin-top: 3px; }
+  .err-pill.err .v { color: var(--err-fg); }
+  .err-pill.warn { background: var(--warn-bg); border-color: var(--warn-border); }
+  .err-pill.warn .v { color: var(--warn-fg); }
+
+  .err-list { display: flex; flex-direction: column; gap: 9px; }
+  .err-row {
+    border: 1px solid var(--border); border-left: 3px solid var(--err);
+    border-radius: var(--radius-md); padding: 11px 13px; background: var(--bg);
+  }
+  .err-row.warn { border-left-color: var(--warn); }
+  .err-row .top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .err-row .row-no { font-family: var(--mono); font-size: 11.5px; font-weight: 600; color: var(--fg-2); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 2px 7px; }
+  .err-row .field-tag { font-size: 11.5px; font-weight: 600; color: var(--err-fg); background: var(--err-bg); border: 1px solid var(--err-border); border-radius: 999px; padding: 2px 9px; }
+  .err-row.warn .field-tag { color: var(--warn-fg); background: var(--warn-bg); border-color: var(--warn-border); }
+  .err-row .desc { font-size: 12.5px; color: var(--fg-2); line-height: 1.6; }
+  .err-row .desc .val { font-family: var(--mono); font-size: 12px; color: var(--fg); background: var(--surface); border: 1px solid var(--border-soft); border-radius: 3px; padding: 0 4px; }
+
+  /* ============================== Toast ============================== */
+  .toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(12px);
+    background: #1f2733; color: #fff; font-size: 13px;
+    padding: 9px 16px; border-radius: 8px; box-shadow: var(--shadow-md);
+    opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; z-index: 90;
+    max-width: 90vw;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%); }
+
+  /* ============================== Responsive ============================== */
+  @media (max-width: 1180px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 900px) {
+    .sidebar { transform: translateX(-100%); }
+    .main { margin-left: 0; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .meta-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ============================== Default-path import ============================== */
+  .path-bar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-md);
+    background: var(--surface); margin-bottom: 12px;
+  }
+  .path-bar .path-label { font-size: 12px; font-weight: 600; color: var(--fg-2); }
+  .path-bar .path-value {
+    font-family: var(--mono); font-size: 12.5px; color: var(--fg);
+    background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-xs);
+    padding: 3px 9px;
+  }
+  .path-bar .path-hint { font-size: 12px; color: var(--muted); }
+  .scan-meta { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); margin-bottom: 10px; }
+  .scan-meta .sep { width: 1px; height: 12px; background: var(--border); }
+  .scan-meta b { color: var(--fg-2); font-weight: 650; }
+  .filelist-wrap { overflow: visible; }
+  @media (max-width: 980px) { .filelist-wrap { overflow-x: auto; } }
+  table.filelist .cb { width: 40px; }
+  table.filelist input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+  table.filelist .file .miss { display: block; font-size: 11.5px; color: var(--warn-fg); font-family: var(--font-body); margin-top: 2px; }
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap;
+    border: 1px solid var(--border); background: var(--surface); color: var(--fg-2);
+  }
+  .status-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .status-badge.new { background: var(--accent-soft); border-color: #cfe0ff; color: #1457b8; }
+  .status-badge.done { background: var(--ok-bg); border-color: var(--ok-border); color: var(--ok-fg); }
+  .status-badge.bad { background: var(--err-bg); border-color: var(--err-border); color: var(--err-fg); }
+  .row-actions { display: flex; align-items: center; gap: 8px; }
+  .scan-actions {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 12px 16px 4px; border-top: 1px solid var(--border-soft); margin-top: 4px;
+  }
+  .scan-actions .hint { font-size: 12.5px; color: var(--muted); }
+  .scan-actions .chk { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--fg-2); cursor: pointer; }
+  .scan-actions .chk input { width: 15px; height: 15px; accent-color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- ============================== Sidebar ============================== -->
+<aside class="sidebar" data-od-id="sidebar">
+  <div class="brand" data-od-id="brand">
+    <div class="brand-mark">F</div>
+    <div>
+      <div class="brand-name">Finlite</div>
+      <div class="brand-sub">健康管理 · 财务助手</div>
+    </div>
+  </div>
+
+  <nav class="nav" data-od-id="main-nav" aria-label="主导航">
+    <div class="nav-group">
+      <div class="nav-label">数据导入</div>
+      <a class="nav-item active" href="#" data-od-id="nav-import-center" aria-current="page">
+        <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10m0 0l-3.5-3.5M12 13l3.5-3.5"/><path d="M4 16v2.5A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5V16"/></svg></span>
+        导入中心
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">业务流水</div>
+      <a class="nav-item" href="#" data-od-id="nav-bank-statement">
+        <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 4l9 5.5"/><path d="M5 10v9M9.5 10v9M14.5 10v9M19 10v9"/><path d="M3 21h18"/></svg></span>
+        银行流水
+      </a>
+      <a class="nav-item" href="#" data-od-id="nav-order-statement">
+        <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-1.8L12 21l-3-1.8L6 21z"/><path d="M9 8h6M9 12h6"/></svg></span>
+        订单流水
+      </a>
+      <a class="nav-item" href="#" data-od-id="nav-store-collection">
+        <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9l1-5h14l1 5"/><path d="M4 9v11h16V9"/><path d="M4 9h16M9.5 20v-6h5v6"/></svg></span>
+        店面收款
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">财务处理</div>
+      <a class="nav-item" href="#" data-od-id="nav-reconciliation">
+        <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M7 6l-4 8h8z"/><path d="M17 6l-4 8h8z"/></svg></span>
+        对账中心
+      </a>
+      <a class="nav-item" href="#" data-od-id="nav-summary">
+        <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11m6 9V4m6 16v-6m4 6H2"/></svg></span>
+        数据汇总
+      </a>
+      <a class="nav-item" href="#" data-od-id="nav-voucher">
+        <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6"/></svg></span>
+        凭证管理
+      </a>
+      <a class="nav-item" href="#" data-od-id="nav-trial-balance">
+        <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M4 9.5h16M4 15h16M10 4v16"/></svg></span>
+        科目余额表
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">系统</div>
+      <a class="nav-item" href="#" data-od-id="nav-settings">
+        <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6a7 7 0 0 0 0 2.4l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.06-.4.1-.8.1-1.2z"/></svg></span>
+        基础设置
+      </a>
+    </div>
+  </nav>
+
+  <div class="sidebar-foot" data-od-id="sidebar-account">
+    <div class="avatar">张</div>
+    <div>
+      <div class="foot-name">张××</div>
+      <div class="foot-role">出纳 · 单账套</div>
+    </div>
+  </div>
+</aside>
+
+<!-- ============================== Main ============================== -->
+<div class="main">
+  <header class="topbar" data-od-id="topbar">
+    <span class="crumb">数据导入</span>
+    <span class="divider"></span>
+    <h1 data-od-id="page-title">导入中心</h1>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-actions">
+      <button class="period-btn" type="button" id="period-selector" data-od-id="period-selector">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v3M16 3v3"/></svg>
+        会计期间 · <b>2026-07</b>
+      </button>
+      <button class="icon-btn" type="button" id="refresh-btn" data-od-id="refresh-btn" title="刷新">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-.9 4.4"/><path d="M20 5v6h-6"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="content">
+
+    <!-- 1. 信息提示条 -->
+    <div class="info-banner" data-od-id="info-banner" role="note">
+      <span class="ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.2"/></svg></span>
+      <div class="body">
+        <strong>本页为只读原始表，不支持编辑。</strong>
+        重复导入按「工行订单号 / 银行行」去重，重复行将自动跳过并计数。
+        <span class="sep">·</span>
+        银行流水导入后会进行<strong>严格余额连续性校验</strong>，余额不连续<strong>不阻断导入</strong>，但会标红等待人工确认。
+      </div>
+    </div>
+
+    <!-- 2. 流程 stepper -->
+    <div class="stepper" data-od-id="import-stepper" aria-label="导入流程">
+      <div class="step" data-step="1" data-od-id="step-select">
+        <span class="step-num">1</span>
+        <span class="step-text"><span class="t">选择文件</span><span class="s">拖拽或浏览本地文件</span></span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step" data-step="2" data-od-id="step-parse">
+        <span class="step-num">2</span>
+        <span class="step-text"><span class="t">解析并预检列映射</span><span class="s">读取表头与样本行</span></span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step" data-step="3" data-od-id="step-confirm">
+        <span class="step-num">3</span>
+        <span class="step-text"><span class="t">人工确认字段识别</span><span class="s">核对关键列与缺失列</span></span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step" data-step="4" data-od-id="step-commit">
+        <span class="step-num">4</span>
+        <span class="step-text"><span class="t">入库并展示结果</span><span class="s">写入本地 SQLite</span></span>
+      </div>
+    </div>
+
+    <!-- 3. 统计卡 -->
+    <div class="stats" data-od-id="stats-row">
+      <div class="stat" data-od-id="stat-batches">
+        <div class="stat-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/></svg>
+          已导入批次
+        </div>
+        <div class="stat-value num"><span id="stat-batches">0</span><span class="unit">个</span></div>
+        <div class="stat-sub">本会计期间累计</div>
+      </div>
+      <div class="stat" data-od-id="stat-success-rows">
+        <div class="stat-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+          累计成功行
+        </div>
+        <div class="stat-value num"><span id="stat-ok">0</span><span class="unit">行</span></div>
+        <div class="stat-sub">已写入流水明细</div>
+      </div>
+      <div class="stat" data-od-id="stat-skipped-rows">
+        <div class="stat-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/></svg>
+          累计跳过（去重）行
+        </div>
+        <div class="stat-value num"><span id="stat-skip">0</span><span class="unit">行</span></div>
+        <div class="stat-sub">重复行自动跳过</div>
+      </div>
+      <div class="stat warn" data-od-id="stat-warn-batches">
+        <div class="stat-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4.2M12 17.2v.2"/></svg>
+          余额警告批次
+        </div>
+        <div class="stat-value num"><span id="stat-warn">0</span><span class="unit">个</span></div>
+        <div class="stat-sub">待人工确认余额衔接</div>
+      </div>
+    </div>
+
+    <!-- 4. 上传区 -->
+    <section class="section" data-od-id="upload-section">
+      <div class="card">
+        <div class="card-head" data-od-id="upload-card-head">
+          <span class="card-title">
+            <span class="ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M4 16v2.5A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5V16"/></svg></span>
+            导入新文件
+          </span>
+          <div class="spacer"></div>
+          <span class="count" style="font-size:12px;color:var(--muted)">单据只读 · 自动识别类型</span>
+        </div>
+        <div class="card-body">
+          <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="拖拽或点击选择文件" data-od-id="dropzone">
+            <div class="dz-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+            </div>
+            <div class="dz-title">将 TSV / CSV / XLSX 文件拖到此处，或<span class="accent">点击选择文件</span></div>
+            <div class="dz-sub">支持银行流水、订单流水，按文件名自动识别类型</div>
+            <div class="dz-tags">
+              <span class="fmt">TSV</span>
+              <span class="fmt">CSV</span>
+              <span class="fmt">XLSX</span>
+            </div>
+            <button class="btn btn-primary btn-lg" type="button" id="chooseFileBtn" data-od-id="choose-file-btn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              选择文件
+            </button>
+            <div class="dz-samples">
+              <span>示例文件：</span>
+              <button class="sample" type="button" data-file="银行流水_20260713.tsv" data-od-id="sample-bank">银行流水_20260713.tsv</button>
+              <button class="sample" type="button" data-file="订单流水_20260712.tsv" data-od-id="sample-order">订单流水_20260712.tsv</button>
+              <button class="sample" type="button" data-file="银行流水_20260706.tsv" data-od-id="sample-bank-missing">银行流水_20260706.tsv · 缺列</button>
+            </div>
+          </div>
+          <input type="file" id="fileInput" accept=".tsv,.csv,.xlsx" hidden />
+
+          <!-- 5. 结果反馈 -->
+          <div class="results" id="results" data-od-id="import-result" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 默认路径导入 -->
+    <section class="section" data-od-id="default-path-section">
+      <div class="card">
+        <div class="card-head" data-od-id="default-path-head">
+          <span class="card-title">
+            <span class="ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
+            默认路径导入
+          </span>
+          <div class="spacer"></div>
+          <span class="count" style="font-size:12px;color:var(--muted)">扫描原始数据目录 · 免手动逐份选择</span>
+        </div>
+        <div class="card-body">
+          <div class="path-bar" data-od-id="default-path-bar">
+            <span class="path-label">默认路径</span>
+            <code class="path-value" id="defaultDir" data-od-id="default-dir">D:\finlite\data\raw</code>
+            <span class="path-hint">应用启动时自动读取；目录不存在时仅提示，不报错</span>
+            <div class="spacer"></div>
+            <button class="btn btn-sm" type="button" id="btnScanPath" data-od-id="btn-scan-path">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-.6 4"/><path d="M20 5v6h-6"/></svg>
+              重新扫描
+            </button>
+            <button class="btn btn-sm" type="button" id="btnChangeDir" data-od-id="btn-change-dir">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              更改目录…
+            </button>
+          </div>
+          <div class="scan-meta" id="scanMeta" data-od-id="scan-meta"></div>
+          <div class="filelist-wrap">
+            <table class="tbl filelist" data-od-id="raw-file-list">
+              <thead>
+                <tr>
+                  <th class="cb"><input type="checkbox" id="rawCheckAll" aria-label="全选" /></th>
+                  <th>文件名</th>
+                  <th style="width:118px">识别类型</th>
+                  <th class="right" style="width:96px">大小</th>
+                  <th style="width:150px">修改时间</th>
+                  <th style="width:170px">状态</th>
+                  <th style="width:184px">操作</th>
+                </tr>
+              </thead>
+              <tbody id="rawFileBody"></tbody>
+            </table>
+          </div>
+          <div class="scan-actions" data-od-id="scan-actions">
+            <label class="chk"><input type="checkbox" id="autoArchive" checked /> 导入后归档到 archived/（避免重复导入）</label>
+            <div class="spacer"></div>
+            <span class="hint" id="rawSelHint">未选择文件</span>
+            <button class="btn" type="button" id="btnPreviewSel" data-od-id="btn-preview-selected">预览列映射</button>
+            <button class="btn btn-primary" type="button" id="btnImportSel" data-od-id="btn-import-selected">导入选中文件</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. 导入批次历史 -->
+    <section class="section" data-od-id="batch-history-section">
+      <div class="section-head">
+        <h2>导入批次历史</h2>
+        <span class="count" id="batchCount">共 0 个批次 · 全部展示</span>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="tbl" data-od-id="batch-table">
+            <thead>
+              <tr>
+                <th style="width:118px">类型</th>
+                <th>文件名</th>
+                <th class="right" style="width:96px">总行数</th>
+                <th class="right" style="width:84px">成功</th>
+                <th class="right" style="width:84px">跳过</th>
+                <th style="width:150px">余额警告</th>
+                <th style="width:150px">导入时间</th>
+                <th style="width:132px">操作</th>
+              </tr>
+            </thead>
+            <tbody id="batchBody"></tbody>
+          </table>
+        </div>
+        <div class="table-foot" data-od-id="table-foot">
+          <svg class="lock" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg>
+          <span id="footCount">共 0 个批次 · 全部展示</span>
+          <div class="spacer" style="flex:1 1 auto"></div>
+          <span class="count" style="font-size:12px;color:var(--muted)">批次一次性完整展示，不提供分页</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ============================== Column mapping modal ============================== -->
+<div class="overlay" id="mapOverlay" data-od-id="mapping-overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mapTitle" data-od-id="mapping-modal">
+    <div class="modal-head">
+      <h3 id="mapTitle">列映射预览</h3>
+      <button class="x" type="button" id="mapClose" aria-label="关闭" data-od-id="mapping-close">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="mapBody"></div>
+    <div class="modal-foot">
+      <span class="hint">确认后将开始写入本地 SQLite；本页仅读取原始表，不做任何修改。</span>
+      <div class="spacer"></div>
+      <button class="btn" type="button" id="mapCancel" data-od-id="mapping-cancel">取消</button>
+      <button class="btn btn-primary" type="button" id="mapConfirm" data-od-id="mapping-confirm">确认导入</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== Error drawer ============================== -->
+<div class="drawer-scrim" id="drawerScrim"></div>
+<aside class="drawer" id="erDrawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" data-od-id="error-drawer">
+  <div class="drawer-head">
+    <div>
+      <h3 id="drawerTitle">错误明细</h3>
+      <div class="sub" id="drawerSub"></div>
+    </div>
+    <button class="x" type="button" id="drawerClose" aria-label="关闭" data-od-id="drawer-close">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</aside>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============================ Sample data ============================ */
+  const BATCHES = [
+    {
+      id: "b1", type: "bank", file: "银行流水_20260713.tsv",
+      total: 20, ok: 19, skip: 1, warn: "差 0.45 元", time: "2026-07-13 09:20",
+      errors: [
+        { row: 7, field: "对方账号", kind: "err", desc: '账号格式无效：<span class="val">1001****7575</span>，期望 12 位数字' },
+        { row: 12, field: "余额", kind: "warn", desc: '余额衔接断开：上行余额 <span class="val">52,318.00</span> + 转入 <span class="val">0.00</span> − 转出 <span class="val">120.00</span> ≠ <span class="val">52,198.45</span>' },
+        { row: 20, field: "余额", kind: "warn", desc: '末行差额校验失败：末行 − 首行 = <span class="val">12,180.45</span>，Σ(转入 − 转出) = <span class="val">12,180.00</span>，差 <span class="val">0.45</span> 元' }
+      ]
+    },
+    {
+      id: "b2", type: "order", file: "订单流水_20260712.tsv",
+      total: 12, ok: 12, skip: 0, warn: null, time: "2026-07-12 18:05",
+      errors: []
+    },
+    {
+      id: "b3", type: "bank", file: "银行流水_20260712.tsv",
+      total: 8, ok: 8, skip: 0, warn: null, time: "2026-07-12 08:47",
+      errors: []
+    },
+    {
+      id: "b4", type: "order", file: "订单流水_20260709.tsv",
+      total: 35, ok: 31, skip: 4, warn: null, time: "2026-07-09 17:32",
+      errors: [
+        { row: 5, field: "工行订单号", kind: "warn", desc: '重复行，已跳过：订单号 <span class="val">2026070912345678</span> 已存在于批次 <span class="val">B-20260630</span>' },
+        { row: 14, field: "工行订单号", kind: "warn", desc: '重复行，已跳过：订单号 <span class="val">2026070912349812</span> 已存在于批次 <span class="val">B-20260630</span>' },
+        { row: 22, field: "工行订单号", kind: "warn", desc: '重复行，已跳过：订单号 <span class="val">2026070912354410</span> 已存在于批次 <span class="val">B-20260630</span>' },
+        { row: 31, field: "工行订单号", kind: "warn", desc: '重复行，已跳过：订单号 <span class="val">2026070912360025</span> 已存在于批次 <span class="val">B-20260630</span>' }
+      ]
+    },
+    {
+      id: "b5", type: "bank", file: "银行流水_20260706.tsv",
+      total: 15, ok: 15, skip: 0, warn: null, time: "2026-07-06 08:55",
+      errors: []
+    },
+    {
+      id: "b6", type: "order", file: "订单流水_20260705.tsv",
+      total: 22, ok: 22, skip: 0, warn: null, time: "2026-07-05 16:10",
+      errors: []
+    },
+    {
+      id: "b7", type: "bank", file: "银行流水_20260702.tsv",
+      total: 26, ok: 25, skip: 1, warn: null, time: "2026-07-02 09:03",
+      errors: [
+        { row: 18, field: "银行行", kind: "warn", desc: '重复行，已跳过：<span class="val">2026-07-02 11:20:14</span> · 摘要「货款」与批次 <span class="val">B-20260628</span> 重复' }
+      ]
+    },
+    {
+      id: "b8", type: "bank", file: "银行流水_20260630.tsv",
+      total: 31, ok: 31, skip: 0, warn: null, time: "2026-06-30 09:12",
+      errors: []
+    },
+    {
+      id: "b9", type: "order", file: "订单流水_20260629.tsv",
+      total: 46, ok: 43, skip: 3, warn: null, time: "2026-06-29 17:58",
+      errors: [
+        { row: 6, field: "工行订单号", kind: "warn", desc: '重复行，已跳过：订单号 <span class="val">2026062965412003</span> 已存在于批次 <span class="val">B-20260628</span>' },
+        { row: 19, field: "工行订单号", kind: "warn", desc: '重复行，已跳过：订单号 <span class="val">2026062965418870</span> 已存在于批次 <span class="val">B-20260628</span>' },
+        { row: 37, field: "工行订单号", kind: "warn", desc: '重复行，已跳过：订单号 <span class="val">2026062965423145</span> 已存在于批次 <span class="val">B-20260628</span>' }
+      ]
+    },
+    {
+      id: "b10", type: "bank", file: "银行流水_20260628.tsv",
+      total: 18, ok: 17, skip: 1, warn: "差 0.20 元", time: "2026-06-28 08:40",
+      errors: [
+        { row: 9, field: "银行行", kind: "warn", desc: '重复行，已跳过：<span class="val">2026-06-28 14:05:31</span> · 摘要「货款」与批次 <span class="val">B-20260622</span> 重复' },
+        { row: 18, field: "余额", kind: "warn", desc: '末行差额校验失败：末行 − 首行 = <span class="val">8,640.20</span>，Σ(转入 − 转出) = <span class="val">8,640.00</span>，差 <span class="val">0.20</span> 元' }
+      ]
+    },
+    {
+      id: "b11", type: "order", file: "订单流水_20260625.tsv",
+      total: 28, ok: 28, skip: 0, warn: null, time: "2026-06-25 18:21",
+      errors: []
+    },
+    {
+      id: "b12", type: "bank", file: "银行流水_20260622.tsv",
+      total: 22, ok: 21, skip: 1, warn: null, time: "2026-06-22 09:05",
+      errors: [
+        { row: 13, field: "银行行", kind: "warn", desc: '重复行，已跳过：<span class="val">2026-06-22 10:47:02</span> · 摘要「拨款」与批次 <span class="val">B-20260620</span> 重复' }
+      ]
+    },
+    {
+      id: "b13", type: "order", file: "订单流水_20260620.tsv",
+      total: 19, ok: 18, skip: 0, warn: null, time: "2026-06-20 17:44",
+      errors: [
+        { row: 11, field: "交易金额", kind: "err", desc: '金额解析失败：<span class="val">1,2O0.00</span> 含非法字符「O」，该行未入库' }
+      ]
+    },
+    {
+      id: "b14", type: "bank", file: "银行流水_20260615.tsv",
+      total: 24, ok: 24, skip: 0, warn: null, time: "2026-06-15 08:52",
+      errors: []
+    },
+    {
+      id: "b15", type: "bank", file: "银行流水_20260608.tsv",
+      total: 16, ok: 15, skip: 0, warn: "差 0.45 元", time: "2026-06-08 09:18",
+      errors: [
+        { row: 5, field: "对方账号", kind: "err", desc: '账号格式无效：<span class="val">1001****0688</span>，期望 12 位数字，该行未入库' },
+        { row: 16, field: "余额", kind: "warn", desc: '末行差额校验失败：末行 − 首行 = <span class="val">6,318.45</span>，Σ(转入 − 转出) = <span class="val">6,318.00</span>，差 <span class="val">0.45</span> 元' }
+      ]
+    }
+  ];
+
+  const BANK_COLS = ["交易时间", "对方单位", "摘要", "附言", "转入金额", "转出金额", "余额"];
+  const ORDER_COLS = ["工行订单号", "商户单号", "交易时间", "交易金额", "手续费", "结算金额", "支付方式", "状态"];
+
+  const BANK_ROWS = [
+    ["2026-07-13 09:12:03", "杭州××科技", "货款", "PZ20260713001", "12,800.00", "0.00", "52,318.00"],
+    ["2026-07-13 10:41:22", "苏州××贸易", "服务费", "PZ20260713002", "0.00", "3,200.00", "49,118.00"],
+    ["2026-07-13 13:05:47", "个人账户 1001****7575", "转账", "PZ20260713003", "5,000.00", "0.00", "54,118.00"],
+    ["2026-07-13 15:22:10", "上海××医疗器械", "采购退款", "PZ20260713004", "860.00", "0.00", "54,978.00"],
+    ["2026-07-13 17:48:59", "广州××连锁", "货款", "PZ20260713005", "0.00", "120.00", "54,858.00"],
+    ["2026-07-13 18:15:32", "个人账户 1001****7575", "扫码收款", "PZ20260713006", "1,980.00", "0.00", "56,838.00"],
+    ["2026-07-13 19:02:11", "杭州××健康管理", "服务费", "PZ20260713007", "0.00", "2,400.00", "54,438.00"],
+    ["2026-07-13 20:30:45", "苏州××贸易", "货款", "PZ20260713008", "3,600.00", "0.00", "58,038.00"],
+    ["2026-07-13 21:12:07", "跨行汇款手续费", "手续费", "PZ20260713009", "0.00", "12.00", "58,026.00"],
+    ["2026-07-13 22:05:53", "待清算商户银行卡POS净收暂收销账户", "POS清算", "1001****7575", "11,970.00", "0.00", "69,996.00"],
+    ["2026-07-13 23:40:18", "广州××连锁", "货款", "PZ20260713011", "0.00", "5,320.00", "64,676.00"],
+    ["2026-07-13 23:58:02", "个人账户 1001****7575", "扫码收款", "PZ20260713012", "446.88", "0.00", "65,122.88"]
+  ];
+
+  const ORDER_ROWS = [
+    ["2026071210001", "M20260712001", "2026-07-12 08:30:11", "199.00", "0.60", "198.40", "微信", "已结算"],
+    ["2026071210002", "M20260712002", "2026-07-12 09:14:05", "1,280.00", "3.84", "1,276.16", "支付宝", "已结算"],
+    ["2026071210003", "M20260712003", "2026-07-12 10:02:49", "68.00", "0.60", "67.40", "微信", "已结算"],
+    ["2026071210004", "M20260712004", "2026-07-12 13:47:31", "4,560.00", "13.68", "4,546.32", "银行卡", "已结算"],
+    ["2026071210005", "M20260712005", "2026-07-12 16:20:08", "299.00", "0.90", "298.10", "微信", "待结算"],
+    ["2026071210006", "M20260712006", "2026-07-12 17:05:22", "8,680.00", "21.70", "8,658.30", "微信", "已结算"],
+    ["2026071210007", "M20260712007", "2026-07-12 18:11:40", "600.00", "1.50", "598.50", "微信", "已结算"],
+    ["2026071210008", "M20260712008", "2026-07-12 18:42:16", "2,128.00", "5.32", "2,122.68", "支付宝", "已结算"],
+    ["2026071210009", "M20260712009", "2026-07-12 19:20:05", "448.00", "1.12", "446.88", "微信", "已结算"],
+    ["2026071210010", "M20260712010", "2026-07-12 20:03:38", "3,200.00", "8.00", "3,192.00", "微信", "已结算"],
+    ["2026071210011", "M20260712011", "2026-07-12 21:27:54", "1,000.00", "2.50", "997.50", "微信", "已结算"],
+    ["2026071210012", "M20260712012", "2026-07-12 22:09:31", "189.50", "0.47", "189.03", "支付宝", "已结算"]
+  ];
+
+  /* Metadata for known demo files: rows count + intentionally missing columns */
+  const FILE_META = {
+    "银行流水_20260713.tsv": { type: "bank", rows: 20, missing: [] },
+    "银行流水_20260712.tsv": { type: "bank", rows: 8, missing: [] },
+    "银行流水_20260706.tsv": { type: "bank", rows: 15, missing: ["余额"] },
+    "银行流水_20260702.tsv": { type: "bank", rows: 26, missing: [] },
+    "订单流水_20260712.tsv": { type: "order", rows: 12, missing: [] },
+    "订单流水_20260709.tsv": { type: "order", rows: 35, missing: [] },
+    "订单流水_20260705.tsv": { type: "order", rows: 22, missing: [] },
+    "银行流水_20260630.tsv": { type: "bank", rows: 31, missing: [] },
+    "银行流水_20260628.tsv": { type: "bank", rows: 18, missing: [] },
+    "银行流水_20260622.tsv": { type: "bank", rows: 22, missing: [] },
+    "银行流水_20260615.tsv": { type: "bank", rows: 24, missing: [] },
+    "银行流水_20260608.tsv": { type: "bank", rows: 16, missing: [] },
+    "订单流水_20260629.tsv": { type: "order", rows: 46, missing: [] },
+    "订单流水_20260625.tsv": { type: "order", rows: 28, missing: [] },
+    "订单流水_20260620.tsv": { type: "order", rows: 19, missing: [] }
+  };
+
+  const TYPE_LABEL = { bank: "银行流水", order: "订单流水" };
+
+  /* ============================ Default-path raw data ============================ */
+  const DEFAULT_DIR = "D:\\finlite\\data\\raw";
+  const RAW_FILES = [
+    { name: "银行流水_20260713.tsv", type: "bank", rows: 20, skip: 1, warn: "差 0.45 元", size: "8.2 KB", mtime: "2026-07-13 09:12", state: "new" },
+    { name: "订单流水_20260712.tsv", type: "order", rows: 12, skip: 0, warn: null, size: "5.6 KB", mtime: "2026-07-12 18:05", state: "new" },
+    { name: "银行流水_20260706.tsv", type: "bank", rows: 15, skip: 0, warn: null, missing: ["余额"], size: "6.4 KB", mtime: "2026-07-06 08:55", state: "new" },
+    { name: "银行流水_20260702.tsv", type: "bank", rows: 26, skip: 1, warn: null, size: "9.9 KB", mtime: "2026-07-02 09:03", state: "new" },
+    { name: "订单流水_20260629.tsv", type: "order", rows: 46, skip: 3, warn: null, size: "18.7 KB", mtime: "2026-06-29 17:58", state: "new" },
+    { name: "银行流水_20260712.tsv", type: "bank", rows: 8, skip: 0, warn: null, size: "3.1 KB", mtime: "2026-07-12 08:47", state: "done", doneAt: "2026-07-12 09:20" },
+    { name: "订单流水_20260709.tsv", type: "order", rows: 35, skip: 4, warn: null, size: "14.8 KB", mtime: "2026-07-09 17:32", state: "done", doneAt: "2026-07-09 18:01" },
+    { name: "对账单说明.txt", type: "unknown", rows: 0, skip: 0, warn: null, size: "1.2 KB", mtime: "2026-07-01 10:15", state: "bad" }
+  ];
+
+  /* ============================ Icons ============================ */
+  const ICON = {
+    check: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>',
+    cross: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    warn: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4.2M12 17.2v.2"/></svg>',
+    ok: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.4l2.7 2.7L16 9.5"/></svg>',
+    err: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16.2v.2"/></svg>',
+    info: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.2"/></svg>',
+    arrow: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+    inbox: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13h4l1.5 2.5h5L16 13h4"/><path d="M6 4h12l2 9v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5z"/></svg>'
+  };
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
+  /* ============================ DOM refs ============================ */
+  const $ = function (id) { return document.getElementById(id); };
+  const statsEl = { batches: $("stat-batches"), ok: $("stat-ok"), skip: $("stat-skip"), warn: $("stat-warn") };
+  const batchBody = $("batchBody");
+  const batchCount = $("batchCount");
+  const footCount = $("footCount");
+  const resultsEl = $("results");
+  const dropzone = $("dropzone");
+  const fileInput = $("fileInput");
+
+  const mapOverlay = $("mapOverlay");
+  const mapBody = $("mapBody");
+  const mapConfirm = $("mapConfirm");
+
+  const drawer = $("erDrawer");
+  const drawerScrim = $("drawerScrim");
+  const drawerBody = $("drawerBody");
+  const drawerSub = $("drawerSub");
+
+  const toastEl = $("toast");
+  let toastTimer = null;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove("show"); }, 2000);
+  }
+
+  /* ============================ Formatting ============================ */
+  function fmtInt(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function nowStamp() {
+    const d = new Date();
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) +
+      " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+
+  /* ============================ Stepper ============================ */
+  function setStep(n) {
+    document.querySelectorAll(".stepper .step").forEach(function (el) {
+      const s = parseInt(el.getAttribute("data-step"), 10);
+      el.classList.toggle("active", s === n);
+      el.classList.toggle("done", s < n);
+    });
+    document.querySelectorAll(".stepper .step-line").forEach(function (el, i) {
+      el.classList.toggle("done", i + 1 < n);
+    });
+  }
+
+  /* ============================ Stats ============================ */
+  function renderStats() {
+    let ok = 0, skip = 0, warn = 0;
+    BATCHES.forEach(function (b) {
+      ok += b.ok; skip += b.skip;
+      if (b.warn) warn += 1;
+    });
+    statsEl.batches.textContent = fmtInt(BATCHES.length);
+    statsEl.ok.textContent = fmtInt(ok);
+    statsEl.skip.textContent = fmtInt(skip);
+    statsEl.warn.textContent = fmtInt(warn);
+  }
+
+  /* ============================ Batch table ============================ */
+  function renderBatches() {
+    batchBody.innerHTML = "";
+    BATCHES.forEach(function (b) {
+      const tr = document.createElement("tr");
+      tr.setAttribute("data-od-id", "batch-row-" + b.id);
+      const typeCls = b.type === "bank" ? "tbl-tag bank" : "tbl-tag";
+      const warnCell = b.warn
+        ? '<span class="warn-badge"><span class="ico">' + ICON.warn + '</span>' + esc(b.warn) + '</span>'
+        : '<span class="muted">—</span>';
+      tr.innerHTML =
+        '<td><span class="' + typeCls + '"><span class="dot"></span>' + TYPE_LABEL[b.type] + '</span></td>' +
+        '<td class="file">' + esc(b.file) + '</td>' +
+        '<td class="right num">' + fmtInt(b.total) + '</td>' +
+        '<td class="right num">' + fmtInt(b.ok) + '</td>' +
+        '<td class="right num">' + (b.skip ? fmtInt(b.skip) : '<span class="muted">0</span>') + '</td>' +
+        '<td>' + warnCell + '</td>' +
+        '<td class="num muted">' + esc(b.time) + '</td>' +
+        '<td><button class="link-btn" type="button" data-open="' + b.id + '" data-od-id="open-errors-' + b.id + '">查看错误明细 ' + ICON.arrow + '</button></td>';
+      batchBody.appendChild(tr);
+    });
+
+    const line = "共 " + BATCHES.length + " 个批次 · 全部展示";
+    batchCount.textContent = line;
+    footCount.textContent = line;
+  }
+
+  /* ============================ Results ============================ */
+  function clearResults() { resultsEl.innerHTML = ""; }
+
+  function showSuccess(type, total, ok, skip) {
+    const el = document.createElement("div");
+    el.className = "banner success";
+    el.setAttribute("data-od-id", "result-success");
+    el.innerHTML =
+      '<span class="ico">' + ICON.ok + '</span>' +
+      '<div class="body"><strong>导入完成（' + TYPE_LABEL[type] + '）：</strong>共 ' +
+      '<span class="em num">' + fmtInt(total) + '</span> 行，成功 ' +
+      '<span class="em num">' + fmtInt(ok) + '</span>，跳过 ' +
+      '<span class="em num">' + fmtInt(skip) + '</span>。</div>';
+    resultsEl.appendChild(el);
+  }
+
+  function showBalanceWarning(diff) {
+    const el = document.createElement("div");
+    el.className = "banner warn";
+    el.setAttribute("data-od-id", "result-balance-warning");
+    el.innerHTML =
+      '<span class="ico">' + ICON.warn + '</span>' +
+      '<div class="body"><strong>余额校验警告：</strong>末行 − 首行 ≠ Σ(转入 − 转出)，差 <span class="em num">' + esc(diff) + '</span>。不平行已标红，可在银行流水页按批次确认。 <a href="#" data-goto="bank">前往银行流水</a></div>';
+    resultsEl.appendChild(el);
+  }
+
+  function showFailure(reason) {
+    const el = document.createElement("div");
+    el.className = "banner err";
+    el.setAttribute("data-od-id", "result-failure");
+    el.innerHTML =
+      '<span class="ico">' + ICON.err + '</span>' +
+      '<div class="body"><strong>导入失败：</strong>' + reason + '</div>';
+    resultsEl.appendChild(el);
+  }
+
+  /* ============================ Mapping modal ============================ */
+  let current = null; // { name, type, rows, missing }
+
+  function resolveMeta(name) {
+    if (FILE_META[name]) return Object.assign({ name: name }, FILE_META[name]);
+    const type = /订单/.test(name) ? "order" : "bank";
+    const rows = 10 + (name.length * 3) % 25;
+    return { name: name, type: type, rows: rows, missing: [] };
+  }
+
+  function buildMappingBody(f) {
+    const isBank = f.type === "bank";
+    const cols = (isBank ? BANK_COLS : ORDER_COLS).filter(function (c) { return f.missing.indexOf(c) === -1; });
+    const missing = f.missing;
+    const rows = isBank ? BANK_ROWS : ORDER_ROWS;
+
+    const idChips = cols.map(function (c) {
+      return '<span class="chip ok"><span class="ico">' + ICON.check + '</span>' + esc(c) + '</span>';
+    }).join("");
+
+    const missChips = missing.map(function (c) {
+      return '<span class="chip err"><span class="ico">' + ICON.cross + '</span>' + esc(c) + '</span>';
+    }).join("");
+
+    const missBlock = missing.length
+      ? '<div class="field-block">' +
+          '<div class="label">缺失列 <span class="tally">（' + missing.length + "）</span></div>" +
+          '<div class="chips">' + missChips + '</div>' +
+          '<div class="field-note"><span class="ico" style="margin-top:1px">' + ICON.err + '</span>' +
+          '<span>缺少关键列 <b>' + missing.map(esc).join("、") + '</b>，导入将报错，请检查表头后重新选择文件。</span></div>' +
+        '</div>'
+      : '<div class="field-block">' +
+          '<div class="label">缺失列 <span class="tally">（0）</span></div>' +
+          '<div class="field-note ok"><span class="ico" style="margin-top:1px">' + ICON.ok + '</span>' +
+          '<span>关键列完整，字段映射可直接入库。</span></div>' +
+        '</div>';
+
+    // raw preview table
+    let head = "";
+    cols.forEach(function (c, i) {
+      const isNum = isBank ? i >= 4 : (i >= 3 && i <= 5);
+      head += '<th class="' + (isNum ? "n" : "") + '">' + esc(c) + "</th>";
+    });
+
+    let bodyRows = "";
+    rows.forEach(function (r) {
+      let cells = "";
+      cols.forEach(function (c) {
+        const idx = (isBank ? BANK_COLS : ORDER_COLS).indexOf(c);
+        const val = r[idx];
+        const isNum = isBank ? idx >= 4 : (idx >= 3 && idx <= 5);
+        const isCode = isBank ? idx === 3 : (idx === 0 || idx === 1);
+        cells += '<td class="' + (isNum ? "n" : (isCode ? "mono" : "")) + '">' + esc(val) + "</td>";
+      });
+      bodyRows += "<tr>" + cells + "</tr>";
+    });
+
+    return '' +
+      '<div class="meta-grid">' +
+        '<div class="meta"><div class="k">文件名</div><div class="v mono">' + esc(f.name) + '</div></div>' +
+        '<div class="meta"><div class="k">识别类型</div><div class="v">' +
+          '<span class="' + (isBank ? "tbl-tag bank" : "tbl-tag") + '"><span class="dot"></span>' + TYPE_LABEL[f.type] + '</span>' +
+        '</div></div>' +
+        '<div class="meta"><div class="k">数据行数</div><div class="v num">' + fmtInt(f.rows) + ' 行</div></div>' +
+      '</div>' +
+
+      '<div class="field-block">' +
+        '<div class="label">已识别关键列 <span class="tally">（' + cols.length + "）</span></div>" +
+        '<div class="chips">' + idChips + '</div>' +
+      '</div>' +
+
+      missBlock +
+
+      '<div class="raw-head">' +
+        '<span class="label">原始表头与样本行</span>' +
+        '<span class="tag">横向滚动查看全部列</span>' +
+        '<span class="tag">仅预览前 ' + rows.length + ' 行</span>' +
+      '</div>' +
+      '<div class="raw-scroll"><table class="raw"><thead><tr>' + head + '</tr></thead><tbody>' + bodyRows + '</tbody></table></div>';
+  }
+
+  function openMapping(name) {
+    current = resolveMeta(name);
+    setStep(2);
+    mapOverlay.classList.add("open");
+    mapConfirm.disabled = false;
+    mapConfirm.style.opacity = "";
+    mapBody.innerHTML = '<div class="parsing"><div class="spinner"></div><div>正在解析列映射…</div></div>';
+
+    setTimeout(function () {
+      mapBody.innerHTML = buildMappingBody(current);
+      setStep(3);
+    }, 620);
+  }
+
+  function closeMapping() {
+    mapOverlay.classList.remove("open");
+  }
+
+  function confirmImport() {
+    const f = current;
+    if (!f) return;
+    closeMapping();
+    clearResults();
+
+    if (f.missing.length) {
+      setStep(1);
+      showFailure('缺少关键列「' + f.missing.join("、") + '」，无法完成字段映射，请检查表头后重新选择文件。');
+      toast("导入已中止：表头缺少关键列");
+      return;
+    }
+
+    setStep(4);
+
+    let ok, skip, warn;
+    if (f.name === "银行流水_20260713.tsv") { ok = 19; skip = 1; warn = "差 0.45 元"; }
+    else if (f.type === "bank") { ok = f.rows; skip = 0; warn = null; }
+    else { ok = f.rows; skip = 0; warn = null; }
+
+    const batch = {
+      id: "b" + (BATCHES.length + 1) + "-" + Date.now(),
+      type: f.type,
+      file: f.name,
+      total: f.rows,
+      ok: ok,
+      skip: skip,
+      warn: warn,
+      time: nowStamp(),
+      errors: buildLiveErrors(f, warn)
+    };
+
+    BATCHES.unshift(batch);
+    renderBatches();
+    renderStats();
+    markRawImported(f.name);
+
+    showSuccess(f.type, f.rows, ok, skip);
+    if (warn) showBalanceWarning(warn);
+
+    toast("已写入本地 SQLite：" + TYPE_LABEL[f.type]);
+  }
+
+  function buildLiveErrors(f, warn) {
+    const errs = [];
+    if (skipOf(f.name) > 0) {
+      errs.push({
+        row: 5,
+        field: f.type === "bank" ? "银行行" : "工行订单号",
+        kind: "warn",
+        desc: (f.type === "bank"
+          ? '重复行，已跳过：<span class="val">2026-07-13 13:05:47</span> · 摘要「转账」与既有流水重复'
+          : '重复行，已跳过：订单号 <span class="val">2026071310005</span> 已存在于批次 <span class="val">B-20260630</span>')
+      });
+    }
+    if (warn) {
+      errs.push({
+        row: 12,
+        field: "余额",
+        kind: "warn",
+        desc: '余额衔接断开：上行余额 <span class="val">52,318.00</span> + 转入 <span class="val">0.00</span> − 转出 <span class="val">120.00</span> ≠ <span class="val">52,198.45</span>'
+      });
+      errs.push({
+        row: f.rows,
+        field: "余额",
+        kind: "warn",
+        desc: '末行差额校验失败：末行 − 首行 = <span class="val">12,180.45</span>，Σ(转入 − 转出) = <span class="val">12,180.00</span>，差 <span class="val">0.45</span> 元'
+      });
+    }
+    return errs;
+  }
+
+  function skipOf(name) {
+    if (name === "银行流水_20260713.tsv") return 1;
+    if (name === "订单流水_20260709.tsv") return 4;
+    if (name === "银行流水_20260702.tsv") return 1;
+    return 0;
+  }
+
+  /* ============================ Error drawer ============================ */
+  function openDrawer(batchId) {
+    const b = BATCHES.filter(function (x) { return x.id === batchId; })[0];
+    if (!b) return;
+    drawerSub.innerHTML = '<span class="' + (b.type === "bank" ? "tbl-tag bank" : "tbl-tag") + '" style="margin-right:6px"><span class="dot"></span>' + TYPE_LABEL[b.type] + '</span>' +
+      '<span class="file">' + esc(b.file) + '</span> · 导入时间 ' + esc(b.time);
+
+    const errCount = b.errors.filter(function (e) { return e.kind === "err"; }).length;
+    const warnCount = b.errors.filter(function (e) { return e.kind === "warn"; }).length;
+
+    let html = '<div class="err-summary">' +
+      '<div class="err-pill err"><div class="k">错误行</div><div class="v num">' + errCount + '</div></div>' +
+      '<div class="err-pill warn"><div class="k">警告 / 跳过行</div><div class="v num">' + (warnCount || b.skip) + '</div></div>' +
+      '<div class="err-pill"><div class="k">成功写入</div><div class="v num">' + fmtInt(b.ok) + '</div></div>' +
+      '</div>';
+
+    if (!b.errors.length) {
+      html += '<div class="empty">' +
+        '<span class="ico">' + ICON.ok + '</span>' +
+        '<div class="t">该批次无错误记录</div>' +
+        '<div class="s">共 ' + fmtInt(b.total) + ' 行全部成功写入，无重复跳过与余额警告。</div>' +
+        '</div>';
+    } else {
+      html += '<div class="err-list">';
+      b.errors.forEach(function (e) {
+        html += '<div class="err-row ' + (e.kind === "warn" ? "warn" : "") + '">' +
+          '<div class="top">' +
+            '<span class="row-no">第 ' + e.row + ' 行</span>' +
+            '<span class="field-tag">' + esc(e.field) + '</span>' +
+          '</div>' +
+          '<div class="desc">' + e.desc + '</div>' +
+        '</div>';
+      });
+      html += '</div>';
+    }
+
+    drawerBody.innerHTML = html;
+    drawer.classList.add("open");
+    drawerScrim.classList.add("open");
+  }
+
+  function closeDrawer() {
+    drawer.classList.remove("open");
+    drawerScrim.classList.remove("open");
+  }
+
+  /* ============================ File ingestion ============================ */
+  function handleFile(name) {
+    if (!name) return;
+    clearResults();
+    openMapping(name);
+  }
+
+  function chooseFile() { fileInput.click(); }
+
+  dropzone.addEventListener("click", function (e) {
+    if (e.target.closest(".sample") || e.target.closest("#chooseFileBtn")) return;
+    chooseFile();
+  });
+  dropzone.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); chooseFile(); }
+  });
+  $("chooseFileBtn").addEventListener("click", function (e) { e.stopPropagation(); chooseFile(); });
+
+  document.querySelectorAll(".sample").forEach(function (btn) {
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      handleFile(btn.getAttribute("data-file"));
+    });
+  });
+
+  fileInput.addEventListener("change", function () {
+    if (fileInput.files && fileInput.files[0]) {
+      handleFile(fileInput.files[0].name);
+      fileInput.value = "";
+    }
+  });
+
+  // drag & drop
+  ["dragenter", "dragover"].forEach(function (ev) {
+    dropzone.addEventListener(ev, function (e) {
+      e.preventDefault(); e.stopPropagation();
+      dropzone.classList.add("dragover");
+    });
+  });
+  ["dragleave", "dragend"].forEach(function (ev) {
+    dropzone.addEventListener(ev, function (e) {
+      e.preventDefault(); e.stopPropagation();
+      dropzone.classList.remove("dragover");
+    });
+  });
+  dropzone.addEventListener("drop", function (e) {
+    e.preventDefault(); e.stopPropagation();
+    dropzone.classList.remove("dragover");
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    handleFile(f ? f.name : "银行流水_20260713.tsv");
+  });
+
+  /* ============================ Global events ============================ */
+  $("mapClose").addEventListener("click", closeMapping);
+  $("mapCancel").addEventListener("click", closeMapping);
+  mapConfirm.addEventListener("click", confirmImport);
+  mapOverlay.addEventListener("click", function (e) { if (e.target === mapOverlay) closeMapping(); });
+
+  batchBody.addEventListener("click", function (e) {
+    const btn = e.target.closest("[data-open]");
+    if (btn) openDrawer(btn.getAttribute("data-open"));
+  });
+
+  $("drawerClose").addEventListener("click", closeDrawer);
+  drawerScrim.addEventListener("click", closeDrawer);
+
+  resultsEl.addEventListener("click", function (e) {
+    const a = e.target.closest("[data-goto]");
+    if (a) { e.preventDefault(); toast("原型演示：跳转到「银行流水」页并按批次确认余额"); }
+  });
+
+  $("refresh-btn").addEventListener("click", function () { toast("已刷新批次列表"); });
+  $("period-selector").addEventListener("click", function () { toast("会计期间固定为 2026-07（单账套）"); });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      if (mapOverlay.classList.contains("open")) closeMapping();
+      else if (drawer.classList.contains("open")) closeDrawer();
+    }
+  });
+
+  /* ============================ Default-path import ============================ */
+  const rawFileBody = $("rawFileBody");
+  const scanMeta = $("scanMeta");
+  const rawSelHint = $("rawSelHint");
+  $("defaultDir").textContent = DEFAULT_DIR;
+
+  function rawStateMeta(s) {
+    if (s === "done") return { cls: "done", label: "已导入" };
+    if (s === "bad") return { cls: "bad", label: "不支持" };
+    return { cls: "new", label: "待导入" };
+  }
+  function rawSelectable(f) { return f.state === "new"; }
+
+  function renderRawFiles() {
+    rawFileBody.innerHTML = "";
+    RAW_FILES.forEach(function (f, i) {
+      const st = rawStateMeta(f.state);
+      const isBank = f.type === "bank";
+      const typeCell = f.type === "unknown"
+        ? '<span class="tbl-tag"><span class="dot"></span>未识别</span>'
+        : '<span class="' + (isBank ? "tbl-tag bank" : "tbl-tag") + '"><span class="dot"></span>' + TYPE_LABEL[f.type] + '</span>';
+      const miss = (f.missing && f.missing.length)
+        ? '<span class="miss">缺列：' + f.missing.map(esc).join("、") + '</span>'
+        : "";
+      const doneAt = (f.state === "done" && f.doneAt)
+        ? ' <span class="muted" style="font-size:11.5px">' + esc(f.doneAt) + '</span>'
+        : "";
+      const cb = rawSelectable(f) ? ' checked' : ' disabled';
+      const actions = f.state === "new"
+        ? '<button class="link-btn" type="button" data-preview="' + i + '">预览列映射 ' + ICON.arrow + '</button>' +
+          '<button class="link-btn" type="button" data-import="' + i + '">导入</button>'
+        : (f.state === "done"
+          ? '<button class="link-btn" type="button" disabled>已写入</button>'
+          : '<button class="link-btn" type="button" disabled>跳过</button>');
+
+      const tr = document.createElement("tr");
+      tr.setAttribute("data-od-id", "raw-file-" + i);
+      tr.innerHTML =
+        '<td class="cb"><input type="checkbox" data-sel="' + i + '"' + cb + ' /></td>' +
+        '<td class="file">' + esc(f.name) + miss + '</td>' +
+        '<td>' + typeCell + '</td>' +
+        '<td class="right num">' + esc(f.size) + '</td>' +
+        '<td class="num muted">' + esc(f.mtime) + '</td>' +
+        '<td><span class="status-badge ' + st.cls + '"><span class="dot"></span>' + st.label + '</span>' + doneAt + '</td>' +
+        '<td><div class="row-actions">' + actions + '</div></td>';
+      rawFileBody.appendChild(tr);
+    });
+    updateRawSelection();
+  }
+
+  function selectedRawIndexes() {
+    return Array.prototype.slice.call(rawFileBody.querySelectorAll('input[data-sel]:checked'))
+      .map(function (cb) { return parseInt(cb.getAttribute("data-sel"), 10); });
+  }
+  function updateRawSelection() {
+    const idx = selectedRawIndexes();
+    rawSelHint.textContent = idx.length ? ("已选择 " + idx.length + " 个文件") : "未选择文件";
+    $("btnImportSel").disabled = idx.length === 0;
+    $("btnPreviewSel").disabled = idx.length !== 1;
+    const all = rawFileBody.querySelectorAll('input[data-sel]:not([disabled])');
+    const sel = rawFileBody.querySelectorAll('input[data-sel]:not([disabled]):checked');
+    $("rawCheckAll").checked = all.length > 0 && sel.length === all.length;
+  }
+
+  function updateScanMeta() {
+    const pending = RAW_FILES.filter(function (f) { return f.state === "new"; }).length;
+    const doneN = RAW_FILES.filter(function (f) { return f.state === "done"; }).length;
+    const badN = RAW_FILES.filter(function (f) { return f.state === "bad"; }).length;
+    scanMeta.innerHTML =
+      '<span>扫描到 <b>' + RAW_FILES.length + '</b> 个原始数据文件</span><span class="sep"></span>' +
+      '<span>待导入 <b>' + pending + '</b></span><span class="sep"></span>' +
+      '<span>已导入 <b>' + doneN + '</b></span>' +
+      (badN ? '<span class="sep"></span><span>不支持 <b>' + badN + '</b></span>' : '') +
+      '<span class="sep"></span><span>最近扫描 ' + nowStamp() + '</span>';
+  }
+
+  function doScan() {
+    setStep(1);
+    scanMeta.textContent = "正在扫描 " + DEFAULT_DIR + " …";
+    rawFileBody.innerHTML = '<tr><td colspan="7" class="muted" style="padding:18px 14px">扫描中…</td></tr>';
+    setTimeout(function () {
+      renderRawFiles();
+      updateScanMeta();
+      toast("扫描完成：发现 " + RAW_FILES.length + " 个原始数据文件");
+    }, 480);
+  }
+
+  function previewRaw(i) {
+    const f = RAW_FILES[i];
+    if (!f || f.state !== "new") return;
+    handleFile(f.name);
+  }
+
+  function markRawImported(name) {
+    let changed = false;
+    RAW_FILES.forEach(function (r) {
+      if (r.name === name && r.state === "new") { r.state = "done"; r.doneAt = nowStamp(); changed = true; }
+    });
+    if (changed) { renderRawFiles(); updateScanMeta(); }
+  }
+
+  function importRawFiles(indexes) {
+    if (!indexes.length) return;
+    clearResults();
+    setStep(4);
+    let imported = 0, failed = 0;
+    indexes.forEach(function (i) {
+      const f = RAW_FILES[i];
+      if (!f || f.state !== "new") return;
+      if (f.missing && f.missing.length) {
+        failed++;
+        showFailure('「' + esc(f.name) + '」缺少关键列「' + f.missing.map(esc).join("、") + '」，无法完成字段映射，请检查表头后重新放入默认路径。');
+        return;
+      }
+      const ok = f.rows - f.skip;
+      const warn = f.warn || null;
+      BATCHES.unshift({
+        id: "b" + (BATCHES.length + 1) + "-" + Date.now() + "-" + i,
+        type: f.type, file: f.name, total: f.rows, ok: ok, skip: f.skip,
+        warn: warn, time: nowStamp(), errors: buildLiveErrors(f, warn)
+      });
+      f.state = "done";
+      f.doneAt = nowStamp();
+      imported++;
+      showSuccess(f.type, f.rows, ok, f.skip);
+      if (warn) showBalanceWarning(warn);
+    });
+    renderBatches();
+    renderStats();
+    renderRawFiles();
+    updateScanMeta();
+    if (imported) toast("已从默认路径写入本地 SQLite：" + imported + " 个批次");
+    else if (failed) toast("导入已中止：部分文件表头缺列");
+  }
+
+  $("btnScanPath").addEventListener("click", doScan);
+  $("btnChangeDir").addEventListener("click", function () { toast("原型演示：打开目录选择器并写入系统设置，默认路径可持久化"); });
+  $("btnPreviewSel").addEventListener("click", function () {
+    const idx = selectedRawIndexes();
+    if (idx.length === 1) previewRaw(idx[0]);
+  });
+  $("btnImportSel").addEventListener("click", function () { importRawFiles(selectedRawIndexes()); });
+  $("rawCheckAll").addEventListener("change", function () {
+    const on = $("rawCheckAll").checked;
+    rawFileBody.querySelectorAll('input[data-sel]:not([disabled])').forEach(function (cb) { cb.checked = on; });
+    updateRawSelection();
+  });
+  rawFileBody.addEventListener("change", function (e) {
+    if (e.target && e.target.matches('input[data-sel]')) updateRawSelection();
+  });
+  rawFileBody.addEventListener("click", function (e) {
+    const pv = e.target.closest("[data-preview]");
+    if (pv) { previewRaw(parseInt(pv.getAttribute("data-preview"), 10)); return; }
+    const im = e.target.closest("[data-import]");
+    if (im) { importRawFiles([parseInt(im.getAttribute("data-import"), 10)]); return; }
+  });
+
+  /* ============================ Init ============================ */
+  renderStats();
+  renderBatches();
+  renderRawFiles();
+  updateScanMeta();
+  setStep(1);
+})();
+</script>
+</body>
+</html>

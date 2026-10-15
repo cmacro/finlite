@@ -1,0 +1,1386 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Finlite — 对账中心</title>
+<style>
+  /* ─── Finlite design tokens ────────────────────────────────────── */
+  :root {
+    --bg:      #ffffff;
+    --fg:      #111111;
+    --accent:  #1677ff;
+    --surface: #f7f8fa;
+    --muted:   #6b7280;
+    --border:  #d9dee7;
+
+    /* derived accent */
+    --accent-hover: color-mix(in oklch, var(--accent) 88%, black);
+    --accent-soft:  color-mix(in oklch, var(--accent) 10%, transparent);
+    --fg-soft:      color-mix(in oklch, var(--fg) 4%, transparent);
+
+    /* semantic state colors (functional indicators, not brand) */
+    --ok:           oklch(0.62 0.17 145);
+    --ok-bg:        oklch(0.96 0.03 145);
+    --ok-border:    oklch(0.80 0.08 145);
+    --ok-fg:        oklch(0.40 0.12 145);
+    --warn:         oklch(0.72 0.14 75);
+    --warn-bg:      oklch(0.96 0.05 75);
+    --warn-border:  oklch(0.85 0.08 75);
+    --warn-fg:      oklch(0.42 0.10 75);
+    --warn-bg-hover: oklch(0.94 0.06 75);
+
+    /* type — Inter for both display & body (data-dense utility) */
+    --font:  'Inter', system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    --mono:  'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+
+    /* scale */
+    --radius: 8px;
+    --radius-sm: 6px;
+    --sidebar-w: 220px;
+    --topbar-h: 52px;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.5715;
+    color: var(--fg);
+    background: var(--surface);
+    height: 100vh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  button { font: inherit; cursor: pointer; }
+  a { color: inherit; text-decoration: none; }
+
+  /* ─── App Shell ─── */
+  .app { display: flex; height: 100vh; }
+
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  .sidebar-brand {
+    height: var(--topbar-h);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--fg);
+  }
+  .sidebar-brand .logo-dot {
+    width: 24px; height: 24px;
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--bg); font-size: 13px; font-weight: 700;
+  }
+  .sidebar-nav { flex: 1; padding: 8px 0; overflow-y: auto; }
+  .nav-section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    padding: 12px 16px 4px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    font-size: 13px;
+    color: var(--fg);
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    transition: background 0.15s;
+    font-family: var(--font);
+  }
+  .nav-item:hover { background: var(--surface); }
+  .nav-item.active {
+    background: var(--surface);
+    color: var(--accent);
+    font-weight: 600;
+    position: relative;
+  }
+  .nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent);
+  }
+  .nav-icon {
+    width: 18px; height: 18px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0.7;
+  }
+  .nav-item.active .nav-icon { opacity: 1; }
+  .sidebar-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* ─── Main Area ─── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .topbar {
+    height: var(--topbar-h);
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    flex-shrink: 0;
+  }
+  .topbar-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--fg);
+  }
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .topbar-period {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .topbar-period strong { color: var(--fg); font-weight: 600; }
+
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+  }
+
+  /* ─── Buttons ─── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 14px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: var(--font);
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--fg);
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+  }
+  .btn-primary:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    color: var(--bg);
+  }
+  .btn-sm { height: 28px; padding: 0 10px; font-size: 12px; }
+  .btn-ghost { border-color: transparent; background: none; }
+  .btn-ghost:hover { background: var(--surface); border-color: transparent; color: var(--accent); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn:disabled:hover { border-color: var(--border); color: var(--fg); }
+
+  /* ─── Stat Cards ─── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+  }
+  .stat-label {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .stat-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--fg);
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+    font-family: var(--mono);
+  }
+  .stat-value .unit { font-size: 14px; font-weight: 500; color: var(--muted); margin-left: 4px; }
+  .stat-trend {
+    font-size: 12px;
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .stat-trend.ok { color: var(--ok-fg); }
+  .stat-trend.warn { color: var(--warn-fg); }
+  .stat-trend.muted { color: var(--muted); }
+
+  /* ─── Toolbar ─── */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .toolbar-left { display: flex; align-items: center; gap: 12px; }
+  .toolbar-right { display: flex; align-items: center; gap: 8px; }
+
+  .filter-select, .filter-input {
+    height: 32px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0 12px;
+    font-size: 13px;
+    font-family: var(--font);
+    color: var(--fg);
+    background: var(--bg);
+    cursor: pointer;
+  }
+  .filter-input { cursor: text; }
+  .filter-select:focus-visible, .filter-input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -1px;
+    border-color: var(--accent);
+  }
+
+  .tab-group {
+    display: inline-flex;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .tab-btn {
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    background: var(--bg);
+    color: var(--muted);
+    cursor: pointer;
+    font-family: var(--font);
+    transition: background 0.15s, color 0.15s;
+  }
+  .tab-btn:hover { color: var(--fg); background: var(--surface); }
+  .tab-btn.active {
+    background: var(--accent);
+    color: var(--bg);
+  }
+  .tab-btn + .tab-btn { border-left: 1px solid var(--border); }
+  .tab-btn.active + .tab-btn { border-left-color: var(--accent); }
+  .tab-btn + .tab-btn.active { border-left-color: var(--accent); }
+  .tab-count {
+    display: inline-block;
+    min-width: 18px;
+    padding: 0 5px;
+    height: 18px;
+    line-height: 18px;
+    text-align: center;
+    border-radius: 9px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 4px;
+    background: var(--surface);
+    color: var(--muted);
+  }
+  .tab-btn.active .tab-count { background: color-mix(in oklch, var(--bg) 25%, transparent); color: var(--bg); }
+
+  /* ─── Recon Table ─── */
+  .recon-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .recon-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .recon-table thead th {
+    background: var(--surface);
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 12px;
+    text-align: left;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    user-select: none;
+  }
+  .recon-table thead th.num { text-align: right; }
+  .recon-table thead th.center { text-align: center; }
+  .recon-table tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--fg);
+    vertical-align: middle;
+  }
+  .recon-table tbody td.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .recon-table tbody td.center { text-align: center; }
+  .recon-table tbody tr:last-child td { border-bottom: none; }
+  .recon-table tbody tr { cursor: pointer; transition: background 0.12s; }
+  .recon-table tbody tr:hover { background: var(--surface); }
+  .recon-table tbody tr.expanded { background: var(--surface); }
+  .recon-table tbody tr.diff-row td { background: var(--warn-bg); }
+  .recon-table tbody tr.diff-row:hover td { background: var(--warn-bg-hover); }
+  .recon-table tbody tr.diff-row.expanded td { background: var(--warn-bg-hover); }
+
+  .date-cell {
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .date-cell .weekday {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 400;
+    margin-left: 4px;
+  }
+  .num-dash { color: var(--muted); }
+
+  /* ─── Status Badges ─── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge-ok {
+    background: var(--ok-bg);
+    color: var(--ok-fg);
+    border: 1px solid var(--ok-border);
+  }
+  .badge-warn {
+    background: var(--warn-bg);
+    color: var(--warn-fg);
+    border: 1px solid var(--warn-border);
+  }
+  .badge-pending {
+    background: var(--surface);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .badge-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .badge-ok .badge-dot { background: var(--ok); }
+  .badge-warn .badge-dot { background: var(--warn); }
+  .badge-pending .badge-dot { background: var(--muted); }
+
+  /* ─── Drill-down Panel ─── */
+  .drill-row td { padding: 0 !important; border-bottom: none !important; }
+  .drill-panel {
+    padding: 16px 24px 20px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .drill-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 1100px) {
+    .drill-grid { grid-template-columns: 1fr; }
+  }
+  .drill-col {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .drill-col-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--fg);
+  }
+  .drill-col-header .source-tag {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+  }
+  .drill-col-table {
+    width: 100%;
+    font-size: 12px;
+    border-collapse: collapse;
+  }
+  .drill-col-table td {
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--fg);
+    vertical-align: top;
+  }
+  .drill-col-table tr:last-child td { border-bottom: none; }
+  .drill-col-table td.label { color: var(--muted); white-space: nowrap; width: 70px; }
+  .drill-col-table td.val {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+  .drill-col-table td.val.fg-accent { color: var(--accent); font-weight: 600; }
+  .drill-col-table tr.summary-row td {
+    border-top: 2px solid var(--border);
+    font-weight: 600;
+    padding-top: 8px;
+  }
+  .drill-col-table tr.summary-row td.val { font-size: 13px; }
+  .drill-col-table .order-no { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .drill-col-table .trace { font-size: 10px; color: var(--muted); font-family: var(--mono); }
+
+  .diff-detail {
+    margin-top: 12px;
+    padding: 12px 16px;
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-border);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .diff-detail-icon {
+    flex-shrink: 0;
+    width: 20px; height: 20px;
+    margin-top: 1px;
+  }
+  .diff-detail-text {
+    flex: 1;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--warn-fg);
+  }
+  .diff-detail-text strong { font-weight: 600; }
+  .diff-detail-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    align-items: center;
+  }
+
+  /* ─── Expand indicator ─── */
+  .expand-icon {
+    display: inline-flex;
+    transition: transform 0.2s;
+    color: var(--muted);
+  }
+  tr.expanded .expand-icon { transform: rotate(90deg); }
+
+  /* ─── Footer summary ─── */
+  .recon-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .recon-footer .footer-totals {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .recon-footer .footer-totals span strong {
+    color: var(--fg);
+    font-weight: 600;
+    font-family: var(--mono);
+  }
+
+  /* ─── Modal ─── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: color-mix(in oklch, var(--fg) 35%, transparent);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    width: 440px;
+    max-width: 90vw;
+    box-shadow: 0 12px 40px color-mix(in oklch, var(--fg) 18%, transparent);
+  }
+  .modal-header {
+    padding: 20px 24px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-header h3 { font-size: 16px; font-weight: 600; }
+  .modal-body { padding: 20px 24px; }
+  .modal-body p { font-size: 13px; color: var(--fg); margin-bottom: 12px; line-height: 1.6; }
+  .modal-body .warn-box {
+    padding: 12px 16px;
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-border);
+    border-radius: var(--radius);
+    font-size: 12px;
+    color: var(--warn-fg);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .modal-body .field-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 4px;
+    display: block;
+  }
+  .modal-body textarea {
+    width: 100%;
+    min-height: 72px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font: inherit;
+    font-size: 13px;
+    color: var(--fg);
+    background: var(--bg);
+    resize: vertical;
+  }
+  .modal-body textarea:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -1px;
+    border-color: var(--accent);
+  }
+  .modal-footer {
+    padding: 12px 24px 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  /* ─── Toast ─── */
+  .toast {
+    display: none;
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--fg);
+    color: var(--bg);
+    padding: 12px 20px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 8px 24px color-mix(in oklch, var(--fg) 25%, transparent);
+    z-index: 200;
+    align-items: center;
+    gap: 8px;
+  }
+  .toast.show { display: flex; }
+  .toast svg { flex-shrink: 0; }
+  .toast-link {
+    color: var(--accent);
+    font-weight: 600;
+    margin-left: 4px;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .toast-link:hover { color: color-mix(in oklch, var(--accent) 80%, var(--bg) 20%); }
+
+  /* ─── Action buttons in table ─── */
+  .row-actions { display: flex; gap: 4px; }
+
+  /* ─── Scrollbar ─── */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+  ::-webkit-scrollbar-track { background: transparent; }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 920px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .sidebar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app" data-od-id="app-shell">
+  <!-- Sidebar -->
+  <aside class="sidebar" data-od-id="sidebar-nav">
+    <div class="sidebar-brand">
+      <span class="logo-dot">F</span>
+      <span>Finlite</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">业务流程</div>
+      <button class="nav-item" data-od-id="nav-import">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8m0 0L5 7m3 3l3-3M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1"/></svg>
+        </span>
+        导入中心
+      </button>
+      <button class="nav-item" data-od-id="nav-bank">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 6l6-4 6 4M3 6v6h10V6M5 8v3M8 8v3M11 8v3"/></svg>
+        </span>
+        银行流水
+      </button>
+      <button class="nav-item" data-od-id="nav-order">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1"/><path d="M5 6h6M5 9h4"/></svg>
+        </span>
+        订单流水
+      </button>
+      <button class="nav-item active" data-od-id="nav-recon">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8l3 3 7-7"/></svg>
+        </span>
+        对账中心
+      </button>
+      <button class="nav-item" data-od-id="nav-summary">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13h12M4 13V6M8 13V3M12 13V8"/></svg>
+        </span>
+        数据汇总
+      </button>
+      <div class="nav-section-label">会计核算</div>
+      <button class="nav-item" data-od-id="nav-voucher">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1"/><path d="M5 5h6M5 8h6M5 11h3"/></svg>
+        </span>
+        凭证管理
+      </button>
+      <button class="nav-item" data-od-id="nav-balance">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h8"/></svg>
+        </span>
+        科目余额表
+      </button>
+      <div class="nav-section-label">系统</div>
+      <button class="nav-item" data-od-id="nav-settings">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 1v2m0 10v2M1 8h2m10 0h2M3 3l1.5 1.5M11.5 11.5L13 13M3 13l1.5-1.5M11.5 4.5L13 3"/></svg>
+        </span>
+        基础设置
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      锦绣健康管理 · 单账套
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Topbar -->
+    <header class="topbar" data-od-id="topbar">
+      <div class="topbar-title">对账中心</div>
+      <div class="topbar-right">
+        <div class="topbar-period">
+          会计期间：<strong id="topbar-period-text">2026年7月</strong>
+        </div>
+        <button class="btn btn-sm" data-od-id="btn-export" onclick="showToast('对账单已导出为 TSV 文件', null)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 10V2m0 0L5 5m3-3l3 3M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1"/></svg>
+          导出对账单
+        </button>
+        <button class="btn btn-sm btn-primary" data-od-id="btn-recon-run" onclick="runReconcile()">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8l3 3 7-7"/></svg>
+          重新对账
+        </button>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content" data-od-id="recon-view">
+
+      <!-- Stat Cards -->
+      <div class="stats-row" data-od-id="stat-cards">
+        <div class="stat-card" data-od-id="stat-total">
+          <div class="stat-label">对账总金额（POS 实收）</div>
+          <div class="stat-value" id="stat-total-val">31,302.98<span class="unit">元</span></div>
+          <div class="stat-trend ok" id="stat-total-trend">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l3 3 7-7"/></svg>
+            5 个结算日已核对
+          </div>
+        </div>
+        <div class="stat-card" data-od-id="stat-matched">
+          <div class="stat-label">已匹配</div>
+          <div class="stat-value" id="stat-matched-val">4<span class="unit">/ 7 天</span></div>
+          <div class="stat-trend ok" id="stat-matched-trend">三方勾稽一致</div>
+        </div>
+        <div class="stat-card" data-od-id="stat-diff">
+          <div class="stat-label">差异待处理</div>
+          <div class="stat-value" id="stat-diff-val" style="color: var(--warn);">2<span class="unit" style="color: var(--warn);">笔</span></div>
+          <div class="stat-trend warn" id="stat-diff-trend">差异金额 150.45 元</div>
+        </div>
+        <div class="stat-card" data-od-id="stat-pending">
+          <div class="stat-label">待汇总生成</div>
+          <div class="stat-value" id="stat-pending-val">1<span class="unit">天</span></div>
+          <div class="stat-trend muted" id="stat-pending-trend">已匹配但未生成汇总草稿</div>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar" data-od-id="toolbar">
+        <div class="toolbar-left">
+          <div class="tab-group" data-od-id="tab-status">
+            <button class="tab-btn active" data-filter="all" onclick="setFilter('all')">全部<span class="tab-count" id="count-all">7</span></button>
+            <button class="tab-btn" data-filter="matched" onclick="setFilter('matched')">已匹配<span class="tab-count" id="count-matched">5</span></button>
+            <button class="tab-btn" data-filter="diff" onclick="setFilter('diff')">差异<span class="tab-count" id="count-diff">2</span></button>
+          </div>
+        </div>
+        <div class="toolbar-right">
+          <select class="filter-select" data-od-id="filter-period" onchange="switchPeriod(this.value)">
+            <option value="2026-07" selected>2026年7月</option>
+            <option value="2026-06">2026年6月</option>
+          </select>
+          <input class="filter-input" type="text" placeholder="搜索日期 / 金额" style="width: 160px;" data-od-id="filter-search" oninput="onSearch(this.value)" />
+        </div>
+      </div>
+
+      <!-- Reconciliation Table -->
+      <div class="recon-card" data-od-id="recon-table-card">
+        <table class="recon-table" data-od-id="recon-table">
+          <thead>
+            <tr>
+              <th style="width: 28px;"></th>
+              <th>结算日期</th>
+              <th class="num">订单实收合计</th>
+              <th class="num">银行 POS 转入</th>
+              <th class="num">汇总实际收入</th>
+              <th class="num">差异</th>
+              <th class="center">状态</th>
+              <th style="width: 120px;">操作</th>
+            </tr>
+          </thead>
+          <tbody id="recon-tbody"></tbody>
+        </table>
+        <div class="recon-footer" data-od-id="recon-footer">
+          <div class="footer-totals">
+            <span>已匹配合计：<strong id="footer-matched-total">27,671.98</strong> 元</span>
+            <span>差异合计：<strong id="footer-diff-total">150.45</strong> 元</span>
+            <span>结算日数：<strong id="footer-day-count">7</strong></span>
+          </div>
+          <span id="footer-data-time">数据截止：2026-07-15 09:30</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Ignore Diff Modal -->
+<div class="modal-overlay" id="ignore-modal" data-od-id="ignore-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>确认忽略差异</h3>
+    </div>
+    <div class="modal-body">
+      <p id="ignore-modal-desc">即将忽略该结算日的差异。此操作不可撤销，且会写入审计日志。</p>
+      <div class="warn-box" id="ignore-modal-detail"></div>
+      <label class="field-label" for="ignore-remark">忽略原因（将记入 audit_logs）</label>
+      <textarea id="ignore-remark" placeholder="如：商户补贴 0.45 元已核实，无需调账"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm" onclick="closeIgnoreModal()">取消</button>
+      <button class="btn btn-sm btn-primary" onclick="confirmIgnoreDiff()">确认忽略</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" data-od-id="toast">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l3 3 7-7"/></svg>
+  <span id="toast-text"></span>
+  <span class="toast-link" id="toast-link" onclick="toastLinkAction()"></span>
+</div>
+
+<script>
+(function() {
+  // ── Real sample data (from business doc, desensitized) ──
+  const reconData = [
+    {
+      date: '2026-07-01', weekday: '周三',
+      orderNet: '3580.45', bankPos: '3580.00', summaryIncome: '3580.00',
+      diff: '0.45', status: 'diff', diffField: '订单实收 vs 银行 POS',
+      orders: [
+        { no: '240701001', customer: '客户A', method: '微信', orderAmt: '2400.00', fee: '6.00', net: '2394.00', trace: '订单流水.tsv:3' },
+        { no: '240701002', customer: '客户B', method: '微信', orderAmt: '1000.00', fee: '2.50', net: '997.50', trace: '订单流水.tsv:4' },
+        { no: '240701003', customer: '客户C', method: '支付宝', orderAmt: '189.50', fee: '0.47', net: '189.03', trace: '订单流水.tsv:5' }
+      ],
+      bank: [
+        { time: '07-01 02:38', counterparty: '待清算商户银行卡POS净收暂收销账户', remark: '1001****7575', inAmt: '3580.00', trace: '银行流水.tsv:6' }
+      ],
+      summary: [
+        { receiptNo: '0000498', reason: 'POS收入汇总', income: '3580.00', fee: '8.97', actual: '3580.00', trace: '数据汇总.tsv:4' }
+      ],
+      diffNote: '订单实收合计 3580.45 与银行 POS 转入 3580.00 差异 0.45 元。疑似商户补贴/消费立减未入账，需人工核实后补录或标记处理。'
+    },
+    {
+      date: '2026-07-09', weekday: '周四',
+      orderNet: '11970.00', bankPos: '11970.00', summaryIncome: '11970.00',
+      diff: '0.00', status: 'matched',
+      orders: [
+        { no: '240709001', customer: '王浩然', method: '微信', orderAmt: '12000.00', fee: '30.00', net: '11970.00', trace: '订单流水.tsv:7' }
+      ],
+      bank: [
+        { time: '07-10 02:45', counterparty: '待清算商户银行卡POS净收暂收销账户', remark: '1001****7575', inAmt: '11970.00', trace: '银行流水.tsv:10' }
+      ],
+      summary: [
+        { receiptNo: '0000501', reason: '王浩然产康充值', income: '12000.00', fee: '30.00', actual: '11970.00', trace: '数据汇总.tsv:6' }
+      ]
+    },
+    {
+      date: '2026-07-10', weekday: '周五',
+      orderNet: '9256.80', bankPos: '9256.80', summaryIncome: '9256.80',
+      diff: '0.00', status: 'matched',
+      orders: [
+        { no: '240710001', customer: '赵雨桐', method: '微信', orderAmt: '8680.00', fee: '21.70', net: '8658.30', trace: '订单流水.tsv:8' },
+        { no: '240710002', customer: '晓璐', method: '微信', orderAmt: '600.00', fee: '1.50', net: '598.50', trace: '订单流水.tsv:9' }
+      ],
+      bank: [
+        { time: '07-11 02:42', counterparty: '待清算商户银行卡POS净收暂收销账户', remark: '1001****7575', inAmt: '9256.80', trace: '银行流水.tsv:12' }
+      ],
+      summary: [
+        { receiptNo: '0000502', reason: '赵雨桐牛奶光', income: '8680.00', fee: '21.70', actual: '8658.30', trace: '数据汇总.tsv:7' },
+        { receiptNo: '0000503', reason: '晓璐护理项目', income: '600.00', fee: '1.50', actual: '598.50', trace: '数据汇总.tsv:8' }
+      ]
+    },
+    {
+      date: '2026-07-11', weekday: '周六',
+      orderNet: '446.88', bankPos: '446.88', summaryIncome: '446.88',
+      diff: '0.00', status: 'matched',
+      orders: [
+        { no: '240711001', customer: '客户D', method: '微信', orderAmt: '448.00', fee: '1.12', net: '446.88', trace: '订单流水.tsv:10' }
+      ],
+      bank: [
+        { time: '07-12 02:35', counterparty: '待清算商户银行卡POS净收暂收销账户', remark: '1001****7575', inAmt: '446.88', trace: '银行流水.tsv:14' }
+      ],
+      summary: [
+        { receiptNo: '0000504', reason: 'POS收入汇总', income: '448.00', fee: '1.12', actual: '446.88', trace: '数据汇总.tsv:9' }
+      ]
+    },
+    {
+      date: '2026-07-12', weekday: '周日',
+      orderNet: '5320.00', bankPos: '5320.00', summaryIncome: '5320.00',
+      diff: '0.00', status: 'matched',
+      orders: [
+        { no: '240712001', customer: '客户E', method: '微信', orderAmt: '3200.00', fee: '8.00', net: '3192.00', trace: '订单流水.tsv:11' },
+        { no: '240712002', customer: '客户F', method: '支付宝', orderAmt: '2128.00', fee: '5.32', net: '2122.68', trace: '订单流水.tsv:12' }
+      ],
+      bank: [
+        { time: '07-13 02:40', counterparty: '待清算商户银行卡POS净收暂收销账户', remark: '1001****7575', inAmt: '5314.68', trace: '银行流水.tsv:16' },
+        { time: '07-13 02:40', counterparty: '待清算商户银行卡POS净收暂收销账户', remark: '1001****7575', inAmt: '5.32', trace: '银行流水.tsv:17' }
+      ],
+      summary: [
+        { receiptNo: '0000505', reason: '客户E护理项目', income: '3200.00', fee: '8.00', actual: '3192.00', trace: '数据汇总.tsv:10' },
+        { receiptNo: '0000506', reason: '客户F产品购买', income: '2128.00', fee: '5.32', actual: '2122.68', trace: '数据汇总.tsv:11' }
+      ]
+    },
+    {
+      date: '2026-07-13', weekday: '周一',
+      orderNet: '678.30', bankPos: '678.30', summaryIncome: '—',
+      diff: '678.30', status: 'pending',
+      orders: [
+        { no: '240713001', customer: '客户G', method: '微信', orderAmt: '680.00', fee: '1.70', net: '678.30', trace: '订单流水.tsv:13' }
+      ],
+      bank: [
+        { time: '07-14 02:38', counterparty: '待清算商户银行卡POS净收暂收销账户', remark: '1001****7575', inAmt: '678.30', trace: '银行流水.tsv:18' }
+      ],
+      summary: [],
+      diffNote: '订单实收与银行 POS 转入一致（678.30 元），但数据汇总尚无该日记录。请前往数据汇总页补录事由并生成草稿。'
+    },
+    {
+      date: '2026-07-14', weekday: '周二',
+      orderNet: '—', bankPos: '150.00', summaryIncome: '—',
+      diff: '150.00', status: 'nodata',
+      orders: [],
+      bank: [
+        { time: '07-15 02:36', counterparty: '待清算商户银行卡POS净收暂收销账户', remark: '1001****7575', inAmt: '150.00', trace: '银行流水.tsv:19' }
+      ],
+      summary: [],
+      diffNote: '银行侧独有日期：有 POS 转入 150.00 元但无对应订单流水。可能为跨期清算或订单尚未导入。请核对银行流水与订单缺口。'
+    }
+  ];
+
+  // ── State ──
+  let currentFilter = 'all';
+  let expandedDate = null;
+  let searchTerm = '';
+  let ignoredDiffs = new Set();
+  let pendingIgnoreDate = null;
+  let toastLinkCallback = null;
+
+  // ── Helpers ──
+  function fmtDate(d) {
+    const parts = d.split('-');
+    return parts[1] + '-' + parts[2];
+  }
+
+  function getStatusBadge(status) {
+    switch (status) {
+      case 'matched':
+        return '<span class="badge badge-ok"><span class="badge-dot"></span>三方一致</span>';
+      case 'diff':
+        return '<span class="badge badge-warn"><span class="badge-dot"></span>差异待处理</span>';
+      case 'pending':
+        return '<span class="badge badge-pending"><span class="badge-dot"></span>待汇总生成</span>';
+      case 'nodata':
+        return '<span class="badge badge-pending"><span class="badge-dot"></span>无数据</span>';
+      default:
+        return '';
+    }
+  }
+
+  function isMatched(row) {
+    return row.status === 'matched' || row.status === 'pending';
+  }
+
+  function isDiff(row) {
+    return row.status === 'diff' || row.status === 'nodata';
+  }
+
+  function effectiveStatus(row) {
+    if (ignoredDiffs.has(row.date)) return 'ignored';
+    return row.status;
+  }
+
+  function effectiveDiff(row) {
+    if (ignoredDiffs.has(row.date)) return '0.00';
+    return row.diff;
+  }
+
+  // ── Table Rendering ──
+  const tbody = document.getElementById('recon-tbody');
+
+  function renderTable() {
+    tbody.innerHTML = '';
+    const filtered = reconData.filter(row => {
+      // Tab filter
+      if (currentFilter === 'matched' && !isMatched(row)) return false;
+      if (currentFilter === 'diff' && !isDiff(row)) return false;
+
+      // Search filter
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        const haystack = (row.date + ' ' + row.orderNet + ' ' + row.bankPos + ' ' + row.summaryIncome + ' ' + row.diff).toLowerCase();
+        if (!haystack.includes(term)) return false;
+      }
+
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td colspan="8" style="text-align:center;color:var(--muted);padding:40px;">暂无符合条件的数据</td>';
+      tbody.appendChild(tr);
+      return;
+    }
+
+    filtered.forEach(row => {
+      const status = effectiveStatus(row);
+      const diff = effectiveDiff(row);
+      const isIgnored = ignoredDiffs.has(row.date);
+
+      // Main row
+      const tr = document.createElement('tr');
+      tr.dataset.date = row.date;
+      if (row.status === 'diff' || row.status === 'nodata') tr.classList.add('diff-row');
+      if (isIgnored) tr.classList.remove('diff-row');
+      if (expandedDate === row.date) tr.classList.add('expanded');
+
+      const badgeHtml = isIgnored
+        ? '<span class="badge badge-pending"><span class="badge-dot"></span>已忽略</span>'
+        : getStatusBadge(status);
+
+      const diffHtml = diff === '0.00' || isIgnored
+        ? '<span class="num-dash">—</span>'
+        : '<span style="color: var(--warn); font-weight: 600;">' + diff + '</span>';
+
+      let actionHtml = '';
+      if (isIgnored) {
+        actionHtml = '<span style="color:var(--muted);font-size:12px;">已处理</span>';
+      } else if (row.status === 'matched') {
+        actionHtml = '<button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();generateSummary(\'' + row.date + '\')">生成汇总</button>';
+      } else if (row.status === 'pending') {
+        actionHtml = '<button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();generateSummary(\'' + row.date + '\')">生成汇总</button>';
+      } else {
+        actionHtml = '<div class="row-actions"><button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();expandRow(\'' + row.date + '\')">定位原行</button></div>';
+      }
+
+      const orderNetHtml = row.orderNet === '—' ? '<span class="num-dash">—</span>' : row.orderNet;
+      const summaryHtml = row.summaryIncome === '—' ? '<span class="num-dash">—</span>' : row.summaryIncome;
+
+      tr.innerHTML =
+        '<td><span class="expand-icon"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4l4 4-4 4"/></svg></span></td>' +
+        '<td><span class="date-cell">' + fmtDate(row.date) + '<span class="weekday">' + row.weekday + '</span></span></td>' +
+        '<td class="num">' + orderNetHtml + '</td>' +
+        '<td class="num">' + row.bankPos + '</td>' +
+        '<td class="num">' + summaryHtml + '</td>' +
+        '<td class="num">' + diffHtml + '</td>' +
+        '<td class="center">' + badgeHtml + '</td>' +
+        '<td>' + actionHtml + '</td>';
+
+      tr.addEventListener('click', function() {
+        expandedDate = (expandedDate === row.date) ? null : row.date;
+        renderTable();
+      });
+
+      tbody.appendChild(tr);
+
+      // Drill-down panel
+      if (expandedDate === row.date) {
+        const drillTr = document.createElement('tr');
+        drillTr.classList.add('drill-row');
+        drillTr.innerHTML = '<td colspan="8">' + renderDrillPanel(row, isIgnored) + '</td>';
+        tbody.appendChild(drillTr);
+      }
+    });
+  }
+
+  function renderDrillPanel(row, isIgnored) {
+    let html = '<div class="drill-panel">';
+    html += '<div class="drill-grid">';
+
+    // ── Orders column ──
+    html += '<div class="drill-col">';
+    html += '<div class="drill-col-header"><span>订单流水</span><span class="source-tag">' + row.orders.length + ' 笔</span></div>';
+    html += '<table class="drill-col-table">';
+    if (row.orders.length === 0) {
+      html += '<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:16px;">无订单数据</td></tr>';
+    } else {
+      row.orders.forEach(function(o) {
+        html += '<tr><td class="label">' + o.customer + '</td><td>' + o.method + ' · <span class="order-no">' + o.no + '</span></td><td class="val">' + o.orderAmt + '</td></tr>';
+        html += '<tr><td class="label">手续费</td><td><span class="trace">' + o.trace + '</span></td><td class="val">' + o.fee + '</td></tr>';
+        html += '<tr><td class="label">实收</td><td></td><td class="val">' + o.net + '</td></tr>';
+      });
+      html += '<tr class="summary-row"><td class="label">实收合计</td><td></td><td class="val fg-accent">' + row.orderNet + '</td></tr>';
+    }
+    html += '</table></div>';
+
+    // ── Bank column ──
+    html += '<div class="drill-col">';
+    html += '<div class="drill-col-header"><span>银行流水</span><span class="source-tag">POS 转入</span></div>';
+    html += '<table class="drill-col-table">';
+    if (row.bank.length === 0) {
+      html += '<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:16px;">无银行数据</td></tr>';
+    } else {
+      row.bank.forEach(function(b) {
+        html += '<tr><td class="label">' + b.time + '</td><td colspan="2" style="font-size:11px;color:var(--muted);">' + b.counterparty + '</td></tr>';
+        html += '<tr><td class="label">附言</td><td colspan="2" style="font-size:11px;color:var(--muted);">' + b.remark + '</td></tr>';
+        html += '<tr><td class="label">转入</td><td><span class="trace">' + b.trace + '</span></td><td class="val">' + b.inAmt + '</td></tr>';
+      });
+      html += '<tr class="summary-row"><td class="label">转入合计</td><td></td><td class="val fg-accent">' + row.bankPos + '</td></tr>';
+    }
+    html += '</table></div>';
+
+    // ── Summary column ──
+    html += '<div class="drill-col">';
+    html += '<div class="drill-col-header"><span>数据汇总</span><span class="source-tag">' + row.summary.length + ' 行</span></div>';
+    html += '<table class="drill-col-table">';
+    if (row.summary.length === 0) {
+      html += '<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:16px;">尚无汇总记录<br><span style="font-size:11px;">请前往数据汇总页补录</span></td></tr>';
+    } else {
+      row.summary.forEach(function(s) {
+        html += '<tr><td class="label">' + s.receiptNo + '</td><td>' + s.reason + '</td><td class="val">' + s.actual + '</td></tr>';
+        html += '<tr><td class="label">收入</td><td><span class="trace">' + s.trace + '</span></td><td class="val">' + s.income + '</td></tr>';
+      });
+      html += '<tr class="summary-row"><td class="label">收入合计</td><td></td><td class="val fg-accent">' + (row.summaryIncome === '—' ? '0.00' : row.summaryIncome) + '</td></tr>';
+    }
+    html += '</table></div>';
+
+    html += '</div>'; // drill-grid
+
+    // ── Diff / Pending detail ──
+    if (row.diffNote && !isIgnored) {
+      if (row.status === 'diff' || row.status === 'nodata') {
+        html += '<div class="diff-detail">';
+        html += '<svg class="diff-detail-icon" viewBox="0 0 20 20" fill="none" stroke="var(--warn-fg)" stroke-width="1.5"><path d="M10 2L2 17h16L10 2z"/><path d="M10 8v4M10 14v.5"/></svg>';
+        html += '<div class="diff-detail-text"><strong>差异分析：</strong>' + row.diffNote + '</div>';
+        html += '<div class="diff-detail-actions">';
+        html += '<button class="btn btn-sm" onclick="event.stopPropagation();openIgnoreModal(\'' + row.date + '\')">忽略差异</button>';
+        html += '<button class="btn btn-sm btn-primary" onclick="event.stopPropagation();adjustEntry(\'' + row.date + '\')">补录调整</button>';
+        html += '</div>';
+        html += '</div>';
+      } else if (row.status === 'pending') {
+        html += '<div class="diff-detail" style="background:var(--surface);border-color:var(--border);">';
+        html += '<svg class="diff-detail-icon" viewBox="0 0 20 20" fill="none" stroke="var(--muted)" stroke-width="1.5"><circle cx="10" cy="10" r="8"/><path d="M10 6v4M10 13v.5"/></svg>';
+        html += '<div class="diff-detail-text" style="color:var(--fg);"><strong>待处理：</strong>' + row.diffNote + '</div>';
+        html += '<div class="diff-detail-actions">';
+        html += '<button class="btn btn-sm btn-primary" onclick="event.stopPropagation();generateSummary(\'' + row.date + '\')">生成汇总草稿</button>';
+        html += '</div>';
+        html += '</div>';
+      }
+    }
+
+    // ── Matched row action ──
+    if (row.status === 'matched' && !isIgnored) {
+      html += '<div style="margin-top:12px;display:flex;justify-content:flex-end;">';
+      html += '<button class="btn btn-sm" onclick="event.stopPropagation();generateSummary(\'' + row.date + '\')">生成汇总草稿</button>';
+      html += '</div>';
+    }
+
+    // ── Ignored indicator ──
+    if (isIgnored) {
+      html += '<div style="margin-top:12px;padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--muted);">';
+      html += '该差异已标记为忽略，已写入 audit_logs。如需恢复，请前往审计日志撤销。';
+      html += '</div>';
+    }
+
+    html += '</div>'; // drill-panel
+    return html;
+  }
+
+  // ── Update stats and footer ──
+  function updateStats() {
+    let totalPos = 0;
+    let matchedDays = 0;
+    let diffCount = 0;
+    let diffAmount = 0;
+    let pendingDays = 0;
+    let matchedTotal = 0;
+    let totalDays = reconData.length;
+
+    reconData.forEach(function(row) {
+      const bankVal = parseFloat(row.bankPos) || 0;
+      totalPos += bankVal;
+
+      const isIgnored = ignoredDiffs.has(row.date);
+
+      if (isIgnored) {
+        matchedDays++;
+        matchedTotal += bankVal;
+      } else if (row.status === 'matched') {
+        matchedDays++;
+        matchedTotal += bankVal;
+      } else if (row.status === 'pending') {
+        matchedDays++;
+        pendingDays++;
+        matchedTotal += bankVal;
+      } else if (row.status === 'diff' || row.status === 'nodata') {
+        diffCount++;
+        diffAmount += parseFloat(row.diff) || 0;
+      }
+    });
+
+    document.getElementById('stat-total-val').innerHTML = totalPos.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '<span class="unit">元</span>';
+    document.getElementById('stat-total-trend').innerHTML = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l3 3 7-7"/></svg>' + matchedDays + ' 个结算日已核对';
+    document.getElementById('stat-matched-val').innerHTML = matchedDays + '<span class="unit">/ ' + totalDays + ' 天</span>';
+    document.getElementById('stat-diff-val').innerHTML = diffCount + '<span class="unit" style="color: var(--warn);">笔</span>';
+    document.getElementById('stat-diff-trend').textContent = '差异金额 ' + diffAmount.toFixed(2) + ' 元';
+    document.getElementById('stat-pending-val').innerHTML = pendingDays + '<span class="unit">天</span>';
+    document.getElementById('stat-pending-trend').textContent = pendingDays > 0 ? '已匹配但未生成汇总草稿' : '全部已生成汇总';
+
+    // Footer
+    document.getElementById('footer-matched-total').textContent = matchedTotal.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    document.getElementById('footer-diff-total').textContent = diffAmount.toFixed(2);
+    document.getElementById('footer-day-count').textContent = totalDays;
+
+    // Tab counts
+    let allCount = reconData.length;
+    let matchedCount = reconData.filter(function(r) { return isMatched(r) || ignoredDiffs.has(r.date); }).length;
+    let diffCountTab = reconData.filter(function(r) { return isDiff(r) && !ignoredDiffs.has(r.date); }).length;
+    document.getElementById('count-all').textContent = allCount;
+    document.getElementById('count-matched').textContent = matchedCount;
+    document.getElementById('count-diff').textContent = diffCountTab;
+  }
+
+  // ── Interactions ──
+  window.setFilter = function(filter) {
+    currentFilter = filter;
+    expandedDate = null;
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelector('.tab-btn[data-filter="' + filter + '"]').classList.add('active');
+    renderTable();
+  };
+
+  window.expandRow = function(date) {
+    expandedDate = (expandedDate === date) ? null : date;
+    renderTable();
+  };
+
+  window.onSearch = function(val) {
+    searchTerm = val.trim();
+    expandedDate = null;
+    renderTable();
+  };
+
+  window.runReconcile = function() {
+    expandedDate = null;
+    renderTable();
+    updateStats();
+    showToast('对账完成，已刷新 7 个结算日', null);
+  };
+
+  window.switchPeriod = function(val) {
+    var text = val === '2026-06' ? '2026年6月' : '2026年7月';
+    document.getElementById('topbar-period-text').textContent = text;
+    if (val === '2026-06') {
+      showToast('2026年6月暂无对账数据，请先导入该期间流水', null);
+    } else {
+      renderTable();
+      showToast('已切换到 2026年7月', null);
+    }
+  };
+
+  window.generateSummary = function(date) {
+    showToast('已为 ' + date + ' 生成汇总草稿', '前往数据汇总');
+    toastLinkCallback = function() {
+      showToast('跳转数据汇总页（原型演示）', null);
+    };
+  };
+
+  window.adjustEntry = function(date) {
+    showToast('跳转数据汇总页补录 ' + date, '前往数据汇总');
+    toastLinkCallback = function() {
+      showToast('跳转数据汇总页（原型演示）', null);
+    };
+  };
+
+  window.openIgnoreModal = function(date) {
+    pendingIgnoreDate = date;
+    var row = reconData.find(function(r) { return r.date === date; });
+    if (!row) return;
+    document.getElementById('ignore-modal-detail').innerHTML =
+      '<strong>结算日：</strong>' + date + '<br>' +
+      '<strong>差异字段：</strong>' + (row.diffField || '银行 POS vs 汇总实际收入') + '<br>' +
+      '<strong>差异金额：</strong>' + row.diff + ' 元';
+    document.getElementById('ignore-remark').value = '';
+    document.getElementById('ignore-modal').classList.add('show');
+  };
+
+  window.closeIgnoreModal = function() {
+    document.getElementById('ignore-modal').classList.remove('show');
+    pendingIgnoreDate = null;
+  };
+
+  window.confirmIgnoreDiff = function() {
+    if (!pendingIgnoreDate) return;
+    var remark = document.getElementById('ignore-remark').value.trim();
+    if (!remark) {
+      var ta = document.getElementById('ignore-remark');
+      ta.style.borderColor = 'var(--warn)';
+      ta.focus();
+      ta.addEventListener('input', function() { ta.style.borderColor = ''; }, { once: true });
+      return;
+    }
+    ignoredDiffs.add(pendingIgnoreDate);
+    closeIgnoreModal();
+    renderTable();
+    updateStats();
+    showToast('差异已忽略，已写入 audit_logs（操作人：出纳/会计）', null);
+    pendingIgnoreDate = null;
+  };
+
+  // ── Toast ──
+  var toastTimer = null;
+  window.showToast = function(text, linkText) {
+    var toast = document.getElementById('toast');
+    document.getElementById('toast-text').textContent = text;
+    var linkEl = document.getElementById('toast-link');
+    if (linkText) {
+      linkEl.textContent = linkText;
+      linkEl.style.display = '';
+    } else {
+      linkEl.style.display = 'none';
+    }
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 3500);
+  };
+
+  window.toastLinkAction = function() {
+    if (toastLinkCallback) toastLinkCallback();
+  };
+
+  // ── Nav items (visual only) ──
+  document.querySelectorAll('.nav-item').forEach(function(item) {
+    item.addEventListener('click', function() {
+      if (this.dataset.odId === 'nav-recon') return;
+      document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+      this.classList.add('active');
+      showToast('页面跳转（原型演示：仅对账中心可用）', null);
+      setTimeout(function() {
+        document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+        document.querySelector('.nav-item[data-od-id="nav-recon"]').classList.add('active');
+      }, 1500);
+    });
+  });
+
+  // ── Close modal on overlay click ──
+  document.getElementById('ignore-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeIgnoreModal();
+  });
+
+  // ── ESC to close modal ──
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeIgnoreModal();
+  });
+
+  // ── Initial render ──
+  renderTable();
+  updateStats();
+})();
+</script>
+
+</body>
+</html>
