@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Finlite · 导入中心</title>
+<style>
+:root{
+  /* Ant palette */
+  --bg:#f5f5f5;
+  --surface:#ffffff;
+  --surface-alt:#fafafa;
+  --gray-1:#f5f5f5;
+  --gray-2:#fafafa;
+  --gray-3:#d9d9d9;
+  --gray-4:#8c8c8c;
+  --fg:rgba(0,0,0,.88);
+  --fg-2:rgba(0,0,0,.65);
+  --muted:#8c8c8c;
+  --border:#d9d9d9;
+  --border-soft:#f0f0f0;
+  --split:#f0f0f0;
+
+  --accent:#1677ff;
+  --accent-hover:#4096ff;
+  --accent-active:#0958d9;
+  --accent-ink:#0958d9;        /* readable blue for text/links/icons at small sizes */
+  --accent-ink-hover:#003eb3;
+  --accent-bg:#e6f4ff;
+  --accent-border:#91caff;
+
+  --success:#52c41a;
+  --success-text:#237804;
+  --success-bg:#f6ffed;
+  --success-border:#b7eb8f;
+
+  --warn:#faad14;
+  --warn-text:#874d00;
+  --warn-bg:#fffbe6;
+  --warn-border:#ffe58f;
+
+  --danger:#ff4d4f;
+  --danger-text:#cf1322;
+  --danger-bg:#fff2f0;
+  --danger-border:#ffccc7;
+
+  --purple:#722ed1;
+  --purple-bg:#f9f0ff;
+  --purple-border:#d3adf7;
+
+  --radius:6px;
+  --radius-sm:4px;
+  --radius-lg:8px;
+  --shadow-card:0 1px 2px rgba(0,0,0,.04);
+  --shadow-pop:0 6px 16px 0 rgba(0,0,0,.12),0 3px 6px -4px rgba(0,0,0,.12);
+  --focus:0 0 0 3px rgba(22,119,255,.18);
+
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;
+  --mono:"SFMono-Regular","JetBrains Mono",Consolas,"Liberation Mono",Menlo,monospace;
+
+  --side-w:216px;
+  --topbar-h:48px;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--font);
+  font-size:14px;
+  line-height:1.5714;
+  color:var(--fg);
+  background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+}
+.num,.mono{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.mono{font-family:var(--mono)}
+h1,h2,h3,p{margin:0}
+button{font-family:inherit}
+a{color:var(--accent-ink);text-decoration:none}
+
+/* ---------- app shell ---------- */
+.app{display:flex;min-height:100vh;min-width:1080px}
+.sidebar{
+  width:var(--side-w);flex:0 0 var(--side-w);
+  background:var(--surface);border-right:1px solid var(--border-soft);
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
+}
+.brand{display:flex;align-items:center;gap:10px;height:var(--topbar-h);padding:0 16px;border-bottom:1px solid var(--border-soft)}
+.brand-mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#1677ff,#0958d9);display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px;flex:0 0 auto}
+.brand-name{font-size:15px;font-weight:700;letter-spacing:.2px}
+.brand-sub{font-size:11px;color:var(--muted);margin-top:-2px}
+.nav{padding:10px 8px;display:flex;flex-direction:column;gap:2px;flex:1}
+.nav-group{font-size:11px;color:var(--muted);padding:12px 10px 6px;letter-spacing:.4px}
+.nav-item{display:flex;align-items:center;gap:10px;height:38px;padding:0 12px;border-radius:var(--radius);color:var(--fg-2);cursor:pointer;font-size:14px;transition:background .14s,color .14s}
+.nav-item svg{width:16px;height:16px;flex:0 0 auto;opacity:.85}
+.nav-item:hover{background:var(--gray-1);color:var(--fg)}
+.nav-item.active{background:var(--accent-bg);color:var(--accent-ink);font-weight:600}
+.nav-item.active svg{opacity:1}
+.nav-badge{margin-left:auto;font-size:11px;line-height:18px;padding:0 6px;border-radius:9px;background:var(--danger-text);color:#fff;font-variant-numeric:tabular-nums}
+.side-foot{border-top:1px solid var(--border-soft);padding:12px 16px;font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.side-foot .acct{color:var(--fg-2);font-family:var(--mono)}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.titlebar{height:var(--topbar-h);background:var(--surface);border-bottom:1px solid var(--border-soft);display:flex;align-items:center;padding:0 24px;gap:8px;position:sticky;top:0;z-index:20}
+.crumb{color:var(--muted);font-size:14px}
+.crumb b{color:var(--fg);font-weight:600}
+.titlebar .sep{color:var(--gray-3)}
+.titlebar .spacer{margin-left:auto}
+.acct-chip{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--fg-2);border:1px solid var(--border-soft);background:var(--surface-alt);border-radius:var(--radius);padding:5px 10px}
+.acct-chip .mono{color:var(--fg)}
+
+.content{padding:20px 24px 56px;max-width:1440px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+
+/* ---------- page head ---------- */
+.page-head{display:flex;align-items:flex-start;gap:16px;padding:2px 0 2px}
+.page-title{font-size:22px;font-weight:600;letter-spacing:-.2px}
+.page-sub{color:var(--fg-2);font-size:13px;margin-top:5px;max-width:720px}
+.page-head .spacer{flex:1}
+.page-actions{display:flex;align-items:center;gap:8px}
+
+/* ---------- card ---------- */
+.card{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius-lg);box-shadow:var(--shadow-card)}
+.card-head{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--split)}
+.card-title{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+.card-title .idx{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--accent-ink);background:var(--accent-bg);border:1px solid var(--accent-border);border-radius:var(--radius-sm);padding:1px 6px}
+.card-desc{color:var(--muted);font-size:12.5px;margin-left:auto}
+.card-body{padding:16px 20px}
+.card-body.tight{padding:0}
+
+/* ---------- alert ---------- */
+.alert{display:flex;gap:10px;border-radius:var(--radius);padding:11px 14px;font-size:13px;border:1px solid}
+.alert svg{width:16px;height:16px;margin-top:1px;flex:0 0 auto}
+.alert-info{background:var(--accent-bg);border-color:var(--accent-border);color:var(--fg)}
+.alert-info svg{color:var(--accent)}
+.alert-body{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;min-width:0}
+.alert-point{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.alert-point .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex:0 0 auto}
+.alert-point b{font-weight:600}
+
+/* ---------- stats ---------- */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.stat{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius-lg);padding:16px 18px;box-shadow:var(--shadow-card);display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden}
+.stat-top{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}
+.stat-ico{width:26px;height:26px;border-radius:var(--radius);display:grid;place-items:center;background:var(--accent-bg);color:var(--accent)}
+.stat-ico svg{width:15px;height:15px}
+.stat.warn .stat-ico{background:var(--warn-bg);color:var(--warn-text)}
+.stat.ok .stat-ico{background:var(--success-bg);color:var(--success-text)}
+.stat.sk .stat-ico{background:var(--gray-1);color:var(--gray-4)}
+.stat-value{font-size:30px;font-weight:600;line-height:1.1;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.stat-foot{font-size:12px;color:var(--muted)}
+.stat-foot b{color:var(--fg-2);font-weight:600}
+
+/* ---------- stepper ---------- */
+.steps{display:flex;align-items:flex-start;padding:4px 4px 0}
+.step{display:flex;align-items:flex-start;gap:12px;flex:1;min-width:0}
+.step-node{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--surface);display:grid;place-items:center;font-size:13px;font-weight:600;color:var(--muted);flex:0 0 auto;font-variant-numeric:tabular-nums;transition:.2s}
+.step-node svg{width:15px;height:15px}
+.step.active .step-node{border-color:var(--accent);color:var(--accent-ink);background:var(--accent-bg);box-shadow:0 0 0 3px rgba(22,119,255,.10)}
+.step.done .step-node{border-color:var(--accent);background:var(--accent);color:#fff}
+.step-body{min-width:0;padding-top:2px}
+.step-name{font-size:14px;font-weight:600;color:var(--fg)}
+.step:not(.active):not(.done) .step-name{color:var(--muted);font-weight:500}
+.step-desc{font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.step-line{flex:1;height:1px;background:var(--border);margin:14px 14px 0;min-width:24px}
+.step-line.done{background:var(--accent-border)}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 15px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--fg);font-size:14px;cursor:pointer;transition:.16s;white-space:nowrap;user-select:none}
+.btn svg{width:15px;height:15px}
+.btn:hover{border-color:var(--accent-ink);color:var(--accent-ink)}
+.btn:active{border-color:var(--accent-ink-hover);color:var(--accent-ink-hover)}
+.btn:focus-visible{outline:none;box-shadow:var(--focus)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-ink);border-color:var(--accent-ink);color:#fff}
+.btn-primary:active{background:var(--accent-ink-hover);border-color:var(--accent-ink-hover);color:#fff}
+.btn-primary:disabled,.btn:disabled{background:var(--gray-1);border-color:var(--border);color:rgba(0,0,0,.25);cursor:not-allowed;box-shadow:none}
+.btn-sm{height:26px;padding:0 10px;font-size:13px}
+.btn-text{height:auto;padding:0;border:none;background:none;color:var(--accent-ink);font-size:13px;cursor:pointer}
+.btn-text:hover{color:var(--accent-ink-hover)}
+.btn-text:focus-visible{outline:none;box-shadow:var(--focus);border-radius:2px}
+.btn-text.danger{color:var(--danger-text)}
+.btn-icon{width:32px;height:32px;padding:0}
+
+/* ---------- dropzone ---------- */
+.dropzone{border:1px dashed var(--border);border-radius:var(--radius-lg);background:var(--surface-alt);padding:26px 20px;text-align:center;transition:.16s;cursor:pointer}
+.dropzone:hover{border-color:var(--accent-hover);background:var(--accent-bg)}
+.dropzone.dragover{border-color:var(--accent);background:var(--accent-bg);box-shadow:inset 0 0 0 1px var(--accent-border)}
+.dz-ico{width:46px;height:46px;margin:0 auto 12px;border-radius:12px;background:var(--accent-bg);color:var(--accent);display:grid;place-items:center;border:1px solid var(--accent-border)}
+.dz-ico svg{width:24px;height:24px}
+.dz-title{font-size:15px;font-weight:600}
+.dz-hint{color:var(--muted);font-size:13px;margin-top:4px}
+.dz-actions{margin-top:14px;display:flex;justify-content:center;align-items:center;gap:10px}
+.fmt-tags{display:flex;justify-content:center;gap:6px;margin-top:12px}
+.fmt-tag{font-size:12px;font-family:var(--mono);color:var(--fg-2);background:var(--gray-1);border:1px solid var(--border-soft);border-radius:var(--radius-sm);padding:2px 8px}
+.examples{margin-top:12px;display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.example-file{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-2);background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius);padding:3px 9px}
+.example-file svg{width:13px;height:13px;color:var(--muted)}
+.example-file .miss{color:var(--warn-text)}
+
+/* ---------- directory bar ---------- */
+.path-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.path-field{flex:1;min-width:280px;display:flex;align-items:center;gap:9px;height:34px;border:1px solid var(--border);border-radius:var(--radius);padding:0 12px;background:var(--surface-alt);color:var(--fg)}
+.path-field svg{width:15px;height:15px;color:var(--muted);flex:0 0 auto}
+.path-field .mono{font-size:13px}
+.path-field .tail{margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.scan-info{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border-soft)}
+.scan-item{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--muted)}
+.scan-item b{color:var(--fg);font-variant-numeric:tabular-nums;font-weight:600}
+.scan-dot{width:6px;height:6px;border-radius:50%;background:var(--gray-3)}
+.scan-dot.b{background:var(--accent)}.scan-dot.ok{background:var(--success)}.scan-dot.rd{background:var(--danger)}
+
+/* ---------- table ---------- */
+.table-wrap{width:100%;overflow:auto;border-top:1px solid var(--split)}
+table.ant{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+.ant thead th{position:sticky;top:0;z-index:2;background:var(--surface-alt);color:var(--fg-2);font-weight:600;text-align:left;padding:10px 14px;border-bottom:1px solid var(--split);white-space:nowrap;font-size:13px}
+.ant tbody td{padding:10px 14px;border-bottom:1px solid var(--split);color:var(--fg);vertical-align:middle}
+.ant tbody tr:last-child td{border-bottom:none}
+.ant tbody tr:hover td{background:var(--surface-alt)}
+.ant tbody tr.selected td{background:var(--accent-bg)}
+.ant .col-num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ant .col-actions{text-align:right;white-space:nowrap}
+.ant .col-c{text-align:center}
+.cell-file{display:flex;align-items:center;gap:8px;min-width:0}
+.cell-file svg{width:15px;height:15px;color:var(--muted);flex:0 0 auto}
+.cell-file .nm{font-family:var(--mono);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:280px}
+.hint-miss{font-size:11px;color:var(--warn-text);background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:var(--radius-sm);padding:0 5px;white-space:nowrap;flex:0 0 auto}
+.muted{color:var(--muted)}
+.warn-count{color:var(--warn-text);font-weight:600}
+.warn-count.zero{color:var(--muted);font-weight:400}
+
+/* checkbox */
+.ck{appearance:none;width:16px;height:16px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);cursor:pointer;position:relative;flex:0 0 auto;transition:.14s}
+.ck:hover{border-color:var(--accent)}
+.ck:checked{background:var(--accent);border-color:var(--accent)}
+.ck:checked::after{content:"";position:absolute;left:5px;top:2px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.ck:disabled{background:var(--gray-1);border-color:var(--border);cursor:not-allowed}
+.ck:disabled:checked{background:var(--gray-3);border-color:var(--gray-3)}
+.ck:focus-visible{outline:none;box-shadow:var(--focus)}
+
+/* tags */
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:var(--radius-sm);font-size:12px;line-height:1;border:1px solid transparent;white-space:nowrap}
+.tag-bank{background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent-ink)}
+.tag-order{background:var(--purple-bg);border-color:var(--purple-border);color:var(--purple)}
+.tag-other{background:var(--gray-1);border-color:var(--border);color:var(--fg-2)}
+.tag-pending{background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent-ink)}
+.tag-imported{background:var(--gray-2);border-color:var(--border);color:var(--fg-2)}
+.tag-unsup{background:var(--danger-bg);border-color:var(--danger-border);color:var(--danger-text)}
+.tag-warn{background:var(--warn-bg);border-color:var(--warn-border);color:var(--warn-text)}
+.tag-ok{background:var(--success-bg);border-color:var(--success-border);color:var(--success-text)}
+
+/* ---------- card foot ---------- */
+.card-foot{display:flex;align-items:center;gap:14px;padding:12px 20px;border-top:1px solid var(--split);background:var(--surface-alt);border-radius:0 0 var(--radius-lg) var(--radius-lg);flex-wrap:wrap}
+.foot-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.sel-count{font-size:13px;color:var(--muted)}
+.sel-count b{color:var(--accent-ink);font-variant-numeric:tabular-nums;font-weight:600}
+
+/* switch */
+.switch-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--fg-2)}
+.switch{width:40px;height:22px;border-radius:11px;background:rgba(0,0,0,.25);position:relative;cursor:pointer;transition:.18s;border:none;padding:0;flex:0 0 auto}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.18s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.switch.on{background:var(--accent)}
+.switch.on::after{left:20px}
+.switch:focus-visible{outline:none;box-shadow:var(--focus)}
+.switch-hint{font-size:12px;color:var(--muted)}
+
+/* ---------- banners ---------- */
+#result-region{display:flex;flex-direction:column;gap:10px}
+.banner{display:flex;gap:12px;padding:13px 16px;border-radius:var(--radius-lg);border:1px solid;box-shadow:var(--shadow-card)}
+.banner svg.ico{width:18px;height:18px;flex:0 0 auto;margin-top:1px}
+.banner-content{min-width:0;flex:1}
+.banner-title{font-weight:600;font-size:14px}
+.banner-desc{font-size:13px;margin-top:3px;color:var(--fg-2)}
+.banner-success{background:var(--success-bg);border-color:var(--success-border)}
+.banner-success svg.ico{color:var(--success)}
+.banner-warn{background:var(--warn-bg);border-color:var(--warn-border)}
+.banner-warn svg.ico{color:var(--warn-text)}
+.banner-error{background:var(--danger-bg);border-color:var(--danger-border)}
+.banner-error svg.ico{color:var(--danger-text)}
+.bal-chain{display:inline-flex;align-items:center;gap:10px;margin-top:9px;padding:8px 12px;background:var(--surface);border:1px solid var(--warn-border);border-radius:var(--radius);font-size:13px;flex-wrap:wrap}
+.bal-item{display:flex;flex-direction:column;line-height:1.3}
+.bal-item .lbl{font-size:11px;color:var(--muted)}
+.bal-item .val{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600}
+.bal-arrow{color:var(--muted)}
+.bal-diff{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700;color:var(--danger-text);background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:var(--radius-sm);padding:2px 8px}
+.banner .extra-link{margin-top:8px;display:inline-flex;gap:6px;align-items:center;font-size:13px}
+
+/* ---------- history count bar ---------- */
+.count-bar{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);padding:9px 20px;background:var(--surface-alt);border-bottom:1px solid var(--split)}
+.count-bar b{color:var(--fg);font-variant-numeric:tabular-nums}
+.count-bar .dot{color:var(--gray-3)}
+
+/* ---------- modal ---------- */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:60;padding:32px}
+.overlay.show{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius-lg);width:760px;max-width:100%;max-height:calc(100vh - 64px);display:flex;flex-direction:column;box-shadow:var(--shadow-pop);animation:pop .18s ease}
+@keyframes pop{from{transform:translateY(8px) scale(.99);opacity:.6}to{transform:none;opacity:1}}
+.modal-head{display:flex;align-items:flex-start;gap:12px;padding:16px 20px;border-bottom:1px solid var(--split)}
+.modal-title{font-size:16px;font-weight:600}
+.modal-sub{font-size:12.5px;color:var(--muted);margin-top:3px}
+.modal-close{margin-left:auto;width:30px;height:30px;border-radius:var(--radius);border:none;background:none;color:var(--muted);cursor:pointer;display:grid;place-items:center}
+.modal-close:hover{background:var(--gray-1);color:var(--fg)}
+.modal-close svg{width:16px;height:16px}
+.modal-body{padding:18px 20px;overflow:auto}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:13px 20px;border-top:1px solid var(--split)}
+.meta-row{display:flex;flex-wrap:wrap;gap:10px 22px;padding:12px 14px;background:var(--surface-alt);border:1px solid var(--border-soft);border-radius:var(--radius);margin-bottom:16px;font-size:13px}
+.meta-row .k{color:var(--muted);margin-right:6px}
+.meta-row .v{font-weight:600}
+.meta-row .v.mono{font-family:var(--mono);font-weight:500;font-size:12.5px}
+.map-section{margin-bottom:16px}
+.map-label{font-size:13px;font-weight:600;margin-bottom:9px;display:flex;align-items:center;gap:7px}
+.map-label .n{font-size:11px;color:var(--muted);font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:var(--radius-sm);font-size:12px;border:1px solid}
+.chip svg{width:12px;height:12px}
+.chip-green{background:var(--success-bg);border-color:var(--success-border);color:var(--success-text)}
+.chip-red{background:var(--danger-bg);border-color:var(--danger-border);color:var(--danger-text)}
+.chip-blue{background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent-ink)}
+.chip-empty{color:var(--muted);font-size:12px}
+.raw-wrap{border:1px solid var(--split);border-radius:var(--radius);overflow:auto;max-height:260px}
+table.raw{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px}
+.raw th{background:var(--surface-alt);color:var(--fg-2);font-weight:600;text-align:left;padding:8px 11px;border-bottom:1px solid var(--split);white-space:nowrap;position:sticky;top:0;z-index:2}
+.raw td{padding:7px 11px;border-bottom:1px solid var(--split);font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--fg-2)}
+.raw th.key{color:var(--success-text)}
+.raw th.miss{color:var(--danger-text);background:var(--danger-bg)}
+.raw tr:last-child td{border-bottom:none}
+
+/* ---------- drawer ---------- */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;z-index:70}
+.drawer-overlay.show{display:block}
+.drawer{position:fixed;top:0;right:0;height:100vh;width:560px;max-width:92vw;background:var(--surface);box-shadow:var(--shadow-pop);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .24s cubic-bezier(.2,0,0,1);z-index:71}
+.drawer.show{transform:none}
+.drawer-head{padding:16px 20px;border-bottom:1px solid var(--split);display:flex;align-items:flex-start;gap:12px}
+.drawer-title{font-size:16px;font-weight:600}
+.drawer-sub{font-size:12.5px;color:var(--muted);margin-top:3px;font-family:var(--mono)}
+.drawer-body{padding:16px 20px;overflow:auto;flex:1}
+
+/* ---------- toast ---------- */
+#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-14px);background:var(--surface);border:1px solid var(--border-soft);box-shadow:var(--shadow-pop);border-radius:var(--radius);padding:9px 15px;font-size:13px;display:flex;align-items:center;gap:8px;opacity:0;pointer-events:none;transition:.2s;z-index:90}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast svg{width:15px;height:15px;color:var(--success)}
+
+.empty-row{text-align:center;color:var(--muted);padding:26px 0;font-size:13px}
+
+@media(max-width:1180px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .step-desc{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app" data-od-id="import-center">
+
+  <!-- ============ sidebar ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">F</div>
+      <div>
+        <div class="brand-name">Finlite</div>
+        <div class="brand-sub">财务助手 · 桌面版</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-item" tabindex="0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        概览
+      </div>
+      <div class="nav-item active" data-od-id="nav-import-center" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 19h16"/></svg>
+        导入中心
+        <span class="nav-badge">6</span>
+      </div>
+      <div class="nav-item" tabindex="0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></svg>
+        银行流水
+      </div>
+      <div class="nav-item" tabindex="0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2"/><rect x="3" y="7" width="18" height="13" rx="1.5"/><path d="M8 12h8"/></svg>
+        订单流水
+      </div>
+      <div class="nav-item" tabindex="0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        对账中心
+      </div>
+      <div class="nav-item" tabindex="0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 3v18h18"/><path d="M7 15l3.5-4 3 2.5L18 8"/></svg>
+        台账报表
+      </div>
+      <div class="nav-group">系统</div>
+      <div class="nav-item" tabindex="0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 15a2 2 0 0 1 0-4 1.7 1.7 0 0 0 1.5-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 10.2 4a2 2 0 0 1 4 0 1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.7 1.7 0 0 0 21 11a2 2 0 0 1 0 4z"/></svg>
+        设置
+      </div>
+    </nav>
+    <div class="side-foot">
+      <span>账套 · 健康管理</span>
+      <span class="acct">1001****7575</span>
+      <span>v1.4.2 · 本地 SQLite</span>
+    </div>
+  </aside>
+
+  <!-- ============ main ============ -->
+  <div class="main">
+    <header class="titlebar">
+      <span class="crumb">Finlite</span>
+      <span class="sep">/</span>
+      <span class="crumb"><b>导入中心</b></span>
+      <span class="spacer"></span>
+      <div class="acct-chip">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
+        账套 1001****7575
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- page head -->
+      <div class="page-head" data-od-id="page-header">
+        <div>
+          <h1 class="page-title" data-od-id="page-title">导入中心</h1>
+          <p class="page-sub" data-od-id="page-subtitle">导入网银导出的银行流水与工行商户后台导出的订单流水，写入本地 SQLite。原始文件只读，去重与余额校验在入库前自动完成。</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-text" type="button" data-od-id="btn-import-help">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.4 2.3c-.6.3-.9.7-.9 1.4v.3"/><circle cx="12" cy="16.5" r=".6" fill="currentColor"/></svg>
+            导入规范说明
+          </button>
+        </div>
+      </div>
+
+      <!-- info alert -->
+      <div class="alert alert-info" data-od-id="info-banner" role="note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01"/><path d="M11 12h1v4h1"/></svg>
+        <div class="alert-body">
+          <span class="alert-point"><span class="dot"></span>原始文件<b>只读</b>，导入不会修改或移动源文件</span>
+          <span class="alert-point"><span class="dot"></span>按<b>工行订单号 / 行内唯一键</b>去重，重复行自动跳过</span>
+          <span class="alert-point"><span class="dot"></span><b>余额连续性校验</b>不平仅记录警告，不阻断导入</span>
+        </div>
+      </div>
+
+      <!-- stats -->
+      <div class="stats" data-od-id="stat-cards">
+        <div class="stat" data-od-id="stat-batches">
+          <div class="stat-top">
+            <span class="stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/></svg></span>
+            已导入批次
+          </div>
+          <div class="stat-value num" id="stat-batches">12</div>
+          <div class="stat-foot">最近一次 <b>今天 09:12</b></div>
+        </div>
+        <div class="stat ok" data-od-id="stat-success-rows">
+          <div class="stat-top">
+            <span class="stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"/></svg></span>
+            累计成功行
+          </div>
+          <div class="stat-value num" id="stat-success">38,452</div>
+          <div class="stat-foot">覆盖 <b>6 个</b> 银行流水批次</div>
+        </div>
+        <div class="stat sk" data-od-id="stat-skipped-rows">
+          <div class="stat-top">
+            <span class="stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg></span>
+            累计跳过行
+          </div>
+          <div class="stat-value num" id="stat-skipped">138</div>
+          <div class="stat-foot">均为<b>重复行</b>，已按唯一键去重</div>
+        </div>
+        <div class="stat warn" data-od-id="stat-warn-batches">
+          <div class="stat-top">
+            <span class="stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.3 4.3 2.5 18a1.7 1.7 0 0 0 1.5 2.5h16a1.7 1.7 0 0 0 1.5-2.5L13.7 4.3a1.7 1.7 0 0 0-3 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+            余额警告批次
+          </div>
+          <div class="stat-value num" id="stat-warn">5</div>
+          <div class="stat-foot">其中 <b>1 个</b> 差 0.45 元待核</div>
+        </div>
+      </div>
+
+      <!-- stepper -->
+      <div class="card" data-od-id="flow-stepper">
+        <div class="card-head">
+          <div class="card-title">导入流程</div>
+          <div class="card-desc">选择文件 → 解析预检列映射 → 确认字段 → 入库结果</div>
+        </div>
+        <div class="card-body">
+          <div class="steps" id="steps">
+            <div class="step" data-step="0"><div class="step-node">1</div><div class="step-body"><div class="step-name">选择文件</div><div class="step-desc">拖拽或从默认目录勾选</div></div></div>
+            <div class="step-line"></div>
+            <div class="step" data-step="1"><div class="step-node">2</div><div class="step-body"><div class="step-name">解析预检列映射</div><div class="step-desc">识别类型与关键列</div></div></div>
+            <div class="step-line"></div>
+            <div class="step" data-step="2"><div class="step-node">3</div><div class="step-body"><div class="step-name">确认字段</div><div class="step-desc">核对列映射与样本行</div></div></div>
+            <div class="step-line"></div>
+            <div class="step" data-step="3"><div class="step-node">4</div><div class="step-body"><div class="step-name">入库结果</div><div class="step-desc">成功 / 跳过 / 余额警告</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- result feedback -->
+      <div class="card" data-od-id="result-feedback-card">
+        <div class="card-head">
+          <div class="card-title">最近导入结果</div>
+          <div class="card-desc">本次会话最近一次入库的反馈</div>
+        </div>
+        <div class="card-body">
+          <div id="result-region" data-od-id="result-feedback"></div>
+        </div>
+      </div>
+
+      <!-- method 1 -->
+      <div class="card" data-od-id="method-dropzone">
+        <div class="card-head">
+          <div class="card-title"><span class="idx">方式一</span>拖拽 / 选择文件</div>
+          <div class="card-desc">适合临时导入单个文件</div>
+        </div>
+        <div class="card-body">
+          <div class="dropzone" id="dropzone" data-od-id="dropzone" tabindex="0">
+            <div class="dz-ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 15V4"/><path d="m7.5 8.5 4.5-4.5 4.5 4.5"/><path d="M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15"/></svg>
+            </div>
+            <div class="dz-title">点击或拖拽文件到此处导入</div>
+            <div class="dz-hint">按文件名自动识别「银行流水」或「订单流水」，解析后进入列映射确认</div>
+            <div class="dz-actions">
+              <button class="btn btn-primary" type="button" id="btnChoose" data-od-id="btn-choose-file">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/></svg>
+                选择文件
+              </button>
+            </div>
+            <div class="fmt-tags">
+              <span class="fmt-tag">TSV</span><span class="fmt-tag">CSV</span><span class="fmt-tag">XLSX</span>
+            </div>
+            <div class="examples" data-od-id="example-files">
+              <span class="example-file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 3v5h5"/><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/></svg>银行流水_20260713.tsv</span>
+              <span class="example-file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 3v5h5"/><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/></svg>订单流水_20260712.tsv</span>
+              <span class="example-file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 3v5h5"/><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/></svg>银行流水_20260706.tsv <span class="miss">（缺「余额」列）</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- method 2 -->
+      <div class="card" data-od-id="method-default-path">
+        <div class="card-head">
+          <div class="card-title"><span class="idx">方式二</span>默认路径导入</div>
+          <div class="card-desc">启动时自动读取默认目录，适合批量入库</div>
+        </div>
+        <div class="card-body">
+          <div class="path-bar">
+            <div class="path-field" data-od-id="default-path">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              <span class="mono">D:\finlite\data\raw</span>
+              <span class="tail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"/></svg>目录存在</span>
+            </div>
+            <button class="btn" type="button" id="btnRescan" data-od-id="btn-rescan">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>
+              重新扫描
+            </button>
+            <button class="btn" type="button" id="btnChangeDir" data-od-id="btn-change-dir">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              更改目录
+            </button>
+          </div>
+          <div class="scan-info" id="scanInfo" data-od-id="scan-info"></div>
+        </div>
+
+        <div class="table-wrap" data-od-id="file-table">
+          <table class="ant">
+            <thead>
+              <tr>
+                <th style="width:44px" class="col-c">
+                  <input type="checkbox" class="ck" id="checkAll" data-od-id="checkbox-select-all" aria-label="全选待导入文件" />
+                </th>
+                <th>文件名</th>
+                <th style="width:112px">识别类型</th>
+                <th style="width:96px" class="col-num">大小</th>
+                <th style="width:150px">修改时间</th>
+                <th style="width:104px">状态</th>
+                <th style="width:168px" class="col-actions">操作</th>
+              </tr>
+            </thead>
+            <tbody id="fileBody"></tbody>
+          </table>
+        </div>
+
+        <div class="card-foot" data-od-id="method2-footer">
+          <div class="switch-row">
+            <button class="switch on" id="archiveSwitch" role="switch" aria-checked="true" data-od-id="switch-archive" aria-label="归档已导入源文件"></button>
+            <span>导入后归档源文件</span>
+            <span class="switch-hint">归档至 D:\finlite\data\archive</span>
+          </div>
+          <div class="foot-right">
+            <span class="sel-count">已选 <b id="selCount">0</b> 个文件</span>
+            <button class="btn" type="button" id="btnPreviewSel" data-od-id="btn-preview-mapping" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg>
+              预览列映射
+            </button>
+            <button class="btn btn-primary" type="button" id="btnImportSel" data-od-id="btn-import-selected" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 19h16"/></svg>
+              导入选中文件
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- batch history -->
+      <div class="card" data-od-id="batch-history-card">
+        <div class="card-head">
+          <div class="card-title">导入批次历史</div>
+          <div class="card-desc">按导入时间倒序</div>
+        </div>
+        <div class="count-bar" data-od-id="batch-count">共 <b id="batchCount">12</b> 个批次 <span class="dot">·</span> 全部展示</div>
+        <div class="table-wrap" data-od-id="batch-history">
+          <table class="ant">
+            <thead>
+              <tr>
+                <th style="width:104px">类型</th>
+                <th>文件名</th>
+                <th style="width:96px" class="col-num">总行数</th>
+                <th style="width:88px" class="col-num">成功</th>
+                <th style="width:80px" class="col-num">跳过</th>
+                <th style="width:96px" class="col-num">余额警告</th>
+                <th style="width:150px">导入时间</th>
+                <th style="width:120px" class="col-actions">操作</th>
+              </tr>
+            </thead>
+            <tbody id="batchBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ============ column mapping modal ============ -->
+<div class="overlay" id="overlay" data-od-id="column-mapping-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="modalTitle">列映射预览</div>
+        <div class="modal-sub">核对识别出的关键列与原始表头，确认无误后写入本地库</div>
+      </div>
+      <button class="modal-close" id="modalClose" aria-label="关闭">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot">
+      <button class="btn" type="button" id="modalCancel">取消</button>
+      <button class="btn btn-primary" type="button" id="modalConfirm" data-od-id="btn-confirm-import">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 19h16"/></svg>
+        确认导入
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ error detail drawer ============ -->
+<div class="drawer-overlay" id="drawerOverlay" data-od-id="error-drawer-overlay"></div>
+<div class="drawer" id="drawer" data-od-id="error-drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+  <div class="drawer-head">
+    <div>
+      <div class="drawer-title" id="drawerTitle">错误明细</div>
+      <div class="drawer-sub" id="drawerSub"></div>
+    </div>
+    <button class="modal-close" id="drawerClose" aria-label="关闭">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</div>
+
+<div id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg><span id="toastMsg"></span></div>
+<input type="file" id="filePicker" accept=".tsv,.csv,.xlsx" multiple style="display:none" />
+
+<script>
+/* ================= data ================= */
+const TYPE = {
+  bank:{label:'银行流水',tag:'tag-bank',
+    keys:['交易日期','交易时间','交易流水号','收入金额','支出金额','余额','对方户名','对方账号'],
+    required:['交易流水号'],
+    header:['交易日期','交易时间','交易流水号','摘要','收入金额','支出金额','余额','对方户名','对方账号','本方账号'],
+    rows:[
+      ['2026-07-13','09:14:22','20260713091422001','服务费收入','12,800.00','0.00','12,656.00','某健康科技有限公司','6222****3301','1001****7575'],
+      ['2026-07-13','10:02:41','20260713100241007','退款','0.00','446.88','12,209.12','个人客户','6225****8842','1001****7575'],
+      ['2026-07-13','11:37:05','20260713113705012','采购付款','0.00','11,970.00','239.12','某供应链管理公司','6228****1177','1001****7575'],
+      ['2026-07-13','15:20:19','20260713152019033','账户管理费','0.00','0.05','239.07','中国工商银行','—','1001****7575']
+    ]},
+  order:{label:'订单流水',tag:'tag-order',
+    keys:['订单号','交易时间','订单金额','实收金额','手续费','结算金额'],
+    required:['订单号'],
+    header:['订单号','商户订单号','交易时间','订单金额','实收金额','手续费','结算金额','支付方式','订单状态','商品名称'],
+    rows:[
+      ['GY20260712193001','SH20260712193','2026-07-12 19:30:01','446.88','446.88','1.34','445.54','微信支付','已结算','健康体检套餐A'],
+      ['GY20260712201544','SH20260712201','2026-07-12 20:15:44','1,280.00','1,280.00','3.84','1,276.16','支付宝','已结算','中医理疗次卡'],
+      ['GY20260712223110','SH20260712223','2026-07-12 22:31:10','268.00','268.00','0.80','267.20','云闪付','已结算','营养咨询服务']
+    ]},
+  other:{label:'其他文件',tag:'tag-other',keys:[],required:[],header:[],rows:[]}
+};
+
+const FILES = [
+  {id:'f1',name:'银行流水_20260713.tsv',type:'bank',size:'1.24 MB',mtime:'2026-07-13 08:42',status:'pending',missing:[],rows:4286},
+  {id:'f2',name:'订单流水_20260712.tsv',type:'order',size:'486 KB',mtime:'2026-07-12 21:15',status:'pending',missing:[],rows:2684},
+  {id:'f3',name:'银行流水_20260706.tsv',type:'bank',size:'1.08 MB',mtime:'2026-07-06 09:03',status:'pending',missing:['余额'],rows:4102},
+  {id:'f4',name:'订单流水_20260705.tsv',type:'order',size:'452 KB',mtime:'2026-07-05 20:58',status:'pending',missing:['订单号'],rows:2461},
+  {id:'f5',name:'银行流水_20260629.tsv',type:'bank',size:'1.02 MB',mtime:'2026-06-29 08:50',status:'imported',missing:[],rows:3988},
+  {id:'f6',name:'订单流水_20260628.tsv',type:'order',size:'431 KB',mtime:'2026-06-28 22:04',status:'imported',missing:[],rows:2540},
+  {id:'f7',name:'银行流水_20260622.csv',type:'bank',size:'980 KB',mtime:'2026-06-22 09:11',status:'imported',missing:[],rows:3871},
+  {id:'f8',name:'对账明细_20260620.xlsx',type:'other',size:'220 KB',mtime:'2026-06-20 14:30',status:'unsupported',missing:[],rows:0},
+  {id:'f9',name:'银行流水_20260615.tsv',type:'bank',size:'967 KB',mtime:'2026-06-15 08:47',status:'pending',missing:[],rows:3905},
+  {id:'f10',name:'商户结算_20260711.csv',type:'order',size:'128 KB',mtime:'2026-07-11 10:22',status:'pending',missing:[],rows:612}
+];
+
+let BATCHES = [
+  {id:'b1',type:'bank',name:'银行流水_20260713.tsv',total:4286,ok:4272,skip:14,warn:1,time:'2026-07-13 09:12'},
+  {id:'b2',type:'order',name:'订单流水_20260712.tsv',total:2684,ok:2684,skip:0,warn:0,time:'2026-07-12 21:18'},
+  {id:'b3',type:'bank',name:'银行流水_20260706.tsv',total:4102,ok:4090,skip:12,warn:0,time:'2026-07-06 09:15'},
+  {id:'b4',type:'order',name:'订单流水_20260705.tsv',total:2461,ok:2453,skip:8,warn:0,time:'2026-07-05 21:01'},
+  {id:'b5',type:'bank',name:'银行流水_20260629.tsv',total:3988,ok:3968,skip:18,warn:1,time:'2026-06-29 08:53'},
+  {id:'b6',type:'order',name:'订单流水_20260628.tsv',total:2540,ok:2540,skip:0,warn:0,time:'2026-06-28 22:08'},
+  {id:'b7',type:'bank',name:'银行流水_20260622.csv',total:3871,ok:3857,skip:11,warn:1,time:'2026-06-22 09:14'},
+  {id:'b8',type:'bank',name:'银行流水_20260615.tsv',total:3905,ok:3891,skip:14,warn:1,time:'2026-06-15 08:52'},
+  {id:'b9',type:'order',name:'订单流水_20260614.tsv',total:2411,ok:2411,skip:0,warn:0,time:'2026-06-14 22:12'},
+  {id:'b10',type:'bank',name:'银行流水_20260608.tsv',total:3760,ok:3744,skip:16,warn:0,time:'2026-06-08 08:49'},
+  {id:'b11',type:'order',name:'订单流水_20260607.tsv',total:2388,ok:2380,skip:8,warn:0,time:'2026-06-07 21:30'},
+  {id:'b12',type:'bank',name:'银行流水_20260601.tsv',total:3712,ok:3699,skip:12,warn:1,time:'2026-06-01 08:44'}
+];
+
+const DRAWER_ERRORS = [
+  {line:'1,204', field:'余额', desc:'余额衔接断开：上一行期末余额 12,656.00，当前行期末余额 12,655.55，相差 -0.45 元。疑为缺失的第三方小额手续费，已记录警告，不阻断入库。'},
+  {line:'2,318', field:'交易流水号', desc:'重复行，已跳过：与第 1,056 行交易流水号 20260713091422001 相同。'},
+  {line:'3,745', field:'余额', desc:'余额衔接断开：上一行期末余额 8,420.10，当前行期末余额 8,420.12，相差 +0.02 元。'},
+  {line:'4,102', field:'摘要', desc:'摘要为空，已按「未填写」写入。'}
+];
+
+/* ================= state ================= */
+const state = { step:0, selected:new Set(), archive:true };
+try{ const a=localStorage.getItem('finlite_archive'); if(a!==null) state.archive=(a==='1'); }catch(e){}
+
+const $ = s => document.querySelector(s);
+const fmt = n => Number(n).toLocaleString('en-US');
+const ICON = {
+  file:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 3v5h5"/><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/></svg>'
+};
+
+/* ================= render: scan info ================= */
+function renderScan(){
+  const pending = FILES.filter(f=>f.status==='pending').length;
+  const imported = FILES.filter(f=>f.status==='imported').length;
+  const unsup = FILES.filter(f=>f.status==='unsupported').length;
+  const el = $('#scanInfo');
+  el.innerHTML =
+    `<span class="scan-item"><span class="scan-dot"></span>扫描到 <b>${FILES.length}</b> 个文件</span>`+
+    `<span class="scan-item"><span class="scan-dot b"></span>待导入 <b>${pending}</b> 个</span>`+
+    `<span class="scan-item"><span class="scan-dot ok"></span>已导入 <b>${imported}</b> 个</span>`+
+    `<span class="scan-item"><span class="scan-dot rd"></span>不支持 <b>${unsup}</b> 个</span>`+
+    `<span class="scan-item"><span class="scan-dot"></span>最近扫描 <b class="mono" style="font-weight:500">2026-07-13 09:12:08</b></span>`;
+}
+
+/* ================= render: file table ================= */
+function statusTag(s){
+  if(s==='pending') return '<span class="tag tag-pending">待导入</span>';
+  if(s==='imported') return '<span class="tag tag-imported">已导入</span>';
+  return '<span class="tag tag-unsup">不支持</span>';
+}
+function renderFiles(){
+  const body = $('#fileBody');
+  body.innerHTML = FILES.map(f=>{
+    const t = TYPE[f.type];
+    const selectable = f.status==='pending';
+    const checked = state.selected.has(f.id) ? 'checked' : '';
+    const dis = selectable ? '' : 'disabled';
+    let missHint='';
+    if(f.missing.length===1) missHint=`<span class="hint-miss">缺「${f.missing[0]}」列</span>`;
+    else if(f.missing.length>1) missHint=`<span class="hint-miss">缺 ${f.missing.length} 列</span>`;
+    let actions='<span class="muted">—</span>';
+    if(f.type!=='other'){
+      actions = `<button class="btn-text" data-od-id="row-preview-${f.id}" onclick="openPreview('${f.id}')">预览列映射</button>`;
+      if(selectable) actions += ` &nbsp; <button class="btn-text" data-od-id="row-import-${f.id}" onclick="importOne('${f.id}')">导入</button>`;
+      else actions = `<button class="btn-text" data-od-id="row-preview-${f.id}" onclick="openPreview('${f.id}')">查看列映射</button>`;
+    }
+    return `<tr class="${checked?'selected':''}" data-od-id="file-row-${f.id}">
+      <td class="col-c"><input type="checkbox" class="ck" ${checked} ${dis} onchange="toggleSelect('${f.id}',this.checked)" aria-label="选择 ${f.name}" /></td>
+      <td><div class="cell-file">${ICON.file}<span class="nm" title="${f.name}">${f.name}</span>${missHint}</div></td>
+      <td><span class="tag ${t.tag}">${t.label}</span></td>
+      <td class="col-num muted mono">${f.size}</td>
+      <td class="muted mono">${f.mtime}</td>
+      <td>${statusTag(f.status)}</td>
+      <td class="col-actions">${actions}</td>
+    </tr>`;
+  }).join('');
+  // select-all state
+  const pend = FILES.filter(f=>f.status==='pending');
+  const all = $('#checkAll');
+  all.checked = pend.length>0 && pend.every(f=>state.selected.has(f.id));
+  all.indeterminate = state.selected.size>0 && !all.checked;
+  // footer
+  $('#selCount').textContent = state.selected.size;
+  $('#btnImportSel').disabled = state.selected.size===0;
+  $('#btnPreviewSel').disabled = state.selected.size===0;
+}
+
+/* ================= render: batch history ================= */
+function typeTag(t){ return `<span class="tag ${TYPE[t].tag}">${TYPE[t].label}</span>`; }
+function renderBatches(){
+  $('#batchBody').innerHTML = BATCHES.map(b=>{
+    const wc = b.warn>0 ? `warn-count` : `warn-count zero`;
+    return `<tr data-od-id="batch-row-${b.id}">
+      <td>${typeTag(b.type)}</td>
+      <td><span class="mono" style="font-size:12.5px">${b.name}</span></td>
+      <td class="col-num">${fmt(b.total)}</td>
+      <td class="col-num">${fmt(b.ok)}</td>
+      <td class="col-num muted">${fmt(b.skip)}</td>
+      <td class="col-num"><span class="${wc}">${b.warn>0?b.warn:'0'}</span></td>
+      <td class="muted mono">${b.time}</td>
+      <td class="col-actions"><button class="btn-text" data-od-id="batch-detail-${b.id}" onclick="openDrawer('${b.id}')">查看错误明细</button></td>
+    </tr>`;
+  }).join('');
+  $('#batchCount').textContent = BATCHES.length;
+}
+
+/* ================= result banners ================= */
+function bannerSuccess(name, rows, ok, skip){
+  return `<div class="banner banner-success" data-od-id="banner-success">
+    <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg>
+    <div class="banner-content">
+      <div class="banner-title">${name} · 导入成功</div>
+      <div class="banner-desc">共 ${fmt(rows)} 行，成功写入 <b>${fmt(ok)}</b> 行，跳过重复行 <b>${fmt(skip)}</b> 行。原始文件${state.archive?'已归档':'保持原位'}。</div>
+    </div>
+  </div>`;
+}
+function bannerWarn(name){
+  return `<div class="banner banner-warn" data-od-id="banner-warn">
+    <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M10.3 4.3 2.5 18a1.7 1.7 0 0 0 1.5 2.5h16a1.7 1.7 0 0 0 1.5-2.5L13.7 4.3a1.7 1.7 0 0 0-3 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+    <div class="banner-content">
+      <div class="banner-title">余额连续性校验未通过 · 1 处警告（不阻断）</div>
+      <div class="banner-desc">${name} 第 1,204 行的期末余额无法与上一行衔接，已记录警告并正常入库。</div>
+      <div class="bal-chain">
+        <span class="bal-item"><span class="lbl">上一行期末</span><span class="val">12,656.00</span></span>
+        <span class="bal-arrow">→</span>
+        <span class="bal-item"><span class="lbl">当前行期末</span><span class="val">12,655.55</span></span>
+        <span class="bal-diff">−0.45</span>
+      </div>
+    </div>
+  </div>`;
+}
+function bannerError(name, reason){
+  return `<div class="banner banner-error" data-od-id="banner-error">
+    <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16.5h.01"/></svg>
+    <div class="banner-content">
+      <div class="banner-title">${name} · 导入失败</div>
+      <div class="banner-desc">${reason} 已回滚，本批次未写入任何数据。</div>
+      <a class="extra-link" href="javascript:void(0)" onclick="openDrawer('${'b1'}')">查看错误明细 →</a>
+    </div>
+  </div>`;
+}
+function renderResults(){
+  const r = $('#result-region');
+  r.innerHTML =
+    bannerSuccess('银行流水_20260713.tsv', 4286, 4272, 14) +
+    bannerWarn('银行流水_20260713.tsv') +
+    bannerError('订单流水_20260705.tsv', '缺少必填列「订单号」，无法建立去重主键。');
+}
+
+/* ================= stepper ================= */
+function setStep(n){
+  state.step = n;
+  document.querySelectorAll('#steps .step').forEach(el=>{
+    const i = +el.dataset.step;
+    el.classList.toggle('active', i===n);
+    el.classList.toggle('done', i<n);
+    const node = el.querySelector('.step-node');
+    node.innerHTML = i<n ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>' : (i+1);
+  });
+  document.querySelectorAll('#steps .step-line').forEach((line,idx)=>{
+    line.classList.toggle('done', idx < n);
+  });
+}
+
+/* ================= selection ================= */
+function toggleSelect(id, on){
+  if(on) state.selected.add(id); else state.selected.delete(id);
+  renderFiles();
+}
+function importOne(id){
+  state.selected = new Set([id]);
+  doImport();
+}
+
+/* ================= import ================= */
+function doImport(){
+  const ids = [...state.selected];
+  if(!ids.length){ toast('请先勾选待导入文件'); return; }
+  const files = ids.map(id=>FILES.find(f=>f.id===id));
+  const banners=[];
+  let okRows=0, skipRows=0, warnCount=0;
+
+  files.forEach(f=>{
+    const t=TYPE[f.type];
+    const missingRequired = t.required.some(c=>f.missing.includes(c));
+    if(f.type==='other' || missingRequired){
+      banners.push(bannerError(f.name, `缺少必填列「${f.missing[0]||'主键'}」，无法建立去重主键。`));
+      return;
+    }
+    const skip = Math.min(14, Math.floor(f.rows*0.01));
+    const ok = f.rows - skip;
+    okRows += ok; skipRows += skip;
+    banners.push(bannerSuccess(f.name, f.rows, ok, skip));
+    if(f.type==='bank'){
+      warnCount++;
+      banners.push(bannerWarn(f.name));
+    }
+    f.status='imported';
+    BATCHES.unshift({id:'n'+Date.now()+f.id,type:f.type,name:f.name,total:f.rows,ok,skip,warn:f.type==='bank'?1:0,
+      time:'2026-07-13 09:12'});
+  });
+
+  // stats
+  const n = BATCHES.length;
+  $('#stat-batches').textContent = n;
+  $('#stat-success').textContent = fmt(38452 + okRows);
+  $('#stat-skipped').textContent = fmt(138 + skipRows);
+  $('#stat-warn').textContent = 5 + warnCount;
+
+  $('#result-region').innerHTML = banners.join('');
+  state.selected.clear();
+  renderFiles(); renderScan(); renderBatches();
+  setStep(3);
+  toast(`已完成 ${files.length} 个文件的导入`);
+}
+
+/* ================= modal ================= */
+let previewId=null;
+function openPreview(id){
+  previewId=id;
+  const f = FILES.find(x=>x.id===id);
+  const t = TYPE[f.type];
+  const recognized = t.keys.filter(c=>!f.missing.includes(c));
+  const missing = f.missing;
+  const rawHeader = f.type==='other' ? [] : t.header;
+  const rawRows = f.type==='other' ? [] : t.rows;
+
+  const chips = recognized.length
+    ? recognized.map(c=>`<span class="chip chip-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>${c}</span>`).join('')
+    : '<span class="chip-empty">未识别到关键列</span>';
+  const missChips = missing.length
+    ? missing.map(c=>`<span class="chip chip-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6 6 18"/></svg>${c}</span>`).join('')
+    : '<span class="chip-empty">无缺失列</span>';
+
+  const head = rawHeader.map(h=>{
+    const isKey = t.keys.includes(h);
+    const isMiss = missing.includes(h);
+    return `<th class="${isMiss?'miss':(isKey?'key':'')}">${h}</th>`;
+  }).join('');
+  const bodyRows = rawRows.map(a=>`<tr>${a.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('');
+  const rawTable = rawHeader.length
+    ? `<div class="raw-wrap"><table class="raw"><thead><tr>${head}</tr></thead><tbody>${bodyRows}</tbody></table></div>`
+    : `<div class="raw-wrap"></div><div class="empty-row" style="padding:18px 0">该文件类型不受支持，无法预览列映射。</div>`;
+
+  $('#modalBody').innerHTML = `
+    <div class="meta-row">
+      <span><span class="k">文件名</span><span class="v mono">${f.name}</span></span>
+      <span><span class="k">识别类型</span><span class="v"><span class="tag ${t.tag}">${t.label}</span></span></span>
+      <span><span class="k">数据行数</span><span class="v num">${f.rows?fmt(f.rows):'—'}</span></span>
+      <span><span class="k">文件大小</span><span class="v num">${f.size}</span></span>
+    </div>
+    <div class="map-section">
+      <div class="map-label">已识别关键列 <span class="n">${recognized.length} / ${t.keys.length}</span></div>
+      <div class="chips">${chips}</div>
+    </div>
+    <div class="map-section">
+      <div class="map-label">缺失列 <span class="n">${missing.length}</span></div>
+      <div class="chips">${missChips}</div>
+    </div>
+    <div class="map-section" style="margin-bottom:0">
+      <div class="map-label">原始表头与样本行</div>
+      ${rawTable}
+    </div>`;
+  $('#modalConfirm').disabled = f.type==='other';
+  $('#overlay').classList.add('show');
+  setStep(2);
+}
+function closeModal(){ $('#overlay').classList.remove('show'); }
+function confirmModal(){
+  const f = FILES.find(x=>x.id===previewId);
+  closeModal();
+  if(!f || f.type==='other') return;
+  state.selected = new Set([f.id]);
+  setStep(3);
+  doImport();
+}
+
+/* ================= drawer ================= */
+function openDrawer(batchId){
+  const b = BATCHES.find(x=>x.id===batchId) || {name:'银行流水_20260713.tsv',warn:1};
+  $('#drawerSub').textContent = b.name + ' · 2026-07-13 09:12';
+  const rows = DRAWER_ERRORS.map(e=>`<tr>
+      <td class="num" style="color:var(--fg)">${e.line}</td>
+      <td><span class="tag tag-warn">${e.field}</span></td>
+      <td style="font-family:var(--font);color:var(--fg-2);white-space:normal;line-height:1.55">${e.desc}</td>
+    </tr>`).join('');
+  $('#drawerBody').innerHTML = `
+    <div class="alert alert-warn" style="margin-bottom:14px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" style="color:var(--warn-text)"><path d="M10.3 4.3 2.5 18a1.7 1.7 0 0 0 1.5 2.5h16a1.7 1.7 0 0 0 1.5-2.5L13.7 4.3a1.7 1.7 0 0 0-3 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      <div class="alert-body" style="display:block">共 <b>${DRAWER_ERRORS.length}</b> 条明细，其中 <b>2</b> 条为余额衔接警告，<b>2</b> 条为跳过 / 补全记录。全部展示，无需翻页。</div>
+    </div>
+    <table class="ant" style="width:100%">
+      <thead><tr><th style="width:80px">行号</th><th style="width:100px">字段</th><th>中文说明</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+  $('#drawerOverlay').classList.add('show');
+  $('#drawer').classList.add('show');
+}
+function closeDrawer(){ $('#drawerOverlay').classList.remove('show'); $('#drawer').classList.remove('show'); }
+
+/* ================= toast ================= */
+let toastTimer=null;
+function toast(msg){
+  $('#toastMsg').textContent = msg;
+  const t=$('#toast'); t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+/* ================= events ================= */
+$('#checkAll').addEventListener('change',e=>{
+  FILES.filter(f=>f.status==='pending').forEach(f=>{ e.target.checked?state.selected.add(f.id):state.selected.delete(f.id); });
+  renderFiles();
+});
+$('#btnImportSel').addEventListener('click',doImport);
+$('#btnPreviewSel').addEventListener('click',()=>{
+  const first=[...state.selected][0];
+  if(first) openPreview(first); else toast('请先勾选文件');
+});
+$('#modalClose').addEventListener('click',closeModal);
+$('#modalCancel').addEventListener('click',closeModal);
+$('#modalConfirm').addEventListener('click',confirmModal);
+$('#overlay').addEventListener('click',e=>{ if(e.target.id==='overlay') closeModal(); });
+$('#drawerClose').addEventListener('click',closeDrawer);
+$('#drawerOverlay').addEventListener('click',closeDrawer);
+$('#btnRescan').addEventListener('click',()=>{ renderScan(); toast('已重新扫描默认目录，共 10 个文件'); });
+$('#btnChangeDir').addEventListener('click',()=>toast('更改目录：请在系统对话框中选择新的默认目录'));
+$('#archiveSwitch').addEventListener('click',function(){
+  state.archive=!state.archive;
+  this.classList.toggle('on',state.archive);
+  this.setAttribute('aria-checked',String(state.archive));
+  try{ localStorage.setItem('finlite_archive', state.archive?'1':'0'); }catch(e){}
+  toast(state.archive?'导入后归档源文件：已开启':'导入后归档源文件：已关闭');
+});
+
+/* dropzone */
+const dz=$('#dropzone');
+dz.addEventListener('click',()=>$('#filePicker').click());
+dz.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();$('#filePicker').click();} });
+['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('dragover');}));
+['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('dragover');}));
+dz.addEventListener('drop',e=>{
+  const n=(e.dataTransfer.files||[]).length||1;
+  toast(`已解析 ${n} 个文件，正在预检列映射`);
+  openPreview('f1');
+});
+$('#btnChoose').addEventListener('click',e=>{ e.stopPropagation(); $('#filePicker').click(); });
+$('#filePicker').addEventListener('change',e=>{
+  const n=e.target.files.length; if(!n) return;
+  toast(`已选择 ${n} 个文件，正在预检列映射`);
+  openPreview('f1');
+  e.target.value='';
+});
+
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeModal(); closeDrawer(); } });
+
+/* ================= init ================= */
+function init(){
+  const sw=$('#archiveSwitch');
+  sw.classList.toggle('on',state.archive);
+  sw.setAttribute('aria-checked',String(state.archive));
+  renderScan(); renderFiles(); renderBatches(); renderResults(); setStep(0);
+}
+init();
+
+/* expose for inline handlers */
+window.toggleSelect=toggleSelect;
+window.importOne=importOne;
+window.openPreview=openPreview;
+window.openDrawer=openDrawer;
+</script>
+</body>
+</html>

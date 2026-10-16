@@ -1,0 +1,99 @@
+/* Finlite UI — canonical design tokens
+ * 单一事实源：docs/uidesign/tokens.css
+ * 约定：所有 Finlite 界面原型/页面必须从此处取色与尺寸，禁止自创色值/字体/圆角。
+ * 状态色一律使用 oklch（成功/警告/错误），主色为 Ant 蓝 #1677ff。
+ */
+:root {
+  /* ---------- base surfaces ---------- */
+  --bg: #ffffff;              /* 卡片 / 侧栏 / 表头底 */
+  --surface: #f7f8fa;         /* 页面底色 */
+  --surface-2: #fbfcfe;       /* 更浅的次级底（hover / footer） */
+  --fg: #111111;              /* 主文字 */
+  --fg-2: #374151;            /* 次文字 */
+  --muted: #6b7280;           /* 弱文字 / 标签 */
+  --border: #d9dee7;          /* 常规边框 */
+  --border-soft: #eceff4;     /* 分隔线 / 行底边 */
+  --border-strong: #c3ccd9;   /* 强调边框 / hover */
+
+  /* ---------- brand (Ant blue) ---------- */
+  --accent: #1677ff;
+  --accent-hover: #0f66e6;
+  --accent-active: #0b52c4;
+  --accent-soft: #eaf2ff;     /* 选中/浅底/链接 hover 底 */
+  --accent-on: #ffffff;
+  --violet: #8b5cf6;          /* 汇总/凭证等次级强调（少量使用） */
+
+  /* ---------- status（oklch，禁止写死 hex） ---------- */
+  --ok: oklch(0.62 0.17 145);
+  --ok-bg: oklch(0.965 0.03 145);
+  --ok-border: oklch(0.86 0.07 145);
+  --ok-fg: oklch(0.45 0.13 145);
+
+  --warn: oklch(0.72 0.14 75);
+  --warn-bg: oklch(0.975 0.045 75);
+  --warn-border: oklch(0.87 0.10 75);
+  --warn-fg: oklch(0.48 0.11 75);
+
+  --err: oklch(0.58 0.20 25);
+  --err-bg: oklch(0.965 0.035 25);
+  --err-border: oklch(0.86 0.09 25);
+  --err-fg: oklch(0.46 0.17 25);
+
+  /* ---------- typography ---------- */
+  --font: Inter, system-ui, -apple-system, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --mono: "SF Mono", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
+  --fs-xs: 12px;              /* 表头、标签 */
+  --fs-sm: 12.5px;            /* 辅助信息 */
+  --fs-base: 13px;            /* 表格正文 */
+  --fs-body: 14px;            /* 页面正文 */
+  --fs-lg: 16px;              /* 页面标题 */
+  --fs-xl: 23px;              /* 统计卡数值 */
+  --fs-display: 26px;         /* 大数值 */
+  --lh: 1.5;
+
+  /* ---------- radius ---------- */
+  --r-xs: 4px;                /* chip / tag / 小控件 */
+  --r-sm: 6px;                /* 按钮 / 输入框 */
+  --r-md: 8px;                /* 卡片 / 表格容器 */
+  --r-lg: 12px;               /* 弹窗 / 抽屉 */
+  --r-pill: 999px;            /* 状态徽标 */
+
+  /* ---------- spacing（8pt 网格，4px 为半步） ---------- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+
+  /* ---------- elevation / focus ---------- */
+  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.06);
+  --shadow-md: 0 10px 30px rgba(17, 24, 39, 0.10);
+  --shadow-lg: 0 24px 64px rgba(17, 24, 39, 0.20);
+  --focus-ring: 0 0 0 3px rgba(22, 119, 255, 0.24);
+
+  /* ---------- layout ---------- */
+  --sidebar-w: 220px;
+  --topbar-h: 52px;
+  --motion: 140ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* ---------- canonical base primitives ---------- */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: var(--fs-body);
+  line-height: var(--lh);
+  color: var(--fg);
+  background: var(--surface);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+button, input, select, textarea { font-family: inherit; }
+
+/* 金额/数量：右对齐 + 等宽数字 */
+.num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+.mono { font-family: var(--mono); }

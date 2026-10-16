@@ -1,0 +1,1084 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Finlite · 导入中心</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ============ design-systems/material/tokens.css (verbatim) ============ */
+:root {
+  --bg: #f8fafd;
+  --surface: #ffffff;
+  --surface-warm: #e8f0fe;
+  --fg: #202124;
+  --fg-2: #3c4043;
+  --muted: #5f6368;
+  --meta: #1a73e8;
+  --border: #dadce0;
+  --border-soft: #edf0f2;
+  --accent: #1a73e8;
+  --accent-on: #ffffff;
+  --accent-hover: color-mix(in oklab, var(--accent), black 8%);
+  --accent-active: color-mix(in oklab, var(--accent), black 14%);
+  --success: #188038;
+  --warn: #f9ab00;
+  --danger: #d93025;
+  --font-display: "Google Sans", Roboto, Arial, sans-serif;
+  --font-body: Roboto, Arial, sans-serif;
+  --font-mono: "Roboto Mono", ui-monospace, Menlo, monospace;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 24px;
+  --text-2xl: 32px;
+  --text-3xl: 48px;
+  --text-4xl: 64px;
+  --leading-body: 1.5;
+  --leading-tight: 1.12;
+  --tracking-display: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --section-y-desktop: 96px;
+  --section-y-tablet: 68px;
+  --section-y-phone: 48px;
+  --radius-sm: 4px;
+  --radius-md: 12px;
+  --radius-lg: 24px;
+  --radius-pill: 9999px;
+  --elev-flat: none;
+  --elev-ring: 0 0 0 1px var(--border);
+  --elev-raised: 0 3px 8px rgba(60, 64, 67, 0.18);
+  --focus-ring: 0 0 0 4px rgba(26, 115, 232, 0.24);
+  --motion-fast: 150ms;
+  --motion-base: 250ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --container-max: 1200px;
+  --container-gutter-desktop: 36px;
+  --container-gutter-tablet: 24px;
+  --container-gutter-phone: 16px;
+}
+/* ============ M3 structural derivatives (composed from the token block above) ============ */
+:root{
+  --surf-0: var(--surface);
+  --surf-1: color-mix(in oklab, var(--accent) 4%, var(--surface));
+  --surf-2: color-mix(in oklab, var(--accent) 8%, var(--surface));
+  --surf-3: color-mix(in oklab, var(--accent) 12%, var(--surface));
+  --surf-4: color-mix(in oklab, var(--accent) 16%, var(--surface));
+  --outline: var(--border);
+  --outline-var: var(--border-soft);
+  --accent-cont: color-mix(in oklab, var(--accent) 14%, var(--surface));
+  --accent-cont-hi: color-mix(in oklab, var(--accent) 22%, var(--surface));
+  --on-accent-cont: color-mix(in oklab, var(--accent), black 30%);
+  --state-hover: color-mix(in oklab, var(--accent) 8%, transparent);
+  --state-press: color-mix(in oklab, var(--accent) 14%, transparent);
+  --success-cont: color-mix(in oklab, var(--success) 13%, var(--surface));
+  --success-on: color-mix(in oklab, var(--success), black 6%);
+  --warn-cont: color-mix(in oklab, var(--warn) 22%, var(--surface));
+  --warn-on: color-mix(in oklab, var(--warn), black 46%);
+  --danger-cont: color-mix(in oklab, var(--danger) 11%, var(--surface));
+  --danger-on: color-mix(in oklab, var(--danger), black 6%);
+  --elev-1: 0 1px 2px rgba(32,33,36,.14), 0 1px 3px 1px rgba(32,33,36,.07);
+  --elev-2: 0 1px 2px rgba(32,33,36,.14), 0 2px 6px 2px rgba(32,33,36,.10);
+  --elev-3: 0 4px 8px 3px rgba(32,33,36,.10), 0 1px 3px rgba(32,33,36,.16);
+}
+*{box-sizing:border-box}
+html{font-family:var(--font-body),"Noto Sans SC",Arial,sans-serif;color:var(--fg);background:var(--bg)}
+body{margin:0;font-size:var(--text-base);line-height:var(--leading-body);-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4,.display{font-family:var(--font-display),"Noto Sans SC",sans-serif;margin:0;font-weight:500;line-height:var(--leading-tight);letter-spacing:var(--tracking-display)}
+.mono{font-family:var(--font-mono);font-size:.85em;letter-spacing:-.01em}
+.num{font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit}
+::selection{background:var(--accent-cont)}
+:focus-visible{outline:none}
+/* ---------- app bar ---------- */
+.appbar{position:sticky;top:0;z-index:40;height:64px;display:flex;align-items:center;gap:14px;padding:0 20px;
+  background:color-mix(in oklab,var(--surface) 88%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--outline-var)}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:700;font-size:17px;letter-spacing:-.01em}
+.brand .mark{width:34px;height:34px;border-radius:10px;background:var(--accent);color:var(--accent-on);display:grid;place-items:center;box-shadow:var(--elev-1)}
+.appbar .divider{width:1px;height:24px;background:var(--outline)}
+.appbar .module{font-size:14px;color:var(--fg-2);font-weight:500}
+.tag{font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--on-accent-cont);background:var(--accent-cont);border-radius:6px;padding:2px 7px}
+.appbar .spacer{flex:1}
+.icon-btn{width:42px;height:42px;border-radius:50%;border:none;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer;position:relative;overflow:hidden;transition:background var(--motion-fast) var(--ease-standard)}
+.icon-btn:hover{background:var(--state-hover);color:var(--accent)}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--surf-3);color:var(--on-accent-cont);display:grid;place-items:center;font-weight:700;font-size:13px;border:1px solid var(--outline-var)}
+/* ---------- layout ---------- */
+.wrap{max-width:var(--container-max);margin:0 auto;padding:28px var(--container-gutter-desktop) 72px}
+.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:22px}
+.page-head h1{font-size:calc(var(--text-2xl) + 4px);font-weight:500}
+.page-head p{margin:8px 0 0;color:var(--muted);font-size:var(--text-sm);max-width:60ch}
+.env{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;background:var(--surf-1);border:1px solid var(--outline-var);border-radius:var(--radius-pill);padding:7px 14px;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--success);flex:none}
+section{margin-top:24px}
+/* ---------- stepper ---------- */
+.stepper{display:flex;align-items:center;gap:0;padding:18px 22px;background:var(--surface);border:1px solid var(--outline-var);border-radius:20px;box-shadow:var(--elev-1)}
+.step{display:flex;align-items:center;gap:10px;min-width:0}
+.step .dot2{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;flex:none;font:700 13px var(--font-body);border:2px solid var(--outline);color:var(--muted);background:var(--surface);transition:all var(--motion-base) var(--ease-standard)}
+.step .lbl{font-size:14px;font-weight:500;color:var(--muted);white-space:nowrap}
+.step[data-state="done"] .dot2{background:var(--accent-cont);border-color:transparent;color:var(--on-accent-cont)}
+.step[data-state="done"] .lbl{color:var(--fg-2)}
+.step[data-state="active"] .dot2{background:var(--accent);border-color:var(--accent);color:var(--accent-on);box-shadow:var(--focus-ring)}
+.step[data-state="active"] .lbl{color:var(--fg);font-weight:700}
+.conn{flex:1;height:2px;background:var(--outline);margin:0 14px;border-radius:2px;min-width:20px;transition:background var(--motion-base)}
+.conn.done{background:var(--accent)}
+/* ---------- info banner ---------- */
+.info-bar{display:flex;gap:14px;align-items:flex-start;padding:16px 20px;border-radius:16px;background:var(--accent-cont);color:var(--on-accent-cont);border:1px solid color-mix(in oklab,var(--accent) 22%,transparent)}
+.info-bar .ic{flex:none;margin-top:1px;color:var(--accent)}
+.info-bar b{color:var(--on-accent-cont)}
+.info-bar .rules{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:6px;font-size:13.5px;color:var(--on-accent-cont)}
+.info-bar .rules span{position:relative;padding-left:14px}
+.info-bar .rules span::before{content:"";position:absolute;left:0;top:8px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.info-bar .title{font-size:14px;font-weight:700}
+/* ---------- stats ---------- */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.stat{background:var(--surf-2);border-radius:20px;padding:18px 20px;position:relative;overflow:hidden;border:1px solid transparent}
+.stat .k{font-size:13px;color:var(--muted);font-weight:500;display:flex;align-items:center;gap:7px}
+.stat .v{font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:10px;letter-spacing:-.02em}
+.stat .d{font-size:12px;color:var(--muted);margin-top:4px}
+.stat.accent{background:var(--accent-cont)}
+.stat.accent .k,.stat.accent .d{color:var(--on-accent-cont)}
+.stat.accent .v{color:var(--on-accent-cont)}
+.stat.warnc{background:var(--warn-cont)}
+.stat.warnc .k,.stat.warnc .d{color:var(--warn-on)}
+.stat.warnc .v{color:var(--warn-on)}
+/* ---------- cards ---------- */
+.card{background:var(--surface);border:1px solid var(--outline-var);border-radius:22px;box-shadow:var(--elev-1);overflow:visible}
+.card-head{display:flex;align-items:center;gap:12px;padding:20px 24px 0}
+.stepno{width:26px;height:26px;border-radius:8px;background:var(--accent);color:var(--accent-on);font:700 13px var(--font-body);display:grid;place-items:center;flex:none}
+.card-head h2{font-size:var(--text-lg);font-weight:500}
+.card-head .sub{font-size:13px;color:var(--muted);margin-top:2px}
+.spacer{flex:1}
+.card-head .spacer{flex:1}
+.card-body{padding:18px 24px 22px}
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 20px;border-radius:var(--radius-pill);
+  border:1px solid transparent;background:transparent;color:var(--accent);font-size:14px;font-weight:500;cursor:pointer;
+  position:relative;overflow:hidden;white-space:nowrap;transition:background var(--motion-fast) var(--ease-standard),box-shadow var(--motion-fast) var(--ease-standard),border-color var(--motion-fast)}
+.btn:focus-visible{box-shadow:var(--focus-ring)}
+.btn-filled{background:var(--accent);color:var(--accent-on)}
+.btn-filled:hover{background:var(--accent-hover);box-shadow:var(--elev-1)}
+.btn-filled:active{background:var(--accent-active)}
+.btn-tonal{background:var(--accent-cont);color:var(--on-accent-cont)}
+.btn-tonal:hover{background:var(--accent-cont-hi);box-shadow:var(--elev-1)}
+.btn-outlined{border-color:var(--outline);color:var(--accent)}
+.btn-outlined:hover{background:var(--state-hover);border-color:var(--accent)}
+.btn-text{padding:0 14px;color:var(--accent)}
+.btn-text:hover{background:var(--state-hover)}
+.btn-icon{width:42px;height:42px;padding:0;border-radius:50%}
+.btn:disabled,.btn[disabled]{background:color-mix(in oklab,var(--fg) 10%,transparent);color:color-mix(in oklab,var(--fg) 40%,transparent);border-color:transparent;cursor:not-allowed;box-shadow:none}
+.btn-sm{height:34px;padding:0 14px;font-size:13px}
+.ripple{position:absolute;border-radius:50%;transform:scale(0);background:currentColor;opacity:.22;animation:rip 600ms var(--ease-standard);pointer-events:none}
+@keyframes rip{to{transform:scale(2.6);opacity:0}}
+/* ---------- dropzone ---------- */
+.dropzone{border:2px dashed color-mix(in oklab,var(--accent) 42%,var(--outline));border-radius:20px;background:var(--surf-1);
+  padding:34px 24px;text-align:center;transition:background var(--motion-base),border-color var(--motion-base)}
+.dropzone.over{background:var(--accent-cont);border-color:var(--accent)}
+.dropzone .up{width:56px;height:56px;margin:0 auto 14px;border-radius:50%;background:var(--accent-cont);color:var(--accent);display:grid;place-items:center}
+.dropzone .t{font-size:15px;font-weight:500}
+.dropzone .s{font-size:13px;color:var(--muted);margin-top:4px}
+.drop-or{display:flex;align-items:center;gap:12px;justify-content:center;margin:16px 0}
+.drop-or span{font-size:12px;color:var(--muted)}
+.drop-or i{height:1px;width:56px;background:var(--outline);display:block}
+.fmts{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.drop-ex{margin-top:14px;font-size:12px;color:var(--muted)}
+.drop-ex code{font-family:var(--font-mono);font-size:11.5px;background:var(--surf-2);border-radius:5px;padding:1px 6px}
+.dropped{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+.dropped-item{display:flex;align-items:center;gap:10px;background:var(--surf-1);border:1px solid var(--outline-var);border-radius:12px;padding:10px 12px;font-size:13px}
+.dropped-item .spacer{flex:1}
+/* ---------- chips / badges ---------- */
+.chip{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 11px;border-radius:8px;font-size:12px;font-weight:500;background:var(--surf-2);color:var(--fg-2);white-space:nowrap;position:relative;overflow:hidden}
+.chip.ok{background:var(--success-cont);color:var(--success-on)}
+.chip.bad{background:var(--danger-cont);color:var(--danger-on)}
+.chip.line{border:1px solid var(--outline);background:var(--surface)}
+.badge{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 10px;border-radius:var(--radius-pill);font-size:12px;font-weight:600;white-space:nowrap}
+.badge.pending{background:var(--accent-cont);color:var(--on-accent-cont)}
+.badge.imported{background:var(--success-cont);color:var(--success-on)}
+.badge.unsupported{background:var(--danger-cont);color:var(--danger-on)}
+.badge.type-bank{background:var(--accent-cont);color:var(--on-accent-cont)}
+.badge.type-order{background:var(--surf-3);color:var(--fg-2)}
+/* ---------- path / scan ---------- */
+.path-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--surf-1);border:1px solid var(--outline-var);border-radius:14px;padding:12px 16px}
+.path-row .folder{display:flex;align-items:center;gap:10px;font-family:var(--font-mono);font-size:13.5px;color:var(--fg)}
+.path-row .folder .ic{color:var(--accent)}
+.path-row .hint{font-size:12px;color:var(--muted);width:100%}
+.scan{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:16px 0}
+.scan .m{background:var(--surf-1);border-radius:12px;padding:10px 14px}
+.scan .m .k{font-size:12px;color:var(--muted)}
+.scan .m .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.scan .m.now .v{font-size:13px;font-family:var(--font-mono);font-weight:500;padding-top:4px}
+/* ---------- tables ---------- */
+.tbl-wrap{overflow:visible;border-radius:14px}
+table.tbl{width:100%;border-collapse:collapse;font-size:13.5px;min-width:640px}
+table.tbl th{position:sticky;top:64px;z-index:3;background:var(--surf-1);text-align:left;padding:11px 14px;font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.02em;border-bottom:1px solid var(--outline);white-space:nowrap}
+table.tbl td{padding:12px 14px;border-bottom:1px solid var(--outline-var);color:var(--fg-2);vertical-align:middle}
+table.tbl tbody tr:last-child td{border-bottom:none}
+table.tbl tbody tr{transition:background var(--motion-fast)}
+table.tbl tbody tr:hover{background:var(--surf-1)}
+.fname{font-weight:500;color:var(--fg)}
+.cell-file{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rnum{text-align:right;font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.act-cell{white-space:nowrap;text-align:right}
+.chk{width:18px;height:18px;accent-color:var(--accent);cursor:pointer}
+/* ---------- bottom bar ---------- */
+.bottombar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid var(--outline-var)}
+.bottombar .spacer{flex:1}
+.switch-row{display:flex;align-items:center;gap:12px}
+.switch{position:relative;width:52px;height:32px;flex:none}
+.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:2}
+.switch .track{position:absolute;inset:0;border-radius:var(--radius-pill);background:var(--surf-3);border:2px solid var(--outline);transition:all var(--motion-base) var(--ease-standard)}
+.switch .thumb{position:absolute;top:50%;left:7px;width:16px;height:16px;border-radius:50%;background:var(--muted);transform:translateY(-50%);transition:all var(--motion-base) var(--ease-standard)}
+.switch input:checked + .track{background:var(--accent);border-color:var(--accent)}
+.switch input:checked ~ .thumb{left:24px;width:22px;height:22px;background:var(--surface)}
+.switch input:focus-visible + .track{box-shadow:var(--focus-ring)}
+.switch-row .lbl{font-size:13.5px;color:var(--fg-2)}
+.selcount{font-size:13.5px;color:var(--muted)}
+.selcount b{color:var(--accent);font-variant-numeric:tabular-nums}
+/* ---------- results ---------- */
+.results .empty{color:var(--muted);font-size:13.5px;display:flex;align-items:center;gap:10px;padding:8px 4px}
+.banner{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;border-radius:16px;margin-bottom:12px;border:1px solid transparent}
+.banner:last-child{margin-bottom:0}
+.banner .ic{flex:none;margin-top:1px}
+.banner .bt{font-weight:700;font-size:14.5px}
+.banner .bd{font-size:13.5px;margin-top:4px;line-height:1.55}
+.banner.ok{background:var(--success-cont);color:var(--success-on);border-color:color-mix(in oklab,var(--success) 24%,transparent)}
+.banner.ok .ic{color:var(--success)}
+.banner.warn{background:var(--warn-cont);color:var(--warn-on);border-color:color-mix(in oklab,var(--warn) 40%,transparent)}
+.banner.warn .ic{color:var(--warn-on)}
+.banner.bad{background:var(--danger-cont);color:var(--danger-on);border-color:color-mix(in oklab,var(--danger) 26%,transparent)}
+.banner.bad .ic{color:var(--danger)}
+.banner b{font-variant-numeric:tabular-nums}
+.warn-cell{display:inline-flex;align-items:center;gap:5px;color:var(--warn-on);font-weight:600;font-variant-numeric:tabular-nums}
+/* ---------- modal ---------- */
+.overlay{position:fixed;inset:0;z-index:60;background:rgba(32,33,36,.42);display:none;align-items:center;justify-content:center;padding:24px}
+.overlay.open{display:flex}
+.dialog{width:min(780px,100%);max-height:88vh;overflow:auto;background:var(--surface);border-radius:28px;box-shadow:var(--elev-3)}
+.dlg-head{display:flex;align-items:flex-start;gap:14px;padding:26px 28px 8px}
+.dlg-head .ic{color:var(--accent);flex:none;margin-top:2px}
+.dlg-head h3{font-size:var(--text-xl);font-weight:500}
+.dlg-head .sub{font-size:13px;color:var(--muted);margin-top:4px}
+.dlg-head .spacer{flex:1}
+.dlg-body{padding:8px 28px 4px}
+.dlg-foot{display:flex;justify-content:flex-end;gap:10px;padding:18px 28px 26px}
+.meta-row{display:flex;gap:20px;flex-wrap:wrap;background:var(--surf-1);border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:13px}
+.meta-row .mi .k{font-size:11.5px;color:var(--muted)}
+.meta-row .mi .v{font-weight:600;margin-top:2px}
+.col-block{margin-bottom:16px}
+.col-block .ch{font-size:12.5px;color:var(--muted);margin-bottom:8px;font-weight:600;display:flex;align-items:center;gap:8px}
+.col-chips{display:flex;flex-wrap:wrap;gap:7px}
+.specimen{border:1px solid var(--outline-var);border-radius:12px;overflow-x:auto}
+table.raw{width:100%;border-collapse:collapse;font-size:12.5px;font-family:var(--font-mono)}
+table.raw th{background:var(--surf-2);color:var(--fg-2);text-align:left;padding:8px 12px;font-weight:600;white-space:nowrap;border-bottom:1px solid var(--outline)}
+table.raw td{padding:8px 12px;border-bottom:1px solid var(--outline-var);white-space:nowrap;color:var(--fg-2)}
+table.raw tr:last-child td{border-bottom:none}
+/* ---------- drawer ---------- */
+.scrim{position:fixed;inset:0;z-index:65;background:rgba(32,33,36,.32);opacity:0;pointer-events:none;transition:opacity var(--motion-base) var(--ease-standard)}
+.scrim.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;z-index:70;width:min(560px,100%);background:var(--surface);border-radius:20px 0 0 20px;
+  box-shadow:var(--elev-3);transform:translateX(102%);transition:transform var(--motion-base) var(--ease-standard);display:flex;flex-direction:column}
+.drawer.open{transform:none}
+.dr-head{display:flex;align-items:flex-start;gap:12px;padding:22px 24px 14px;border-bottom:1px solid var(--outline-var)}
+.dr-head h3{font-size:var(--text-lg);font-weight:500}
+.dr-head .sub{font-size:12.5px;color:var(--muted);margin-top:3px;font-family:var(--font-mono)}
+.dr-head .spacer{flex:1}
+.dr-body{padding:16px 24px 28px;overflow:auto}
+.dr-sum{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.err-item{display:grid;grid-template-columns:64px 88px 1fr;gap:12px;padding:12px 0;border-bottom:1px solid var(--outline-var);font-size:13px}
+.err-item .rn{font-family:var(--font-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.err-item .fld{font-weight:600;color:var(--fg)}
+.err-item .msg{color:var(--fg-2);line-height:1.55}
+.err-empty{color:var(--muted);font-size:13.5px;text-align:center;padding:40px 0}
+/* ---------- snackbar ---------- */
+.snackbar{position:fixed;left:50%;bottom:26px;z-index:80;transform:translate(-50%,140%);background:color-mix(in oklab,var(--fg) 94%,black);color:#fff;border-radius:10px;
+  padding:12px 18px;font-size:13.5px;box-shadow:var(--elev-3);display:flex;align-items:center;gap:12px;max-width:90vw;transition:transform var(--motion-base) var(--ease-standard)}
+.snackbar.show{transform:translate(-50%,0)}
+.snackbar .ic{color:var(--accent)}
+.card-head .link,.link{font-size:13px;color:var(--accent);font-weight:500;background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:6px}
+.card-head .link:hover,.link:hover{background:var(--state-hover)}
+.count-note{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+/* ---------- responsive ---------- */
+@media (max-width:1080px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .scan{grid-template-columns:repeat(3,1fr)}
+}
+@media (max-width:820px){
+  .tbl-wrap{overflow-x:auto}
+}
+@media (max-width:720px){
+  :root{--container-gutter-desktop:16px}
+  .wrap{padding:20px 16px 56px}
+  .stats{grid-template-columns:1fr}
+  .scan{grid-template-columns:repeat(2,1fr)}
+  .stepper{flex-direction:column;align-items:flex-start;gap:12px}
+  .conn{display:none}
+  .page-head h1{font-size:26px}
+  table.tbl th{top:64px}
+  .bottombar{gap:12px}
+}
+</style>
+</head>
+<body>
+
+<header class="appbar" data-od-id="app-bar">
+  <div class="brand"><span class="mark" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M5 20h14v-2H5v2zm7-18l-5 5h3v6h4V7h3l-5-5z"/></svg>
+  </span>Finlite</div>
+  <span class="divider"></span>
+  <span class="module">导入中心</span>
+  <span class="tag">F1</span>
+  <span class="spacer"></span>
+  <button class="icon-btn" data-od-id="btn-help" title="帮助" aria-label="帮助">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/></svg>
+  </button>
+  <div class="avatar" title="财务专员 · 演示账号">财</div>
+</header>
+
+<main class="wrap">
+  <div class="page-head" data-od-id="page-header">
+    <div>
+      <h1>导入银行流水与订单流水</h1>
+      <p>将网银导出的银行流水、工行商户后台导出的订单流水解析后写入本地 SQLite。原始表只读，导入结果可在批次历史中回溯。</p>
+    </div>
+    <div class="env"><span class="dot"></span>本地库已连接 · Wails3 · SQLite</div>
+  </div>
+
+  <!-- stepper -->
+  <section aria-label="导入流程">
+    <div class="stepper" id="stepper" data-od-id="import-stepper">
+      <div class="step" data-step="1" data-state="active">
+        <span class="dot2">1</span><span class="lbl">选择文件</span>
+      </div>
+      <span class="conn"></span>
+      <div class="step" data-step="2">
+        <span class="dot2">2</span><span class="lbl">解析预检列映射</span>
+      </div>
+      <span class="conn"></span>
+      <div class="step" data-step="3">
+        <span class="dot2">3</span><span class="lbl">确认字段</span>
+      </div>
+      <span class="conn"></span>
+      <div class="step" data-step="4">
+        <span class="dot2">4</span><span class="lbl">入库结果</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- info banner -->
+  <section aria-label="导入规则">
+    <div class="info-bar" data-od-id="info-banner">
+      <span class="ic" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+      </span>
+      <div>
+        <div class="title">导入前须知</div>
+        <div class="rules">
+          <span>原始流水表<b>只读</b>，导入过程不修改源文件</span>
+          <span>按<b>工行订单号 / 行号</b>去重，重复行自动跳过</span>
+          <span>银行流水执行<b>余额连续性校验</b>，不平仅告警、<b>不阻断导入</b></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- stats -->
+  <section aria-label="统计概览">
+    <div class="stats" data-od-id="stats-grid">
+      <div class="stat accent" data-od-id="stat-batches">
+        <div class="k">已导入批次</div>
+        <div class="v num" id="stat-batches">12</div>
+        <div class="d">含全部历史导入记录</div>
+      </div>
+      <div class="stat" data-od-id="stat-rows">
+        <div class="k">累计成功行</div>
+        <div class="v num" id="stat-rows">16,747</div>
+        <div class="d">已写入 SQLite 的明细行</div>
+      </div>
+      <div class="stat" data-od-id="stat-skipped">
+        <div class="k">累计跳过行</div>
+        <div class="v num" id="stat-skipped">11</div>
+        <div class="d">按订单号 / 行号判定重复</div>
+      </div>
+      <div class="stat warnc" data-od-id="stat-balance-warn">
+        <div class="k">余额警告批次</div>
+        <div class="v num" id="stat-warn">2</div>
+        <div class="d">存在余额衔接差异，未阻断</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- method 1 -->
+  <section aria-label="方式一">
+    <div class="card" data-od-id="method-drag-drop">
+      <div class="card-head">
+        <span class="stepno">1</span>
+        <div><h2>方式一 · 拖拽或选择文件</h2><div class="sub">适用于临时导出、需要单独导入的流水文件</div></div>
+      </div>
+      <div class="card-body">
+        <div class="dropzone" id="dropzone" data-od-id="dropzone" tabindex="0" role="button" aria-label="拖拽文件到此处或点击选择文件">
+          <div class="up" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M5 20h14v-2H5v2zm7-18l-5 5h3v6h4V7h3l-5-5z"/></svg>
+          </div>
+          <div class="t">将流水文件拖到这里</div>
+          <div class="s">支持一次拖入多个文件，系统按文件名自动识别类型</div>
+          <div class="drop-or"><i></i><span>或</span><i></i></div>
+          <button class="btn btn-filled" id="btn-select-file" data-od-id="btn-select-file">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+            选择文件
+          </button>
+          <div class="fmts">
+            <span class="chip line">TSV</span>
+            <span class="chip line">CSV</span>
+            <span class="chip line">XLSX</span>
+          </div>
+          <div class="drop-ex">示例文件名：<code>银行流水_20260713.tsv</code> <code>订单流水_20260712.tsv</code> <code>银行流水_20260706.tsv</code></div>
+        </div>
+        <div class="dropped" id="dropped-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- method 2 -->
+  <section aria-label="方式二">
+    <div class="card" data-od-id="method-default-path">
+      <div class="card-head">
+        <span class="stepno">2</span>
+        <div><h2>方式二 · 默认路径导入</h2><div class="sub">启动时自动读取默认目录，批量化处理已归档的流水文件</div></div>
+      </div>
+      <div class="card-body">
+        <div class="path-row" data-od-id="default-path">
+          <div class="folder">
+            <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg></span>
+            <span>D:\finlite\data\raw</span>
+          </div>
+          <span class="spacer" style="flex:1"></span>
+          <button class="btn btn-outlined btn-sm" id="btn-rescan" data-od-id="btn-rescan">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-8 8s3.57 8 8 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+            重新扫描
+          </button>
+          <button class="btn btn-text btn-sm" id="btn-change-dir" data-od-id="btn-change-dir">更改目录</button>
+          <div class="hint">启动时自动读取；目录不存在时仅提示，不会中断其他功能。</div>
+        </div>
+
+        <div class="scan" data-od-id="scan-info">
+          <div class="m"><div class="k">扫描到文件</div><div class="v num" id="scan-total">11</div></div>
+          <div class="m"><div class="k">待导入</div><div class="v num" id="scan-pending">6</div></div>
+          <div class="m"><div class="k">已导入</div><div class="v num" id="scan-imported">3</div></div>
+          <div class="m"><div class="k">不支持</div><div class="v num" id="scan-unsupported">2</div></div>
+          <div class="m now"><div class="k">最近扫描</div><div class="v" id="scan-time">2026-07-13 09:58:12</div></div>
+        </div>
+
+        <div class="tbl-wrap">
+          <table class="tbl" data-od-id="default-file-table">
+            <thead>
+              <tr>
+                <th style="width:40px"><input type="checkbox" class="chk" id="select-all" data-od-id="select-all-files" aria-label="全选文件"></th>
+                <th>文件名</th>
+                <th style="width:110px">识别类型</th>
+                <th style="width:96px">大小</th>
+                <th style="width:150px">修改时间</th>
+                <th style="width:104px">状态</th>
+                <th style="width:190px" class="act-cell">操作</th>
+              </tr>
+            </thead>
+            <tbody id="file-body"></tbody>
+          </table>
+        </div>
+
+        <div class="bottombar" data-od-id="file-bottombar">
+          <div class="switch-row">
+            <label class="switch">
+              <input type="checkbox" id="archive-switch" data-od-id="switch-archive" checked>
+              <span class="track"></span><span class="thumb"></span>
+            </label>
+            <span class="lbl">导入后归档原始文件到 processed\ 目录</span>
+          </div>
+          <span class="spacer"></span>
+          <span class="selcount">已选择 <b id="sel-count">1</b> 个文件</span>
+          <button class="btn btn-tonal" id="btn-preview-selected" data-od-id="btn-preview-selected">预览列映射</button>
+          <button class="btn btn-filled" id="btn-import-selected" data-od-id="btn-import-selected">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            导入选中文件
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- results -->
+  <section aria-label="导入结果">
+    <div class="card results" id="result-feedback" data-od-id="result-feedback">
+      <div class="card-head">
+        <h2>导入结果</h2>
+        <span class="spacer"></span>
+        <span class="count-note">最近一次操作反馈</span>
+      </div>
+      <div class="card-body" id="result-feedback-body">
+        <div class="empty">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/></svg>
+          尚未执行导入。选择文件后，成功 / 余额警告 / 失败结果会在此逐条列出。
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- batch history -->
+  <section aria-label="导入批次历史">
+    <div class="card" data-od-id="batch-history">
+      <div class="card-head">
+        <span class="stepno">3</span>
+        <div><h2>导入批次历史</h2><div class="sub">每一批次对应一次写入操作，可回溯错误明细</div></div>
+        <span class="spacer"></span>
+        <span class="count-note" id="batch-count">共 12 个批次 · 全部展示</span>
+      </div>
+      <div class="card-body">
+        <div class="tbl-wrap">
+          <table class="tbl" data-od-id="batch-table">
+            <thead>
+              <tr>
+                <th style="width:110px">类型</th>
+                <th>文件名</th>
+                <th style="width:92px" class="rnum">总行数</th>
+                <th style="width:80px" class="rnum">成功</th>
+                <th style="width:80px" class="rnum">跳过</th>
+                <th style="width:110px" class="rnum">余额警告</th>
+                <th style="width:160px">导入时间</th>
+                <th style="width:140px" class="act-cell">操作</th>
+              </tr>
+            </thead>
+            <tbody id="batch-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- column mapping modal -->
+<div class="overlay" id="modal" data-od-id="column-mapping-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="dialog">
+    <div class="dlg-head">
+      <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2zm8 14H5v-4h6v4zm0-6H5V9h6v4zm0-6H5V5h6v2zm8 12h-6v-4h6v4zm0-6h-6V9h6v4zm0-6h-6V5h6v2z"/></svg></span>
+      <div>
+        <h3 id="modal-title">列映射预览</h3>
+        <div class="sub" id="modal-sub">—</div>
+      </div>
+      <span class="spacer"></span>
+      <button class="icon-btn" id="modal-close" aria-label="关闭">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
+    </div>
+    <div class="dlg-body">
+      <div class="meta-row" id="modal-meta"></div>
+      <div class="col-block">
+        <div class="ch"><span class="chip ok">已识别关键列</span></div>
+        <div class="col-chips" id="modal-known"></div>
+      </div>
+      <div class="col-block" id="modal-missing-block">
+        <div class="ch"><span class="chip bad">缺失列</span></div>
+        <div class="col-chips" id="modal-missing"></div>
+      </div>
+      <div class="col-block">
+        <div class="ch">原始表头 + 样本行（前 3 行）</div>
+        <div class="specimen" id="modal-specimen"></div>
+      </div>
+    </div>
+    <div class="dlg-foot">
+      <button class="btn btn-text" id="modal-cancel">取消</button>
+      <button class="btn btn-filled" id="modal-confirm" data-od-id="btn-confirm-import">确认导入</button>
+    </div>
+  </div>
+</div>
+
+<!-- error detail drawer -->
+<div class="scrim" id="scrim" data-od-id="drawer-scrim"></div>
+<aside class="drawer" id="drawer" data-od-id="error-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+  <div class="dr-head">
+    <div>
+      <h3 id="drawer-title">错误明细</h3>
+      <div class="sub" id="drawer-sub">—</div>
+    </div>
+    <span class="spacer"></span>
+    <button class="icon-btn" id="drawer-close" aria-label="关闭">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+    </button>
+  </div>
+  <div class="dr-body">
+    <div class="dr-sum" id="drawer-sum"></div>
+    <div id="drawer-list"></div>
+  </div>
+</aside>
+
+<!-- snackbar -->
+<div class="snackbar" id="snackbar" data-od-id="snackbar"><span class="ic"></span><span id="snackbar-text"></span></div>
+
+<script>
+(function(){
+  "use strict";
+  var $=function(s,r){return (r||document).querySelector(s)};
+  var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+  function ico(name,size){
+    var p={
+      check:"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z",
+      warn:"M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z",
+      error:"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z",
+      info:"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z",
+      file:"M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"
+    }[name]||"";
+    return '<svg viewBox="0 0 24 24" width="'+(size||18)+'" height="'+(size||18)+'" fill="currentColor" aria-hidden="true"><path d="'+p+'"/></svg>';
+  }
+  function fmt(n){return (n||0).toLocaleString("en-US")}
+  function nowStr(){
+    var d=new Date();
+    var p=function(x){return (x<10?"0":"")+x};
+    return "2026-07-13 "+p(d.getHours())+":"+p(d.getMinutes());
+  }
+
+  /* ---------- data (de-identified) ---------- */
+  var FILES=[
+    {id:"f1", name:"银行流水_20260713.tsv", type:"银行流水", rows:1284, size:"186 KB", mtime:"2026-07-13 09:42", status:"pending", missing:[], skip:2, balanceWarn:true},
+    {id:"f2", name:"订单流水_20260712.tsv", type:"订单流水", rows:2056, size:"402 KB", mtime:"2026-07-12 18:05", status:"pending", missing:[], skip:1},
+    {id:"f3", name:"银行流水_20260706.tsv", type:"银行流水", rows:980,  size:"141 KB", mtime:"2026-07-06 10:11", status:"pending", missing:["余额"], skip:3},
+    {id:"f4", name:"订单流水_20260710.csv", type:"订单流水", rows:1732, size:"355 KB", mtime:"2026-07-10 17:33", status:"pending", missing:[]},
+    {id:"f5", name:"银行流水_20260701.tsv", type:"银行流水", rows:1102, size:"160 KB", mtime:"2026-07-01 09:20", status:"imported", missing:[]},
+    {id:"f6", name:"订单流水_20260628.xlsx", type:"订单流水", rows:1940, size:"512 KB", mtime:"2026-06-28 19:47", status:"imported", missing:[]},
+    {id:"f7", name:"银行流水_20260624.csv", type:"银行流水", rows:864,  size:"124 KB", mtime:"2026-06-24 08:56", status:"pending", missing:["摘要"]},
+    {id:"f8", name:"银行流水_20260620.tsv", type:"银行流水", rows:1015, size:"148 KB", mtime:"2026-06-20 11:02", status:"imported", missing:[]},
+    {id:"f9", name:"对账单_20260620.pdf", type:"不支持", rows:null, size:"2.1 MB", mtime:"2026-06-20 11:05", status:"unsupported", missing:[]},
+    {id:"f10", name:"说明.txt", type:"不支持", rows:null, size:"1 KB", mtime:"2026-06-18 15:22", status:"unsupported", missing:[]},
+    {id:"f11", name:"银行流水_20260618.tsv", type:"银行流水", rows:906, size:"132 KB", mtime:"2026-06-18 09:31", status:"pending", missing:["交易金额"]}
+  ];
+
+  var BATCHES=[
+    {id:"b1", type:"银行流水", file:"银行流水_20260712.tsv", total:1284, ok:1281, skip:3, warn:1, time:"2026-07-12 19:03"},
+    {id:"b2", type:"订单流水", file:"订单流水_20260712.tsv", total:2056, ok:2056, skip:0, warn:0, time:"2026-07-12 18:41"},
+    {id:"b3", type:"银行流水", file:"银行流水_20260709.tsv", total:1102, ok:1100, skip:2, warn:0, time:"2026-07-09 09:51"},
+    {id:"b4", type:"订单流水", file:"订单流水_20260708.tsv", total:1890, ok:1890, skip:0, warn:0, time:"2026-07-08 20:12"},
+    {id:"b5", type:"银行流水", file:"银行流水_20260706.tsv", total:980,  ok:978,  skip:2, warn:1, time:"2026-07-06 10:35"},
+    {id:"b6", type:"订单流水", file:"订单流水_20260704.xlsx", total:1732, ok:1731, skip:1, warn:0, time:"2026-07-04 16:08"},
+    {id:"b7", type:"银行流水", file:"银行流水_20260701.tsv", total:1102, ok:1102, skip:0, warn:0, time:"2026-07-01 09:44"},
+    {id:"b8", type:"订单流水", file:"订单流水_20260628.xlsx", total:1940, ok:1940, skip:0, warn:0, time:"2026-06-28 19:47"},
+    {id:"b9", type:"银行流水", file:"银行流水_20260624.csv", total:864,  ok:862,  skip:2, warn:0, time:"2026-06-24 09:12"},
+    {id:"b10",type:"订单流水", file:"订单流水_20260621.tsv", total:1505, ok:1505, skip:0, warn:0, time:"2026-06-21 14:26"},
+    {id:"b11",type:"银行流水", file:"银行流水_20260620.tsv", total:1015, ok:1014, skip:1, warn:0, time:"2026-06-20 11:20"},
+    {id:"b12",type:"订单流水", file:"订单流水_20260615.tsv", total:1288, ok:1288, skip:0, warn:0, time:"2026-06-15 18:03"}
+  ];
+
+  var ACC="1001****7575";
+  var selected=new Set(["f1"]);
+  var dropped=[];
+  var modalFile=null;
+
+  /* ---------- stepper ---------- */
+  function setStep(n){
+    $$("#stepper .step").forEach(function(el){
+      var s=+el.dataset.step;
+      el.dataset.state = s<n ? "done" : (s===n ? "active" : "todo");
+      if(el.dataset.state==="done"){ el.querySelector(".dot2").innerHTML="&#10003;"; }
+      else { el.querySelector(".dot2").textContent=s; }
+    });
+    $$("#stepper .conn").forEach(function(c,i){ c.classList.toggle("done", (i+1)<n); });
+  }
+
+  /* ---------- toast ---------- */
+  var snackTimer=null;
+  function toast(msg){
+    var sb=$("#snackbar");
+    $("#snackbar-text").textContent=msg;
+    sb.classList.add("show");
+    if(snackTimer) clearTimeout(snackTimer);
+    snackTimer=setTimeout(function(){sb.classList.remove("show")},2600);
+  }
+
+  /* ---------- file table ---------- */
+  function statusBadge(f){
+    if(f.status==="unsupported") return '<span class="badge unsupported">不支持</span>';
+    if(f.status==="imported") return '<span class="badge imported">已导入</span>';
+    return '<span class="badge pending">待导入</span>';
+  }
+  function nameCell(f){
+    var h='<span class="fname">'+f.name+'</span>';
+    f.missing.forEach(function(m){
+      var crit=(m==="交易金额");
+      h+='<span class="chip bad">缺「'+m+'」'+(crit?" · 必需":"")+'</span>';
+    });
+    return h;
+  }
+  function renderFiles(){
+    var body=$("#file-body"), h="";
+    FILES.forEach(function(f){
+      var selectable=(f.status==="pending");
+      var imp = f.status==="imported" ? '<span class="muted" style="font-size:12.5px">已入库</span>'
+        : (f.status==="unsupported" ? '<span class="muted" style="font-size:12.5px">无法预览</span>'
+        : '<button class="btn btn-text btn-sm" data-act="import" data-id="'+f.id+'">导入</button>');
+      var prev = (f.status==="unsupported")
+        ? '<button class="btn btn-text btn-sm" disabled>预览列映射</button>'
+        : '<button class="btn btn-text btn-sm" data-act="preview" data-id="'+f.id+'">预览列映射</button>';
+      h+='<tr data-od-id="file-row-'+f.id+'">'
+        +'<td><input type="checkbox" class="chk" data-act="sel" data-id="'+f.id+'" '+(selected.has(f.id)?"checked":"")+(selectable?"":" disabled")+'></td>'
+        +'<td><div class="cell-file">'+nameCell(f)+'</div></td>'
+        +'<td>'+(f.type==="不支持"?'<span class="muted">—</span>':'<span class="badge '+(f.type==="订单流水"?"type-order":"type-bank")+'">'+f.type+'</span>')+'</td>'
+        +'<td class="num">'+f.size+'</td>'
+        +'<td class="num muted">'+f.mtime+'</td>'
+        +'<td>'+statusBadge(f)+'</td>'
+        +'<td class="act-cell">'+prev+imp+'</td>'
+      +'</tr>';
+    });
+    body.innerHTML=h;
+    updateSelectionUI();
+  }
+  function enabledBoxes(){ return $$('#file-body input[data-act="sel"]:not([disabled])'); }
+  function updateSelectionUI(){
+    $("#sel-count").textContent=selected.size;
+    var boxes=enabledBoxes();
+    var all=boxes.length>0 && boxes.every(function(b){return b.checked});
+    var sa=$("#select-all"); sa.checked=all; sa.indeterminate=!all && boxes.some(function(b){return b.checked});
+  }
+
+  /* ---------- scan info ---------- */
+  function renderScan(){
+    $("#scan-total").textContent=FILES.length;
+    $("#scan-pending").textContent=FILES.filter(function(f){return f.status==="pending"}).length;
+    $("#scan-imported").textContent=FILES.filter(function(f){return f.status==="imported"}).length;
+    $("#scan-unsupported").textContent=FILES.filter(function(f){return f.status==="unsupported"}).length;
+  }
+
+  /* ---------- stats ---------- */
+  function renderStats(){
+    $("#stat-batches").textContent=fmt(BATCHES.length);
+    $("#stat-rows").textContent=fmt(BATCHES.reduce(function(s,b){return s+b.ok},0));
+    $("#stat-skipped").textContent=fmt(BATCHES.reduce(function(s,b){return s+b.skip},0));
+    $("#stat-warn").textContent=fmt(BATCHES.filter(function(b){return b.warn>0}).length);
+  }
+
+  /* ---------- batches ---------- */
+  function renderBatches(){
+    var body=$("#batch-body"), h="";
+    BATCHES.forEach(function(b){
+      var warn = b.warn>0 ? '<span class="warn-cell">'+ico("warn",14)+b.warn+'</span>' : '<span class="muted">—</span>';
+      h+='<tr data-od-id="batch-row-'+b.id+'">'
+        +'<td><span class="badge '+(b.type==="订单流水"?"type-order":"type-bank")+'">'+b.type+'</span></td>'
+        +'<td><span class="fname">'+b.file+'</span></td>'
+        +'<td class="rnum num">'+fmt(b.total)+'</td>'
+        +'<td class="rnum num">'+fmt(b.ok)+'</td>'
+        +'<td class="rnum num">'+fmt(b.skip)+'</td>'
+        +'<td class="rnum">'+warn+'</td>'
+        +'<td class="num muted">'+b.time+'</td>'
+        +'<td class="act-cell"><button class="btn btn-text btn-sm" data-batch="'+b.id+'" data-od-id="btn-errors-'+b.id+'">查看错误明细</button></td>'
+      +'</tr>';
+    });
+    body.innerHTML=h;
+    $("#batch-count").textContent="共 "+BATCHES.length+" 个批次 · 全部展示";
+  }
+
+  /* ---------- results ---------- */
+  function banner(kind,iconName,title,body){
+    return '<div class="banner '+kind+'"><span class="ic">'+ico(iconName,22)+'</span><div><div class="bt">'+title+'</div><div class="bd">'+body+'</div></div></div>';
+  }
+  function renderResults(res){
+    var box=$("#result-feedback-body"), h="";
+    if(res && res.ok && res.ok.length){
+      var rows=res.ok.reduce(function(s,f){return s+(f.rows||0)},0);
+      var sk=res.ok.reduce(function(s,f){return s+(f.skip||0)},0);
+      h+=banner("ok","check","导入成功",
+        "本次入库 <b>"+res.ok.length+"</b> 个文件，成功 <b>"+fmt(rows-sk)+"</b> 行，跳过 <b>"+fmt(sk)+"</b> 行。文件："+
+        res.ok.map(function(f){return '<span class="mono">'+f.name+'</span>'}).join("、")+"。");
+    }
+    if(res && res.warn && res.warn.length){
+      h+=banner("warn","warn","余额衔接警告（不阻断）",
+        res.warn.map(function(f){
+          return '<span class="mono">'+f.name+'</span> 已导入，但检测到余额衔接差异：账号 <span class="mono">'+ACC+'</span>，第 <b>682</b> 行上一行余额 <b>12,800.00</b>，本行发生额 <b>-830.00</b>，原始记录余额 <b>11,970.45</b>，差异 <b>+0.45 元</b>。已按原始记录入库。';
+        }).join("<br>"));
+    }
+    if(res && res.fail && res.fail.length){
+      h+=banner("bad","error","导入失败",
+        res.fail.map(function(f){
+          return '<span class="mono">'+f.name+'</span>：'+ (f.reason || ('缺少必需列「'+(f.missing||[]).join("、")+'」，无法写入数据库。请补齐该列后重新导入。'));
+        }).join("<br>"));
+    }
+    box.innerHTML = h || '<div class="empty">'+ico("info",18)+'尚未执行导入。选择文件后，成功 / 余额警告 / 失败结果会在此逐条列出。</div>';
+  }
+
+  /* ---------- import engine ---------- */
+  function addBatch(f){
+    BATCHES.unshift({
+      id:"nb"+Date.now(), type:f.type, file:f.name, total:f.rows||0,
+      ok:(f.rows||0)-(f.skip||0), skip:f.skip||0, warn:f.balanceWarn?1:0, time:nowStr()
+    });
+  }
+  function doImport(files){
+    var ok=[], warn=[], fail=[];
+    files.forEach(function(f){
+      if(f.missing && f.missing.indexOf("交易金额")>-1){ fail.push(f); return; }
+      if(f.status==="imported"){ return; }
+      f.status="imported";
+      ok.push(f);
+      if(f.balanceWarn) warn.push(f);
+      addBatch(f);
+    });
+    var box=$("#result-feedback-body");
+    renderResults({ok:ok,warn:warn,fail:fail});
+    var hasRes=(ok.length+warn.length+fail.length)>0;
+    setStep(hasRes?4:3);
+    if(hasRes){
+      renderFiles(); renderScan(); renderStats(); renderBatches();
+      if(fail.length && !ok.length) toast("导入失败，详情见「导入结果」");
+      else toast("已导入 "+ok.length+" 个文件"+(warn.length?"（含余额警告）":""));
+    }
+    return {ok:ok,warn:warn,fail:fail};
+  }
+
+  /* ---------- modal ---------- */
+  function samplesFor(f){
+    if(f.type==="订单流水"){
+      return {
+        header:["工行订单号","商户订单号","交易时间","订单金额","实收金额","手续费","支付方式","订单状态"],
+        rows:[
+          ["20260712001","M20260712-8842","2026-07-12 08:31:09","128.00","126.72","1.28","微信支付","已支付"],
+          ["20260712002","M20260712-8843","2026-07-12 09:07:55","12,800.00","12,672.00","128.00","支付宝","已支付"],
+          ["20260712003","M20260712-8844","2026-07-12 10:22:41","446.88","442.41","4.47","银行卡","已支付"]
+        ]
+      };
+    }
+    var header=["交易日期","交易时间","交易金额","余额","收款方","摘要"];
+    var rows=[
+      ["2026-07-13","09:14:02","-830.00","11,970.00","商户结算-A","刷卡结算"],
+      ["2026-07-13","10:02:37","12,800.00","24,770.00","客户回款-B","转账收入"],
+      ["2026-07-13","14:26:11","-446.88","24,323.12","平台服务费-C","平台服务费"]
+    ];
+    f.missing.forEach(function(m){
+      var i=header.indexOf(m);
+      if(i>-1){ header.splice(i,1); rows=rows.map(function(r){return r.filter(function(_,k){return k!==i})}); }
+    });
+    return {header:header, rows:rows};
+  }
+  function columnList(f){
+    var cols = f.type==="订单流水"
+      ? ["工行订单号","商户订单号","交易时间","订单金额","实收金额","手续费","支付方式","订单状态"]
+      : ["交易日期","交易时间","交易金额","余额","收款方","摘要"];
+    var known=[], missing=[];
+    cols.forEach(function(c){
+      if(f.missing.indexOf(c)>-1) missing.push(c); else known.push(c);
+    });
+    return {known:known, missing:missing, all:cols};
+  }
+  function openModal(f){
+    if(!f) return;
+    modalFile=f;
+    setStep(2);
+    var cl=columnList(f), s=samplesFor(f);
+    $("#modal-title").textContent="列映射预览";
+    $("#modal-sub").textContent=f.name;
+    $("#modal-meta").innerHTML=
+      '<div class="mi"><div class="k">文件名</div><div class="v mono">'+f.name+'</div></div>'+
+      '<div class="mi"><div class="k">识别类型</div><div class="v">'+(f.type==="不支持"?"—":f.type)+'</div></div>'+
+      '<div class="mi"><div class="k">数据行数</div><div class="v num">'+(f.rows?fmt(f.rows):"—")+'</div></div>'+
+      '<div class="mi"><div class="k">账号（掩码）</div><div class="v mono">'+(f.type==="银行流水"?ACC:"—")+'</div></div>';
+    $("#modal-known").innerHTML= cl.known.map(function(c){return '<span class="chip ok">'+ico("check",13)+c+'</span>'}).join("") || '<span class="muted">—</span>';
+    var mb=$("#modal-missing-block");
+    if(cl.missing.length){
+      mb.style.display="";
+      $("#modal-missing").innerHTML=cl.missing.map(function(c){return '<span class="chip bad">'+ico("error",13)+c+'</span>'}).join("");
+    } else { mb.style.display="none"; }
+    var table='<table class="raw"><thead><tr>'+s.header.map(function(x){return "<th>"+x+"</th>"}).join("")+'</tr></thead><tbody>'+
+      s.rows.map(function(r){return "<tr>"+r.map(function(c){return "<td>"+c+"</td>"}).join("")+"</tr>"}).join("")+
+      '</tbody></table>';
+    $("#modal-specimen").innerHTML=table;
+    var crit=(f.missing.indexOf("交易金额")>-1);
+    var already=(f.status==="imported");
+    $("#modal-confirm").disabled=(crit||already);
+    $("#modal-confirm").textContent=crit?"缺少必需列，无法导入":(already?"该文件已导入":"确认导入");
+    $("#modal").classList.add("open");
+    setTimeout(function(){setStep(3)},160);
+  }
+  function closeModal(){ $("#modal").classList.remove("open"); modalFile=null; }
+  $("#modal-close").addEventListener("click",closeModal);
+  $("#modal-cancel").addEventListener("click",closeModal);
+  $("#modal").addEventListener("click",function(e){ if(e.target===$("#modal")) closeModal(); });
+  $("#modal-confirm").addEventListener("click",function(){
+    if(!modalFile) return;
+    var f=modalFile; closeModal(); doImport([f]);
+  });
+
+  /* ---------- drawer ---------- */
+  function getErrors(b){
+    var out=[];
+    if(b.warn>0){
+      out.push({row:682, field:"余额", msg:"余额衔接断开：上一行余额 12,800.00，本行发生额 -830.00，推算应结余 11,970.00，原始记录为 11,970.45，差异 +0.45 元。已按原始记录入库（不阻断导入）。"});
+      out.push({row:683, field:"余额", msg:"承接上一行差异，后续余额以原始记录为准继续校验。"});
+      out.push({row:731, field:"交易金额", msg:"金额含千分位与货币符号（￥446.88），已自动清洗为 446.88。"});
+      out.push({row:914, field:"交易时间", msg:"交易时间为空，已按交易日期 2026-07-12 00:00:00 补全。"});
+    }
+    var i;
+    for(i=0;i<b.skip;i++){
+      out.push({row:1042+i*57, field:"行去重", msg:"与已入库记录重复（工行订单号相同），判定为重复行，已跳过。"});
+    }
+    return out;
+  }
+  function openDrawer(b){
+    $("#drawer-sub").textContent=(b.type==="银行流水"?"银行":"订单")+"流水 · "+b.file;
+    $("#drawer-sum").innerHTML=
+      '<span class="chip">总行数 '+fmt(b.total)+'</span>'+
+      '<span class="chip ok">成功 '+fmt(b.ok)+'</span>'+
+      '<span class="chip">跳过 '+fmt(b.skip)+'</span>'+
+      (b.warn>0?'<span class="chip bad">余额警告 '+b.warn+'</span>':'<span class="chip">无余额警告</span>');
+    var errs=getErrors(b);
+    var list=$("#drawer-list");
+    if(!errs.length){ list.innerHTML='<div class="err-empty">该批次没有需要处理的错误明细。</div>'; }
+    else {
+      list.innerHTML=errs.map(function(e){
+        return '<div class="err-item"><div class="rn">'+e.row+'</div><div class="fld">'+e.field+'</div><div class="msg">'+e.msg+'</div></div>';
+      }).join("");
+    }
+    $("#drawer").classList.add("open");
+    $("#scrim").classList.add("open");
+  }
+  function closeDrawer(){ $("#drawer").classList.remove("open"); $("#scrim").classList.remove("open"); }
+  $("#drawer-close").addEventListener("click",closeDrawer);
+  $("#scrim").addEventListener("click",closeDrawer);
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape"){ closeModal(); closeDrawer(); } });
+
+  $("#batch-body").addEventListener("click",function(e){
+    var btn=e.target.closest("button[data-batch]");
+    if(!btn) return;
+    var b=BATCHES.filter(function(x){return x.id===btn.dataset.batch})[0];
+    if(b) openDrawer(b);
+  });
+
+  /* ---------- file table events ---------- */
+  $("#file-body").addEventListener("click",function(e){
+    var btn=e.target.closest("button[data-act]");
+    if(!btn) return;
+    var f=FILES.filter(function(x){return x.id===btn.dataset.id})[0];
+    if(!f) return;
+    if(btn.dataset.act==="preview") openModal(f);
+    if(btn.dataset.act==="import") doImport([f]);
+  });
+  $("#file-body").addEventListener("change",function(e){
+    var cb=e.target.closest('input[data-act="sel"]');
+    if(!cb) return;
+    if(cb.checked) selected.add(cb.dataset.id); else selected.delete(cb.dataset.id);
+    updateSelectionUI();
+  });
+  $("#select-all").addEventListener("change",function(){
+    var on=this.checked;
+    enabledBoxes().forEach(function(b){ b.checked=on; if(on) selected.add(b.dataset.id); else selected.delete(b.dataset.id); });
+    updateSelectionUI();
+  });
+
+  /* ---------- bottom bar ---------- */
+  $("#btn-import-selected").addEventListener("click",function(){
+    var files=FILES.filter(function(f){return selected.has(f.id) && f.status==="pending"});
+    if(!files.length){ toast("请先选择要导入的文件"); return; }
+    doImport(files);
+    files.forEach(function(f){ if(f.status==="imported") selected.delete(f.id); });
+    updateSelectionUI();
+  });
+  $("#btn-preview-selected").addEventListener("click",function(){
+    var f=FILES.filter(function(x){return selected.has(x.id)})[0];
+    if(!f){ toast("请先选择一个文件再预览列映射"); return; }
+    openModal(f);
+  });
+  $("#btn-rescan").addEventListener("click",function(){
+    FILES.forEach(function(f){
+      if(f.status==="imported" && f._fresh) f.status="pending";
+    });
+    $("#scan-time").textContent=nowStr()+":"+String(new Date().getSeconds()).padStart(2,"0");
+    renderScan(); renderFiles();
+    toast("已重新扫描 D:\\finlite\\data\\raw");
+  });
+  $("#btn-change-dir").addEventListener("click",function(){
+    toast("演示环境：默认目录固定为 D:\\finlite\\data\\raw");
+  });
+  $("#archive-switch").addEventListener("change",function(){
+    toast(this.checked?"导入后归档原始文件已开启":"导入后归档原始文件已关闭");
+  });
+  $("#btn-help").addEventListener("click",function(){
+    toast("导入中心：支持 TSV / CSV / XLSX，按文件名自动识别类型");
+  });
+
+  /* ---------- method 1 ---------- */
+  function addDropped(name){
+    if(!/\.(tsv|csv|xlsx)$/i.test(name)){
+      renderResults({fail:[{name:name, reason:"不支持的文件格式（仅支持 TSV / CSV / XLSX）。"}]});
+      setStep(4);
+      toast("不支持的文件格式");
+      return;
+    }
+    var f=FILES.filter(function(x){return x.name===name})[0];
+    if(!f){
+      f={id:"d"+Date.now(), name:name, type:(/订单/.test(name)?"订单流水":"银行流水"),
+         rows:0, size:"—", mtime:nowStr(), status:"pending", missing:[], skip:0, dropped:true};
+    }
+    if(dropped.indexOf(f)===-1) dropped.push(f);
+    renderDropped();
+    setStep(2);
+    toast(name+" 已加入待导入队列");
+  }
+  function renderDropped(){
+    var box=$("#dropped-list");
+    box.innerHTML=dropped.map(function(f){
+      return '<div class="dropped-item" data-od-id="dropped-'+f.id+'">'+
+        '<span style="color:var(--accent)">'+ico("file",18)+'</span>'+
+        '<span class="fname">'+f.name+'</span>'+
+        '<span class="badge '+(f.type==="订单流水"?"type-order":"type-bank")+'">'+f.type+'</span>'+
+        '<span class="chip">'+(f.rows?fmt(f.rows)+" 行":"待解析")+'</span>'+
+        '<span class="spacer"></span>'+
+        '<button class="btn btn-text btn-sm" data-dropped="'+f.id+'">预览列映射</button>'+
+      '</div>';
+    }).join("");
+  }
+  $("#dropped-list").addEventListener("click",function(e){
+    var btn=e.target.closest("button[data-dropped]");
+    if(!btn) return;
+    var f=dropped.filter(function(x){return x.id===btn.dataset.dropped})[0];
+    if(f) openModal(f);
+  });
+  var dz=$("#dropzone");
+  ["dragenter","dragover"].forEach(function(ev){ dz.addEventListener(ev,function(e){ e.preventDefault(); dz.classList.add("over"); }); });
+  ["dragleave","drop"].forEach(function(ev){ dz.addEventListener(ev,function(e){ e.preventDefault(); dz.classList.remove("over"); }); });
+  dz.addEventListener("drop",function(e){
+    var list=e.dataTransfer && e.dataTransfer.files;
+    if(list && list.length){ for(var i=0;i<list.length;i++) addDropped(list[i].name); }
+    else { addDropped("银行流水_20260713.tsv"); }
+  });
+  dz.addEventListener("click",function(e){ if(e.target.closest("button, .chip, .drop-ex")) return; addDropped("银行流水_20260713.tsv"); });
+  dz.addEventListener("keydown",function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); addDropped("银行流水_20260713.tsv"); } });
+  $("#btn-select-file").addEventListener("click",function(e){ e.stopPropagation(); addDropped("银行流水_20260713.tsv"); });
+
+  /* ---------- ripple ---------- */
+  document.addEventListener("pointerdown",function(e){
+    var b=e.target.closest(".btn, .icon-btn, .chip");
+    if(!b) return;
+    var r=b.getBoundingClientRect();
+    var s=document.createElement("span");
+    var size=Math.max(r.width,r.height);
+    s.className="ripple";
+    s.style.width=s.style.height=size+"px";
+    s.style.left=(e.clientX-r.left-size/2)+"px";
+    s.style.top=(e.clientY-r.top-size/2)+"px";
+    b.appendChild(s);
+    setTimeout(function(){ s.remove(); },620);
+  });
+
+  /* ---------- init ---------- */
+  renderFiles();
+  renderScan();
+  renderStats();
+  renderBatches();
+  renderResults(null);
+  setStep(1);
+})();
+</script>
+</body>
+</html>
