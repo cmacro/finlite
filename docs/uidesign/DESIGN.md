@@ -84,7 +84,9 @@ description: Finlite 全部界面原型的单一风格事实源——色板、�
 
 ## 8. 如何在 OpenDesign 后续生成中强制沿用
 
-1. **绑定 design system**：`create_project({ designSystem: "ant", skill: "design-md" })`，或 `start_run({ plugin: "design-system-ant" })`。
+> 统一项目：**`finlite-uidesign`**；预览地址 `http://127.0.0.1:7456/api/projects/finlite-uidesign/raw/{文件名}`。
+
+1. **绑定 design system**：`start_run({ plugin: "design-system-ant" })`；新建项目时可 `create_project({ designSystem: "ant", skill: "design-md" })`。
    design system 内容来自 `od://design-systems/ant/DESIGN.md`。
 2. **把本规范写进项目**：生成前将 `DESIGN.md` 与 `tokens.css` 写入项目根，并放一份基准页（如 `import-center.html`）。
 3. **Prompt 固定前导**：

@@ -29,7 +29,8 @@ finlite 的界面原型由 OpenDesign 生成，若不约束会各自成风。本
 
 ## 4. OpenDesign 生成流程（强制）
 
-1. 固定 design system：`create_project({ designSystem: "ant", skill: "design-md" })`，或 `start_run({ plugin: "design-system-ant" })`。
+0. **统一项目**：所有原型集中在 OpenDesign 项目 `finlite-uidesign`，文件放项目根，预览地址为 `http://127.0.0.1:7456/api/projects/finlite-uidesign/raw/{文件名}`。
+1. 固定 design system：`start_run({ plugin: "design-system-ant" })`（或 `create_project({ designSystem: "ant", skill: "design-md" })`）。
 2. 生成前将 `docs/uidesign/DESIGN.md`、`docs/uidesign/tokens.css` 写入项目根，并放一份基准页（如 `import-center.html`）。
 3. Prompt 固定前导：明确「严格遵循 DESIGN.md / tokens.css / 基准页，不得自创配色字体圆角；明细不分页；中文；金额等宽右对齐；脱敏」。
 4. 产物按 `docs/uidesign/` 约定落盘；风格变体放在 `docs/uidesign/styles/`。
@@ -38,5 +39,6 @@ finlite 的界面原型由 OpenDesign 生成，若不约束会各自成风。本
 
 - [x] `docs/uidesign/tokens.css` 规范 token
 - [x] `docs/uidesign/DESIGN.md` 完整规范（OpenDesign 面向）
-- [x] OpenDesign 各模块项目写入 `DESIGN.md` + `tokens.css`
+- [x] OpenDesign 统一为单一项目 `finlite-uidesign`，内置 `DESIGN.md` + `tokens.css` + 全部原型
 - [x] `docs/uidesign/styles/` 保存 Ant / Material / Linear / Stripe 四风格变体供对比
+- [x] `docs/uidesign/README.md` 原型清单与预览入口
