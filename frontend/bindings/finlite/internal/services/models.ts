@@ -103,6 +103,33 @@ export interface ImportError {
     "message": string;
 }
 
+/**
+ * ImportRawReq 默认路径导入请求；Names 只能是默认目录内的文件名（防路径穿越）。
+ */
+export interface ImportRawReq {
+    "names": string[] | null;
+
+    /**
+     * 导入成功后移到 archived/
+     */
+    "archive": boolean;
+}
+
+/**
+ * ImportRawResult 单个默认路径文件的导入结果。
+ */
+export interface ImportRawResult {
+    "fileName": string;
+
+    /**
+     * imported / failed
+     */
+    "status": string;
+    "result": ImportResult;
+    "archivedTo": string;
+    "error": string;
+}
+
 export interface ImportResult {
     "batchId": string;
 
@@ -115,6 +142,11 @@ export interface ImportResult {
     "successCount": number;
     "skipCount": number;
     "balanceWarning": string;
+
+    /**
+     * RFC3339，导入中心批次历史展示用
+     */
+    "importedAt": string;
 }
 
 export interface OrderFlow {
@@ -146,6 +178,54 @@ export interface OrderFlowPage {
     "total": number;
     "page": number;
     "pageSize": number;
+}
+
+/**
+ * RawFile 默认原始数据目录中的一个文件（扫描结果）。
+ */
+export interface RawFile {
+    "name": string;
+
+    /**
+     * bank_flow / order_flow；空=未识别
+     */
+    "sourceType": string;
+
+    /**
+     * 字节
+     */
+    "size": number;
+
+    /**
+     * RFC3339
+     */
+    "modTime": string;
+
+    /**
+     * new / done / bad
+     */
+    "state": string;
+    "missingColumns": string[] | null;
+
+    /**
+     * 已导入批次的导入时间（RFC3339，仅 done）
+     */
+    "importedAt": string;
+    "error": string;
+}
+
+/**
+ * RawScan 默认路径扫描结果。DirExists=false 时前端仅提示，不报错。
+ */
+export interface RawScan {
+    "dir": string;
+    "dirExists": boolean;
+    "files": RawFile[] | null;
+
+    /**
+     * RFC3339
+     */
+    "scannedAt": string;
 }
 
 export interface ReconDiff {

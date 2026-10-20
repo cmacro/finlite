@@ -116,6 +116,16 @@
       : '撤销本批次的余额确认吗？不平行的行将恢复红底显示。'
   );
 
+  // 顶栏刷新按钮（App.svelte 广播）：重拉当前筛选与批次列表。
+  $effect(() => {
+    const handler = () => {
+      void refresh();
+      void loadBatches();
+    };
+    window.addEventListener('finlite:refresh', handler);
+    return () => window.removeEventListener('finlite:refresh', handler);
+  });
+
   refresh();
   loadBatches();
 </script>

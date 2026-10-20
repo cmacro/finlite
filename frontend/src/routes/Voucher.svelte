@@ -183,6 +183,16 @@
       : '反审核该凭证吗？将回到草稿并留审计日志。'
   );
 
+  // 顶栏刷新按钮（App.svelte 广播）：重拉凭证列表与可生成汇总。
+  $effect(() => {
+    const handler = () => {
+      void refresh();
+      void loadReviewed();
+    };
+    window.addEventListener('finlite:refresh', handler);
+    return () => window.removeEventListener('finlite:refresh', handler);
+  });
+
   refresh();
   loadReviewed();
 </script>

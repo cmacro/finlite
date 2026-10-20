@@ -155,6 +155,13 @@
     pendingAudit?.approve ? '审核通过该汇总吗？审核后方可生成凭证。' : '驳回该汇总为草稿吗？'
   );
 
+  // 顶栏刷新按钮（App.svelte 广播）：重拉汇总列表。
+  $effect(() => {
+    const handler = () => void refresh();
+    window.addEventListener('finlite:refresh', handler);
+    return () => window.removeEventListener('finlite:refresh', handler);
+  });
+
   refresh();
 </script>
 

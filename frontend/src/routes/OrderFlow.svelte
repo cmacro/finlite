@@ -55,6 +55,13 @@
     refresh();
   }
 
+  // 顶栏刷新按钮（App.svelte 广播）：重拉订单流水。
+  $effect(() => {
+    const handler = () => void refresh();
+    window.addEventListener('finlite:refresh', handler);
+    return () => window.removeEventListener('finlite:refresh', handler);
+  });
+
   refresh();
 </script>
 

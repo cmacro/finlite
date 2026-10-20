@@ -16,6 +16,13 @@ import { Call as $Call, CancellablePromise as $CancellablePromise } from "@wails
 import * as $models from "./models.js";
 
 /**
+ * GetRawDir 返回默认原始数据目录：优先读本地设置，未设置则回退到「库文件同目录 /raw」。
+ */
+export function GetRawDir(): $CancellablePromise<string> {
+    return $Call.ByID(3553610882);
+}
+
+/**
  * ImportBankFile 导入银行流水文件。去重键 (txn_time,in,out,counterparty)。
  */
 export function ImportBankFile(filePath: string): $CancellablePromise<$models.ImportResult> {
@@ -38,6 +45,14 @@ export function ImportOrderFile(filePath: string): $CancellablePromise<$models.I
 }
 
 /**
+ * ImportRawFiles 导入默认路径中选中的文件，逐个返回结果（单文件失败不阻断其他文件）。
+ * Archive=true 时导入成功后把文件移动到 archived/，避免下次扫描重复导入。
+ */
+export function ImportRawFiles(req: $models.ImportRawReq): $CancellablePromise<$models.ImportRawResult[] | null> {
+    return $Call.ByID(3985040625, req);
+}
+
+/**
  * ListBatches 导入批次列表（导入中心用）。
  */
 export function ListBatches(sourceType: string): $CancellablePromise<$models.ImportResult[] | null> {
@@ -57,4 +72,26 @@ export function ListErrors(batchID: string): $CancellablePromise<$models.ImportE
  */
 export function PreviewColumns(fileName: string, content: string): $CancellablePromise<$models.ColumnMapping> {
     return $Call.ByID(90746310, fileName, content);
+}
+
+/**
+ * PreviewRawFile 预览默认路径内的单个文件（列映射弹窗用），避免前端读取任意路径。
+ */
+export function PreviewRawFile(name: string): $CancellablePromise<$models.ColumnMapping> {
+    return $Call.ByID(497833205, name);
+}
+
+/**
+ * ScanRawDir 扫描默认路径：识别类型、缺列、是否已导入（同名批次且导入时间不早于文件修改时间）。
+ * 目录不存在时返回 DirExists=false 的空结果，不报错（业务要求：仅提示）。
+ */
+export function ScanRawDir(): $CancellablePromise<$models.RawScan> {
+    return $Call.ByID(4075177657);
+}
+
+/**
+ * SetRawDir 保存默认原始数据目录（目录须已存在），返回规范化后的绝对路径。
+ */
+export function SetRawDir(dir: string): $CancellablePromise<string> {
+    return $Call.ByID(1252651734, dir);
 }

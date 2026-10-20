@@ -30,6 +30,13 @@
     }
   }
 
+  // 顶栏刷新按钮（App.svelte 广播）：重拉余额表与收支日报。
+  $effect(() => {
+    const handler = () => void refresh();
+    window.addEventListener('finlite:refresh', handler);
+    return () => window.removeEventListener('finlite:refresh', handler);
+  });
+
   refresh();
 </script>
 

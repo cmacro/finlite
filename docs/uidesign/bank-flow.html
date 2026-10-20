@@ -109,10 +109,9 @@ svg{display:block;flex:0 0 auto;}
   height:52px;flex:0 0 52px;background:var(--bg);border-bottom:1px solid var(--border);
   display:flex;align-items:center;gap:14px;padding:0 20px;
 }
-.crumb{font-size:12px;color:var(--muted);}
-.crumb b{color:var(--fg);font-weight:600;}
-.page-title{font-size:16px;font-weight:700;letter-spacing:-.015em;}
-.topbar .sep{width:1px;height:20px;background:var(--border);}
+.page-title{display:inline-flex;align-items:baseline;gap:8px;font-size:16px;font-weight:700;letter-spacing:-.015em;}
+.topbar-cat{font-size:12.5px;font-weight:500;color:var(--muted);}
+.topbar-sep{color:var(--muted);font-weight:400;}
 .spacer{flex:1;}
 .period-pill{
   display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px;
@@ -121,6 +120,14 @@ svg{display:block;flex:0 0 auto;}
 }
 .period-pill:hover{background:var(--surface);}
 .period-pill svg{color:var(--muted);}
+.icon-btn{
+  width:32px;height:32px;display:grid;place-items:center;
+  border:1px solid var(--border);background:var(--bg);color:var(--fg-2,#374151);
+  border-radius:var(--radius-sm);cursor:pointer;
+  transition:background var(--motion-fast),border-color var(--motion-fast),color var(--motion-fast);
+}
+.icon-btn:hover{background:var(--surface);border-color:#c6cdd9;color:var(--fg);}
+.icon-btn:focus-visible{outline:none;box-shadow:var(--focus-ring);}
 .content{flex:1;overflow-y:auto;padding:16px 20px 40px;}
 
 /* ---------------- buttons ---------------- */
@@ -476,24 +483,22 @@ tr.detail-row td{padding:0;border-bottom:1px solid var(--border-soft,#edf0f5);}
   <!-- ================= MAIN ================= -->
   <div class="main">
     <header class="topbar" data-od-id="topbar">
-      <div>
-        <div class="crumb">数据 / <b>银行流水</b></div>
-      </div>
-      <span class="sep"></span>
-      <div class="page-title">银行流水</div>
-      <span class="sep"></span>
+      <h1 class="page-title" data-od-id="page-title"><span class="topbar-cat">流水账务</span><span class="topbar-sep">|</span>银行流水</h1>
       <button class="period-pill" data-od-id="period-pill" title="当前会计期间">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         会计期间 2026-07
       </button>
       <div class="spacer"></div>
-      <button class="btn btn-ghost" id="btnRefresh" data-od-id="btn-refresh">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-        刷新
-      </button>
       <button class="btn" id="btnExport" data-od-id="btn-export">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         导出 TSV
+      </button>
+      <button class="icon-btn" id="btnRefresh" data-od-id="btn-refresh" title="刷新" aria-label="刷新">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      </button>
+      <button class="btn" id="btnImport" data-od-id="btn-import">
+        <svg viewBox="0 0 16 16"><path d="M8 2.4v7.2M8 9.6 5.2 6.8M8 9.6l2.8-2.8"/><path d="M2.8 10.6v2.1a1.3 1.3 0 0 0 1.3 1.3h7.8a1.3 1.3 0 0 0 1.3-1.3v-2.1"/></svg>
+        导入明细
       </button>
     </header>
 
@@ -1187,7 +1192,8 @@ function bind(){
   document.getElementById('btnRevoke').addEventListener('click', revokeBatch);
   document.getElementById('btnRefresh').addEventListener('click', function(){ renderBatchBar(); renderTable(); renderStats(); updateNavBadge(); toast('info','已刷新当前视图。'); });
   document.getElementById('btnExport').addEventListener('click', function(){ toast('info','已按当前筛选导出 TSV（原型演示，不产生文件）。'); });
-  document.getElementById('btnGoImport').addEventListener('click', function(){ toast('info','跳转导入中心（原型演示）。'); });
+  document.getElementById('btnImport').addEventListener('click', function(){ window.location.href = 'import-center.html'; });
+  document.getElementById('btnGoImport').addEventListener('click', function(){ window.location.href = 'import-center.html'; });
 
   /* table interactions (delegated) */
   document.getElementById('tbody').addEventListener('click', function(e){

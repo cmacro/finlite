@@ -1,0 +1,24 @@
+/* 顶栏（基准：docs/uidesign/import-center.html 的 canonical topbar）：
+ * 左侧标题统一为「分类 | 模块名称」（分类弱化、模块强调），右侧放页面级动作；
+ * 刷新按钮只显示图标（title/aria-label 提供说明）。
+ * 尺寸/颜色只取 tokens.css，禁止自创色值。 */
+@layer components {
+  .topbar {
+    @apply flex h-[52px] shrink-0 items-center gap-3.5 border-b border-border bg-surface px-[22px];
+  }
+  .topbar-title {
+    @apply inline-flex items-baseline gap-2 text-base font-[650] tracking-[-0.01em] text-fg;
+  }
+  .topbar-cat {
+    @apply text-[12.5px] font-medium text-muted;
+  }
+  .topbar-sep {
+    @apply font-normal text-muted;
+  }
+  .topbar-actions {
+    @apply ml-auto flex items-center gap-2;
+  }
+  .icon-btn {
+    @apply grid h-8 w-8 cursor-pointer place-items-center rounded-md border border-border bg-surface text-fg-2 transition-colors hover:border-border-strong hover:bg-surface-2 focus-visible:shadow-[0_0_0_3px_var(--color-focusring)] focus-visible:outline-none;
+  }
+}

@@ -1,0 +1,415 @@
+/* 导入中心（F1）页面组件：提示条 / 步骤条 / 统计卡 / 拖拽上传 / 结果横幅 /
+ * 列映射预览弹窗 / 错误明细抽屉。基准视觉：docs/uidesign/import-center.html。
+ * 颜色与尺寸只取 tokens.css，禁止自创色值。 */
+
+@keyframes import-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes import-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes import-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes import-slide {
+  from {
+    transform: translateX(102%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@layer components {
+  /* ---------- 信息提示条 ---------- */
+  .info-banner {
+    @apply flex items-start gap-[11px] rounded-lg border border-accent-border bg-accent-soft px-[15px] py-3;
+  }
+  .info-banner .ico {
+    @apply mt-0.5 shrink-0 text-accent;
+  }
+  .info-banner .body {
+    @apply text-[13px] leading-[1.62] text-fg-2;
+  }
+  .info-banner .body strong {
+    @apply font-semibold text-fg;
+  }
+  .info-banner .sep {
+    @apply mx-1.5 text-subtle;
+  }
+
+  /* ---------- 流程步骤条 ---------- */
+  .stepper {
+    @apply mt-3.5 flex items-center overflow-x-auto rounded-xl border border-border bg-surface px-5 py-3.5 shadow-sm;
+  }
+  .step {
+    @apply flex shrink-0 items-center gap-2.5;
+  }
+  .step-num {
+    @apply grid h-[26px] w-[26px] place-items-center rounded-full border border-border bg-surface text-[12.5px] font-semibold text-muted transition-colors;
+  }
+  .step-text {
+    @apply flex flex-col leading-[1.25];
+  }
+  .step-text .t {
+    @apply text-[13px] font-semibold text-muted transition-colors;
+  }
+  .step-text .s {
+    @apply text-[11px] text-subtle;
+  }
+  .step.done .step-num {
+    @apply border-ok-border bg-ok-bg text-ok-fg;
+  }
+  .step.done .step-text .t {
+    @apply text-fg-2;
+  }
+  .step.active .step-num {
+    @apply border-accent bg-accent text-on-accent shadow-[0_0_0_4px_var(--color-focusring)];
+  }
+  .step.active .step-text .t {
+    @apply text-fg;
+  }
+  .step.active .step-text .s {
+    @apply text-accent;
+  }
+  .step-line {
+    @apply mx-3.5 h-0.5 min-w-8 flex-1 rounded-full bg-border;
+  }
+  .step-line.done {
+    @apply bg-ok-border;
+  }
+
+  /* ---------- 统计卡 ---------- */
+  .stats {
+    @apply mt-3.5 grid grid-cols-4 gap-3.5 max-[1180px]:grid-cols-2;
+  }
+  .stat {
+    @apply rounded-xl border border-border bg-surface px-4 py-3.5 shadow-sm;
+  }
+  .stat-label {
+    @apply flex items-center gap-1.5 text-[12px] font-medium text-muted;
+  }
+  .stat-value {
+    @apply mt-2 text-[26px] leading-none font-bold tracking-[-0.02em] text-fg tabular-nums;
+  }
+  .stat-unit {
+    @apply ml-1 text-[13px] font-semibold tracking-normal text-muted;
+  }
+  .stat-sub {
+    @apply mt-[7px] text-[11.5px] text-subtle;
+  }
+  .stat.warn {
+    @apply border-warn-border bg-warn-bg;
+  }
+  .stat.warn .stat-label,
+  .stat.warn .stat-value,
+  .stat.warn .stat-unit,
+  .stat.warn .stat-sub {
+    @apply text-warn-fg;
+  }
+
+  /* ---------- 拖拽上传区 ---------- */
+  .dropzone {
+    @apply cursor-pointer rounded-xl border-2 border-dashed border-border-strong bg-surface-2 px-6 pt-[34px] pb-[30px] text-center transition-colors hover:border-accent-border hover:bg-accent-soft focus-visible:shadow-[0_0_0_3px_var(--color-focusring)] focus-visible:outline-none;
+  }
+  .dropzone.dragover {
+    @apply border-accent bg-accent-soft;
+  }
+  .dz-icon {
+    @apply mx-auto mb-3.5 grid h-14 w-14 place-items-center rounded-[14px] border border-border bg-surface text-muted transition-all;
+  }
+  .dropzone.dragover .dz-icon {
+    @apply -translate-y-0.5 text-accent;
+  }
+  .dz-title {
+    @apply text-[15px] font-semibold text-fg;
+  }
+  .dz-title .accent {
+    @apply text-accent;
+  }
+  .dz-sub {
+    @apply mt-1.5 text-[12.5px] text-muted;
+  }
+  .dz-tags {
+    @apply my-3.5 flex justify-center gap-1.5;
+  }
+  .fmt {
+    @apply rounded-[4px] border border-border bg-surface px-2 py-[3px] font-mono text-[11px] font-semibold tracking-[0.04em] text-fg-2;
+  }
+
+  /* ---------- 导入结果横幅 ---------- */
+  .results {
+    @apply mt-4 flex flex-col gap-2.5;
+  }
+  .banner {
+    @apply flex items-start gap-[11px] rounded-lg border border-border px-[15px] py-[13px];
+    animation: import-rise 0.28s cubic-bezier(0.2, 0, 0, 1);
+  }
+  .banner .ico {
+    @apply mt-px shrink-0;
+  }
+  .banner .body {
+    @apply text-[13px] leading-relaxed;
+  }
+  .banner .em {
+    @apply font-semibold;
+  }
+  .banner.ok {
+    @apply border-ok-border bg-ok-bg text-ok-fg;
+  }
+  .banner.ok .ico {
+    @apply text-ok-fg;
+  }
+  .banner.warn {
+    @apply border-warn-border bg-warn-bg text-warn-fg;
+  }
+  .banner.warn .ico {
+    @apply text-warn-fg;
+  }
+  .banner.err {
+    @apply border-err-border bg-err-bg text-err-fg;
+  }
+  .banner.err .ico {
+    @apply text-err-fg;
+  }
+  .banner .goto {
+    @apply font-semibold underline underline-offset-2;
+  }
+
+  /* ---------- 列映射预览弹窗 ---------- */
+  .map-overlay {
+    @apply fixed inset-0 z-[60] flex items-center justify-center bg-mask p-7 backdrop-blur-[1.5px];
+  }
+  .map-modal {
+    @apply flex max-h-[calc(100vh-56px)] w-[880px] max-w-full flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-2xl;
+    animation: import-pop 0.2s cubic-bezier(0.2, 0, 0, 1);
+  }
+  .map-head {
+    @apply flex shrink-0 items-center gap-3 border-b border-border-soft px-[18px] py-[15px];
+  }
+  .map-head h3 {
+    @apply text-[15px] font-semibold tracking-[-0.01em] text-fg;
+  }
+  .map-title-ico {
+    @apply text-muted;
+  }
+  .map-x {
+    @apply ml-auto grid h-[30px] w-[30px] cursor-pointer place-items-center rounded-md border-0 bg-transparent text-muted hover:bg-surface-2 hover:text-fg focus-visible:shadow-[0_0_0_3px_var(--color-focusring)] focus-visible:outline-none;
+  }
+  .map-body {
+    @apply flex-1 overflow-y-auto p-[18px];
+  }
+  .map-foot {
+    @apply flex shrink-0 items-center gap-2.5 border-t border-border-soft bg-surface-2 px-[18px] py-3.5;
+  }
+  .map-foot .hint {
+    @apply text-[12px] text-muted;
+  }
+
+  .meta-grid {
+    @apply mb-4 grid grid-cols-3 gap-3 max-[900px]:grid-cols-1;
+  }
+  .meta {
+    @apply rounded-lg border border-border-soft bg-surface-2 px-[13px] py-2.5;
+  }
+  .meta .k {
+    @apply mb-[5px] text-[11.5px] text-muted;
+  }
+  .meta .v {
+    @apply text-[13.5px] font-semibold text-fg;
+  }
+
+  .field-block {
+    @apply mb-4;
+  }
+  .field-label {
+    @apply mb-[9px] flex items-center gap-1.5 text-[12px] font-semibold text-fg-2;
+  }
+  .field-label .tally {
+    @apply font-medium text-muted;
+  }
+  .chips {
+    @apply flex flex-wrap gap-[7px];
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-2 px-2.5 py-[5px] text-[12.5px] font-medium text-fg-2;
+  }
+  .chip.ok {
+    @apply border-ok-border bg-ok-bg text-ok-fg;
+  }
+  .chip.err {
+    @apply border-err-border bg-err-bg text-err-fg;
+  }
+  .field-note {
+    @apply mt-2.5 flex items-start gap-2 rounded-md border border-err-border bg-err-bg px-3 py-[9px] text-[12.5px] text-err-fg;
+  }
+  .field-note.ok {
+    @apply border-ok-border bg-ok-bg text-ok-fg;
+  }
+
+  .raw-head {
+    @apply mb-[9px] flex flex-wrap items-center gap-2;
+  }
+  .raw-head .raw-label {
+    @apply text-[12px] font-semibold text-fg-2;
+  }
+  .raw-head .raw-tag {
+    @apply rounded-[4px] border border-border bg-surface-2 px-[7px] py-0.5 text-[11px] text-muted;
+  }
+  .raw-scroll {
+    @apply max-h-[300px] overflow-auto rounded-lg border border-border bg-surface;
+  }
+  .raw-table {
+    @apply min-w-full border-separate border-spacing-0 text-[12.5px];
+  }
+  .raw-table th {
+    @apply sticky top-0 z-[2] border-b border-border bg-surface px-3 py-2 text-left text-[11.5px] font-semibold whitespace-nowrap text-muted;
+  }
+  .raw-table td {
+    @apply border-b border-border-soft px-3 py-2 whitespace-nowrap text-fg-2;
+  }
+  .raw-table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .raw-table .n {
+    @apply text-right tabular-nums;
+  }
+
+  /* 解析中骨架 */
+  .parsing {
+    @apply flex flex-col items-center gap-3 py-[46px] text-muted;
+  }
+  .spinner {
+    @apply h-[26px] w-[26px] animate-spin rounded-full border-[3px] border-accent-soft border-t-accent;
+  }
+
+  /* ---------- 默认路径导入 ---------- */
+  .path-bar {
+    @apply mb-3 flex flex-wrap items-center gap-2.5 rounded-lg border border-border bg-surface-2 px-3 py-2.5;
+  }
+  .path-label {
+    @apply text-[12px] font-semibold text-fg-2;
+  }
+  .path-value {
+    @apply rounded-[4px] border border-border bg-surface px-2 py-0.5 font-mono text-[12.5px] text-fg;
+    word-break: break-all;
+  }
+  .path-hint {
+    @apply text-[12px] text-muted;
+  }
+  .scan-meta {
+    @apply mb-3 flex flex-wrap items-center gap-3.5 text-[12px] text-muted;
+  }
+  .scan-meta .sep {
+    @apply h-3 w-px bg-border;
+  }
+  .scan-meta b {
+    @apply font-semibold text-fg-2;
+  }
+  .scan-actions {
+    @apply mt-3.5 flex flex-wrap items-center gap-2.5;
+  }
+  .chk {
+    @apply inline-flex cursor-pointer items-center gap-[7px] text-[12.5px] text-fg-2;
+  }
+  .chk input {
+    @apply h-[15px] w-[15px] accent-[var(--color-accent)];
+  }
+  .row-actions {
+    @apply flex items-center gap-2;
+  }
+  .miss-note {
+    @apply mt-0.5 block text-[11.5px] text-err-fg;
+  }
+
+  /* ---------- 错误明细抽屉 ---------- */
+  .drawer-scrim {
+    @apply fixed inset-0 z-[55] bg-mask;
+    animation: import-fade 0.2s ease-out;
+  }
+  .drawer {
+    @apply fixed top-0 right-0 bottom-0 z-[56] flex w-[600px] max-w-full flex-col border-l border-border bg-surface shadow-2xl;
+    animation: import-slide 0.24s cubic-bezier(0.2, 0, 0, 1);
+  }
+  .drawer-head {
+    @apply flex shrink-0 items-start gap-3 border-b border-border-soft px-[18px] py-[15px];
+  }
+  .drawer-head h3 {
+    @apply text-[15px] font-semibold tracking-[-0.01em] text-fg;
+  }
+  .drawer-sub {
+    @apply mt-[3px] flex flex-wrap items-center gap-1.5 text-[12px] text-muted;
+  }
+  .drawer-x {
+    @apply ml-auto grid h-[30px] w-[30px] shrink-0 cursor-pointer place-items-center rounded-md border-0 bg-transparent text-muted hover:bg-surface-2 hover:text-fg focus-visible:shadow-[0_0_0_3px_var(--color-focusring)] focus-visible:outline-none;
+  }
+  .drawer-body {
+    @apply flex-1 overflow-y-auto px-[18px] pt-4 pb-6;
+  }
+
+  .err-summary {
+    @apply mb-3.5 flex gap-2.5;
+  }
+  .err-pill {
+    @apply flex-1 rounded-lg border border-border bg-surface-2 px-3 py-[9px];
+  }
+  .err-pill .k {
+    @apply text-[11.5px] text-muted;
+  }
+  .err-pill .v {
+    @apply mt-0.5 text-lg font-bold tabular-nums;
+  }
+  .err-pill.err .v {
+    @apply text-err-fg;
+  }
+  .err-pill.warn {
+    @apply border-warn-border bg-warn-bg;
+  }
+  .err-pill.warn .v {
+    @apply text-warn-fg;
+  }
+
+  .err-list {
+    @apply flex flex-col gap-[9px];
+  }
+  .err-row {
+    @apply rounded-lg border border-border border-l-[3px] border-l-err bg-surface px-[13px] py-[11px];
+  }
+  .err-row.warn {
+    @apply border-l-warn;
+  }
+  .err-row .top {
+    @apply mb-1.5 flex items-center gap-2;
+  }
+  .row-no {
+    @apply rounded-[4px] border border-border bg-surface-2 px-[7px] py-0.5 font-mono text-[11.5px] font-semibold text-fg-2;
+  }
+  .field-tag {
+    @apply rounded-full border border-err-border bg-err-bg px-[9px] py-0.5 text-[11.5px] font-semibold text-err-fg;
+  }
+  .err-row.warn .field-tag {
+    @apply border-warn-border bg-warn-bg text-warn-fg;
+  }
+  .err-desc {
+    @apply text-[12.5px] leading-relaxed text-fg-2;
+  }
+}

@@ -125,6 +125,8 @@ input{font-family:inherit;font-size:inherit;color:inherit;}
   display:flex;align-items:center;gap:14px;padding:0 20px;
 }
 .page-titles{display:flex;align-items:baseline;gap:10px;min-width:0;}
+.topbar-cat{font-size:12.5px;font-weight:500;color:var(--muted);}
+.topbar-sep{color:var(--muted);font-weight:400;}
 .page-title{font-size:16px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;}
 .tag-mod{
   font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-weak);
@@ -164,6 +166,15 @@ input{font-family:inherit;font-size:inherit;color:inherit;}
 .btn-ghost{border-color:transparent;background:transparent;}
 .btn-ghost:hover{background:var(--surface-2);border-color:transparent;}
 .btn-sm{height:28px;padding:0 10px;font-size:12px;}
+.icon-btn{
+  width:28px;height:28px;display:grid;place-items:center;
+  border:1px solid var(--border);border-radius:var(--radius-md);
+  background:var(--bg);color:var(--fg-2);cursor:pointer;
+  transition:background .12s,border-color .12s,color .12s;
+}
+.icon-btn:hover{background:var(--surface-2);color:var(--fg);border-color:var(--surface-3);}
+.icon-btn:focus-visible{outline:none;box-shadow:var(--focus);}
+.icon-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
 
 /* ---------- Content ---------- */
 .content{
@@ -586,7 +597,7 @@ tr.detail-row.hidden{display:none;}
     <!-- Topbar -->
     <header class="topbar" data-od-id="topbar">
       <div class="page-titles">
-        <h1 class="page-title" data-od-id="page-title">订单流水</h1>
+        <h1 class="page-title" data-od-id="page-title"><span class="topbar-cat">流水账务</span><span class="topbar-sep">|</span>订单流水</h1>
         <span class="tag-mod">F3</span>
         <span class="tag-readonly" data-od-id="readonly-badge">
           <svg viewBox="0 0 16 16"><rect x="3.2" y="7" width="9.6" height="6.4" rx="1.2"/><path d="M5.4 7V5.2a2.6 2.6 0 0 1 5.2 0V7"/></svg>
@@ -598,13 +609,12 @@ tr.detail-row.hidden{display:none;}
         <svg viewBox="0 0 16 16"><rect x="2.4" y="3.2" width="11.2" height="10.4" rx="1.4"/><path d="M2.4 6.4h11.2M5.4 2.2v2M10.6 2.2v2"/></svg>
         <span class="k">会计期间</span><span class="v">2026-07</span>
       </div>
-      <button class="btn btn-ghost btn-sm" id="btnRefresh" data-od-id="btn-refresh">
+      <button class="icon-btn" id="btnRefresh" data-od-id="btn-refresh" title="刷新" aria-label="刷新">
         <svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.6-3.7"/><path d="M13.2 2.6v2.9h-2.9"/></svg>
-        刷新
       </button>
-      <button class="btn btn-sm" id="btnExport" data-od-id="btn-export">
+      <button class="btn" id="btnImport" data-od-id="btn-import">
         <svg viewBox="0 0 16 16"><path d="M8 2.4v7.2M8 9.6 5.2 6.8M8 9.6l2.8-2.8"/><path d="M2.8 10.6v2.1a1.3 1.3 0 0 0 1.3 1.3h7.8a1.3 1.3 0 0 0 1.3-1.3v-2.1"/></svg>
-        导出明细
+        导入明细
       </button>
     </header>
 

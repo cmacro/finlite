@@ -20,30 +20,54 @@
     | 'users'
     | 'wallet'
     | 'target'
-    | 'settings';
+    | 'settings'
+    | 'info'
+    | 'check'
+    | 'circle-check'
+    | 'x'
+    | 'alert-triangle'
+    | 'arrow-right'
+    | 'refresh'
+    | 'folder'
+    | 'inbox'
+    | 'plus'
+    | 'calendar'
+    | 'lock';
 </script>
 
 <script lang="ts">
   import type { Component } from 'svelte';
   import {
+    ArrowRight,
     Book,
     BookOpen,
     Building2,
+    Calendar,
     ChartNoAxesColumnIncreasing,
+    Check,
+    CircleCheck,
     Download,
     FilePlus,
     FileText,
+    Folder,
     House,
+    Inbox,
+    Info,
     ListChecks,
+    Lock,
+    Plus,
     Receipt,
+    RefreshCw,
     Scale,
     Search,
     Settings,
     SquareCheck,
     Target,
+    TriangleAlert,
     Upload,
     Users,
     Wallet,
+    X,
   } from '@lucide/svelte';
 
   interface Props {
@@ -72,6 +96,18 @@
     wallet: Wallet,
     target: Target,
     settings: Settings,
+    info: Info,
+    check: Check,
+    'circle-check': CircleCheck,
+    x: X,
+    'alert-triangle': TriangleAlert,
+    'arrow-right': ArrowRight,
+    refresh: RefreshCw,
+    folder: Folder,
+    inbox: Inbox,
+    plus: Plus,
+    calendar: Calendar,
+    lock: Lock,
   };
 
   const C = $derived(map[name] ?? House);

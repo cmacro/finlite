@@ -1,0 +1,59 @@
+/* 左侧导航（基准：docs/uidesign/import-center.html 的 canonical sidebar）。
+ * 结构：品牌区 → 分组导航 → 底部账套状态条；尺寸/颜色只取 tokens.css，禁止自创色值。 */
+@layer components {
+  .sider {
+    @apply flex h-full w-[220px] shrink-0 flex-col border-r border-border bg-surface;
+  }
+
+  /* 品牌区：F 色块 + Finlite + 单账套 */
+  .brand {
+    @apply flex h-[52px] shrink-0 items-center gap-[9px] border-b border-border px-4;
+  }
+  .brand-mark {
+    @apply flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-[7px] text-sm font-extrabold tracking-[-0.02em] text-on-accent;
+    background: linear-gradient(150deg, oklch(0.62 0.19 255), var(--color-accent));
+  }
+  .brand-name {
+    @apply text-base font-bold tracking-[-0.02em] text-fg;
+  }
+  .brand-sub {
+    @apply ml-auto text-[11px] font-medium text-muted;
+  }
+
+  /* 导航：分组标题 + 条目 */
+  .sider-nav {
+    @apply flex-1 overflow-y-auto px-[10px] pt-3 pb-[18px];
+  }
+  .nav-group {
+    @apply mb-[14px];
+  }
+  .nav-label {
+    @apply px-[10px] pb-1.5 text-[11px] font-semibold tracking-[0.04em] text-muted;
+  }
+  .nav-item {
+    @apply relative flex w-full cursor-pointer items-center gap-[10px] rounded-lg border border-transparent bg-transparent px-[10px] py-2 text-left text-[13px] font-medium text-fg-2 transition-all duration-150 hover:bg-navhover hover:text-fg focus-visible:shadow-[0_0_0_3px_var(--color-focusring)] focus-visible:outline-none;
+  }
+  .nav-item svg {
+    @apply h-4 w-4 shrink-0 opacity-85;
+    stroke-width: 1.6;
+  }
+  .nav-item.active {
+    @apply bg-accent-soft font-semibold text-accent;
+  }
+  .nav-item.active svg {
+    @apply opacity-100;
+  }
+  /* 当前项左侧 3px 主色条（对齐原型 ::before） */
+  .nav-item.active::before {
+    @apply absolute top-1/2 left-[-10px] h-[18px] w-[3px] -translate-y-1/2 rounded-r-[3px] bg-accent;
+    content: '';
+  }
+
+  /* 底部账套状态条 */
+  .nav-foot {
+    @apply flex items-center gap-[7px] border-t border-border-soft px-4 pt-[10px] pb-[14px] text-[11px] text-muted;
+  }
+  .nav-dot {
+    @apply h-1.5 w-1.5 shrink-0 rounded-full bg-ok;
+  }
+}

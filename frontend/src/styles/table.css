@@ -1,5 +1,6 @@
 /* 密集表格（对齐 ForgeFin data-table 命名，finlite 浅色 13px 视觉）。
- * 数字列标记 class="num"，空态行标记 class="empty"。 */
+ * 数字列标记 class="num"，空态行标记 class="empty"。
+ * 徽标/标签/表尾为跨页复用件（导入中心、流水、汇总等）。 */
 @layer components {
   .data-table {
     @apply w-full border-collapse text-[13px];
@@ -19,5 +20,82 @@
   /* 余额不平行整行红底（确认后取消红底） */
   .data-table .row-mismatch td {
     @apply bg-danger-soft;
+  }
+
+  /* ---------- 类型标签（银行流水蓝 / 订单流水灰） ---------- */
+  .tbl-tag {
+    @apply inline-flex h-[22px] items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 text-[12px] font-medium whitespace-nowrap text-fg-2;
+  }
+  .tbl-tag .dot {
+    @apply h-1.5 w-1.5 rounded-full bg-dot-neutral;
+  }
+  .tbl-tag.bank {
+    @apply border-accent-border bg-accent-soft text-accent-fg;
+  }
+  .tbl-tag.bank .dot {
+    @apply bg-accent;
+  }
+
+  /* ---------- 警告徽标（余额警告等） ---------- */
+  .warn-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-warn-border bg-warn-bg px-2.5 py-0.5 text-[12px] font-semibold whitespace-nowrap text-warn-fg;
+  }
+
+  /* ---------- 表尾（汇总/只读提示） ---------- */
+  .table-foot {
+    @apply flex items-center gap-2 rounded-b-xl border-t border-border-soft bg-surface-2 px-4 py-2.5 text-[12.5px] text-muted;
+  }
+
+  /* ---------- 状态徽标（待导入 / 已导入 / 不支持） ---------- */
+  .status-badge {
+    @apply inline-flex h-[22px] items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 text-[12px] font-medium whitespace-nowrap text-fg-2;
+  }
+  .status-badge .dot {
+    @apply h-1.5 w-1.5 rounded-full bg-dot-neutral;
+  }
+  .status-badge.new {
+    @apply border-accent-border bg-accent-soft text-accent-fg;
+  }
+  .status-badge.new .dot {
+    @apply bg-accent;
+  }
+  .status-badge.done {
+    @apply border-ok-border bg-ok-bg text-ok-fg;
+  }
+  .status-badge.done .dot {
+    @apply bg-ok;
+  }
+  .status-badge.bad {
+    @apply border-err-border bg-err-bg text-err-fg;
+  }
+  .status-badge.bad .dot {
+    @apply bg-err;
+  }
+
+  /* ---------- 勾选列（默认路径文件列表） ---------- */
+  .data-table .cb {
+    @apply w-10;
+  }
+  .data-table .cb input {
+    @apply h-[15px] w-[15px] accent-[var(--color-accent)];
+  }
+
+  /* ---------- 文件名（等宽） ---------- */
+  .file-name {
+    @apply font-mono text-[12.5px] text-fg-2;
+  }
+
+  /* ---------- 区块空态（图标 + 标题 + 说明） ---------- */
+  .empty-block {
+    @apply flex flex-col items-center justify-center gap-2 px-5 py-10 text-center text-muted;
+  }
+  .empty-block .ico {
+    @apply text-subtle;
+  }
+  .empty-block .t {
+    @apply text-[13.5px] font-semibold text-fg-2;
+  }
+  .empty-block .s {
+    @apply text-[12px];
   }
 }

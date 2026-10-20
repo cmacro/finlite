@@ -21,7 +21,7 @@ var baselineSchema string
 
 // SchemaVersion 当前 schema 版本：等于最后一个增量脚本的 to 版本。
 // 新库直接建 baseline 并置 user_version=SchemaVersion；旧库按脚本递增升级。
-const SchemaVersion = 3
+const SchemaVersion = 4
 
 // DB 封装单写互斥的 *sql.DB。读多并发由 database/sql 池处理，写路径统一加锁。
 type DB struct {

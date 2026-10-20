@@ -1,8 +1,5 @@
-/* 标题 / 工具栏 / 按钮 / 输入框。颜色只引用 tokens.css token。 */
+/* 标题 / 工具栏 / 按钮 / 输入框 / 卡片。颜色只引用 tokens.css token。 */
 @layer components {
-  .page-title {
-    @apply mb-3 text-xl font-semibold;
-  }
   .section-title {
     @apply mt-4 mb-2 text-base font-semibold;
   }
@@ -11,22 +8,62 @@
     @apply mb-3 flex flex-wrap items-center gap-2;
   }
 
-  /* .btn-sm / .btn-danger 须与 .btn 叠加使用 */
+  /* .btn-sm / .btn-primary / .btn-danger 须与 .btn 叠加使用 */
   .btn {
-    @apply cursor-pointer rounded-md border border-edge bg-surface px-3 py-1.5 text-[13px] disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-border bg-surface px-3.5 text-[13px] font-medium whitespace-nowrap transition-colors hover:border-border-strong hover:bg-surface-2 focus-visible:shadow-[0_0_0_3px_var(--color-focusring)] focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn.btn-sm {
-    @apply px-2 py-0.5 text-xs;
+    @apply h-6 px-2 text-xs;
+  }
+  .btn-primary {
+    @apply border-accent bg-accent text-on-accent shadow-sm hover:border-accent-hover hover:bg-accent-hover active:border-accent-active active:bg-accent-active;
+  }
+  .btn-lg {
+    @apply h-9 px-[18px] text-[13.5px];
   }
   .btn-danger {
     @apply border-danger text-danger;
   }
 
+  /* 文字按钮（表格行内操作，如「查看错误明细」「刷新」） */
+  .link-btn {
+    @apply -m-1 inline-flex cursor-pointer items-center gap-1 rounded-[4px] border-0 bg-transparent p-1 text-[12.5px] font-medium text-accent transition-colors hover:bg-accent-soft focus-visible:shadow-[0_0_0_3px_var(--color-focusring)] focus-visible:outline-none disabled:cursor-default disabled:bg-transparent disabled:text-muted;
+  }
+
   .input {
-    @apply rounded-md border border-edge bg-surface px-2 py-1.5 text-[13px];
+    @apply rounded-md border border-border bg-surface px-2 py-1.5 text-[13px] focus-visible:shadow-[0_0_0_3px_var(--color-focusring)] focus-visible:outline-none;
   }
   /* 金额输入：右对齐等宽数字，与表格金额列一致 */
   .input.num-input {
     @apply text-right tabular-nums;
+  }
+
+  /* ---------- 卡片 / 区块（对齐 docs/uidesign/DESIGN.md §5） ---------- */
+  .card {
+    @apply rounded-xl border border-border bg-surface shadow-sm;
+  }
+  .card-head {
+    @apply flex items-center gap-2.5 border-b border-border-soft px-[18px] py-3.5;
+  }
+  .card-title {
+    @apply text-sm font-semibold tracking-[-0.01em] text-fg;
+  }
+  .card-title .ico {
+    @apply mr-1.5 align-[-2px] text-muted;
+  }
+  .card-body {
+    @apply p-[18px];
+  }
+  .section {
+    @apply mt-[18px];
+  }
+  .section-head {
+    @apply mb-2.5 flex items-end gap-2.5;
+  }
+  .section-head h2 {
+    @apply text-sm font-semibold tracking-[-0.01em] text-fg;
+  }
+  .section-head .count {
+    @apply text-[12.5px] font-normal text-muted;
   }
 }

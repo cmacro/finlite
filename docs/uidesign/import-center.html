@@ -129,9 +129,13 @@
     gap: 14px;
     padding: 0 22px;
   }
-  .crumb { font-size: 12.5px; color: var(--muted); }
-  .topbar h1 { font-size: 16px; font-weight: 650; letter-spacing: -0.01em; }
-  .topbar .divider { width: 1px; height: 20px; background: var(--border); }
+  /* 左侧标题统一为「分类 | 模块名称」，分类弱化、模块强调。 */
+  .topbar h1 {
+    display: inline-flex; align-items: baseline; gap: 8px;
+    font-size: 16px; font-weight: 650; letter-spacing: -0.01em;
+  }
+  .topbar-cat { font-size: 12.5px; font-weight: 500; color: var(--muted); }
+  .topbar-sep { color: var(--muted); font-weight: 400; }
   .topbar-spacer { flex: 1 1 auto; }
   .topbar-actions { display: flex; align-items: center; gap: 8px; }
 
@@ -661,9 +665,7 @@
 <!-- ============================== Main ============================== -->
 <div class="main">
   <header class="topbar" data-od-id="topbar">
-    <span class="crumb">数据导入</span>
-    <span class="divider"></span>
-    <h1 data-od-id="page-title">导入中心</h1>
+    <h1 data-od-id="page-title"><span class="topbar-cat">数据接入</span><span class="topbar-sep">|</span>导入中心</h1>
     <div class="topbar-spacer"></div>
     <div class="topbar-actions">
       <button class="period-btn" type="button" id="period-selector" data-od-id="period-selector">

@@ -132,7 +132,7 @@ description: finlite 单账套业务唯一依据：银行流水 + 订单流水 +
 ```
 [1 收集] 银行网银导出银行流水(TSV) + 工行商户导出订单流水(TSV)
             ↓
-[2 导入] 导入中心选文件 → 解析 → 去重 → 余额校验 → 入库(import_batch)
+[2 导入] 导入中心选文件或扫描默认原始目录 → 解析 → 去重 → 余额校验 → 入库(import_batch)
             ↓
 [3 对账] 对账中心：订单(按结算日汇总实收) vs 银行(POS转入) 自动匹配，差异进待处理
             ↓
@@ -232,7 +232,7 @@ description: finlite 单账套业务唯一依据：银行流水 + 订单流水 +
 
 | # | 模块 | 功能 | 验收 |
 |---|---|---|---|
-| F1 | 导入中心 | 选 TSV/CSV/XLSX，预览列映射，导入银行/订单，返回成功/重复/失败数+余额警告 | 样本文件一次导入成功，去重按工行订单号+银行(时间+金额+对方) |
+| F1 | 导入中心 | 选 TSV/CSV/XLSX 或扫描默认原始目录批量导入，预览列映射，导入银行/订单，返回成功/重复/失败数+余额警告，可选导入后归档 | 样本文件一次导入成功，去重按工行订单号+银行(时间+金额+对方) |
 | F2 | 银行流水 | 列表（日期/对方/转入/转出/余额三色/确认态）、批次确认/撤销、按日期/关键字筛 | 不平红底，确认后变绿，撤销恢复红 |
 | F3 | 订单流水 | 列表（订单号/金额/手续费/实收/支付方式/结算日）、费率复算差异提示 | 手续费 ±0.01 外标异 |
 | F4 | 对账中心 | 按结算日自动勾稽三方，匹配/差异两栏，差异一键定位原行 | 7-10/11/12 全绿，7-01 标差异 0.45 |
@@ -279,6 +279,9 @@ accounts(code TEXT PK, name TEXT, parent_code TEXT, account_type TEXT, is_active
 fee_rates(pay_method TEXT PK, rate TEXT, updated_at TEXT);
 audit_logs(id TEXT PK, entity_type TEXT, entity_id TEXT, action TEXT,
   old_values TEXT, new_values TEXT, operator TEXT, operated_at TEXT, remark TEXT);
+
+-- 本地界面偏好（当前仅导入中心 raw_dir）
+app_settings(key TEXT PK, value TEXT, updated_at TEXT);
 ```
 
 索引：`bank_flows(txn_time)`、`order_flows(settle_date, icbc_order_no)`、`data_summaries(date, status)`、`vouchers(voucher_date)`。
@@ -341,6 +344,8 @@ Wails3 约定：Service 方法 `context.Context` 首参可选，返回 `(T, erro
 汇总第二行费率行跳过（首列为空且含 `0.005`）。
 
 导入中心受理 TSV / CSV / XLSX：文本文件按首行检测分隔符（制表符优先，其次逗号）；XLSX 取首个工作表，首行即表头。列映射预览展示识别到的关键列与样本前若干行。
+
+默认路径导入：默认目录为「库文件同目录 /raw」（可在导入中心更改并持久化），扫描该目录下的 TSV/CSV/XLSX；文件名不含「银行」「订单」等类型关键字、缺关键列、解析失败的文件分别标「未识别 / 缺列 / 不支持」，仅提示不阻断其他文件。同名批次导入时间不早于文件修改时间视为已导入；导入成功后可选归档到 `archived/`（重名追加时间戳），归档后文件不再出现在扫描列表。
 
 ## 附录 B：脱敏映射使用
 

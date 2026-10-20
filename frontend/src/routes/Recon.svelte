@@ -55,6 +55,13 @@
     reconcile();
   }
 
+  // 顶栏刷新按钮（App.svelte 广播）：重拉待处理差异。
+  $effect(() => {
+    const handler = () => void refreshDiffs();
+    window.addEventListener('finlite:refresh', handler);
+    return () => window.removeEventListener('finlite:refresh', handler);
+  });
+
   refreshDiffs();
 </script>
 

@@ -13,6 +13,7 @@ type ImportResult struct {
 	SuccessCount   int    `json:"successCount"`
 	SkipCount      int    `json:"skipCount"`
 	BalanceWarning string `json:"balanceWarning"`
+	ImportedAt     string `json:"importedAt"` // RFC3339，导入中心批次历史展示用
 }
 
 type ImportError struct {
@@ -68,6 +69,43 @@ type BankFlowPage struct {
 	Total    int        `json:"total"`
 	Page     int        `json:"page"`
 	PageSize int        `json:"pageSize"`
+}
+
+// ---------- 默认路径导入（导入中心「默认路径导入」） ----------
+
+// RawFile 默认原始数据目录中的一个文件（扫描结果）。
+type RawFile struct {
+	Name           string   `json:"name"`
+	SourceType     string   `json:"sourceType"` // bank_flow / order_flow；空=未识别
+	Size           int64    `json:"size"`       // 字节
+	ModTime        string   `json:"modTime"`    // RFC3339
+	State          string   `json:"state"`      // new / done / bad
+	MissingColumns []string `json:"missingColumns"`
+	ImportedAt     string   `json:"importedAt"` // 已导入批次的导入时间（RFC3339，仅 done）
+	Error          string   `json:"error"`
+}
+
+// RawScan 默认路径扫描结果。DirExists=false 时前端仅提示，不报错。
+type RawScan struct {
+	Dir       string    `json:"dir"`
+	DirExists bool      `json:"dirExists"`
+	Files     []RawFile `json:"files"`
+	ScannedAt string    `json:"scannedAt"` // RFC3339
+}
+
+// ImportRawReq 默认路径导入请求；Names 只能是默认目录内的文件名（防路径穿越）。
+type ImportRawReq struct {
+	Names   []string `json:"names"`
+	Archive bool     `json:"archive"` // 导入成功后移到 archived/
+}
+
+// ImportRawResult 单个默认路径文件的导入结果。
+type ImportRawResult struct {
+	FileName   string       `json:"fileName"`
+	Status     string       `json:"status"` // imported / failed
+	Result     ImportResult `json:"result"`
+	ArchivedTo string       `json:"archivedTo"`
+	Error      string       `json:"error"`
 }
 
 // ---------- 订单流水 ----------

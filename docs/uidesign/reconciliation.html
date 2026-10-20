@@ -98,10 +98,15 @@ html, body {
   flex-shrink: 0;
 }
 .topbar-title {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
   font-size: 15px;
   font-weight: 600;
   color: var(--fg);
 }
+.topbar-cat { font-size: 12.5px; font-weight: 500; color: var(--muted); }
+.topbar-sep { color: var(--muted); font-weight: 400; }
 .topbar-right {
   display: flex;
   align-items: center;
@@ -550,7 +555,7 @@ tr.expanded .expand-icon { transform: rotate(90deg); }
   <div class="main">
     <!-- Topbar -->
     <header class="topbar" data-od-id="topbar">
-      <div class="topbar-title">对账中心</div>
+      <div class="topbar-title" data-od-id="page-title"><span class="topbar-cat">对账与汇总</span><span class="topbar-sep">|</span>对账中心</div>
       <div class="topbar-right">
         <div class="topbar-period">
           会计期间：<strong>2026年7月</strong>

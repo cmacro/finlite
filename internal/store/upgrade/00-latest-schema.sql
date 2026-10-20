@@ -140,3 +140,10 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     remark      TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON audit_logs (entity_type, entity_id);
+
+-- 本地界面偏好（导入中心默认原始数据目录等）；键值对，单账套单机使用。
+CREATE TABLE IF NOT EXISTS app_settings (
+    key        TEXT NOT NULL PRIMARY KEY,
+    value      TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);

@@ -182,10 +182,7 @@ func (s *ImportService) PreviewColumns(ctx context.Context, fileName, content st
 	if err != nil {
 		return ColumnMapping{}, err
 	}
-	spec := bankColumnSpec
-	if sourceType == "order_flow" {
-		spec = orderColumnSpec
-	}
+	spec := columnSpec(sourceType)
 	var matched, missing []string
 	for _, name := range spec {
 		if colIdx(header, strings.Split(name, "/")...) >= 0 {
@@ -256,7 +253,7 @@ func (s *ImportService) importBankRows(ctx context.Context, fileName string, hea
 
 	batchID := uuid.NewString()
 	now := time.Now().Format(time.RFC3339)
-	res := ImportResult{BatchID: batchID, SourceType: "bank_flow", FileName: fileName, RowCount: len(rows)}
+	res := ImportResult{BatchID: batchID, SourceType: "bank_flow", FileName: fileName, RowCount: len(rows), ImportedAt: now}
 
 	// 1) 解析全部行（解析失败/缺时间的记错跳过）
 	type parseErr struct {
@@ -525,7 +522,7 @@ func (s *ImportService) importOrderRows(ctx context.Context, fileName string, he
 
 	batchID := uuid.NewString()
 	now := time.Now().Format(time.RFC3339)
-	res := ImportResult{BatchID: batchID, SourceType: "order_flow", FileName: fileName, RowCount: len(rows)}
+	res := ImportResult{BatchID: batchID, SourceType: "order_flow", FileName: fileName, RowCount: len(rows), ImportedAt: now}
 
 	err := s.DB.WithWriteTx(ctx, func(tx *sql.Tx) error {
 		for idx, row := range rows {
@@ -626,7 +623,7 @@ func (s *ImportService) ImportFile(ctx context.Context, fileName, content string
 // ListBatches 导入批次列表（导入中心用）。
 func (s *ImportService) ListBatches(ctx context.Context, sourceType string) ([]ImportResult, error) {
 	q := `SELECT id, source_type, file_name, row_count, success_count, skip_count,
-			COALESCE(balance_warning,'') FROM import_batches`
+			COALESCE(balance_warning,''), COALESCE(imported_at,'') FROM import_batches`
 	var args []any
 	if sourceType != "" {
 		q += ` WHERE source_type=?`
@@ -641,7 +638,7 @@ func (s *ImportService) ListBatches(ctx context.Context, sourceType string) ([]I
 	var out []ImportResult
 	for rows.Next() {
 		var r ImportResult
-		if err := rows.Scan(&r.BatchID, &r.SourceType, &r.FileName, &r.RowCount, &r.SuccessCount, &r.SkipCount, &r.BalanceWarning); err != nil {
+		if err := rows.Scan(&r.BatchID, &r.SourceType, &r.FileName, &r.RowCount, &r.SuccessCount, &r.SkipCount, &r.BalanceWarning, &r.ImportedAt); err != nil {
 			return nil, fmt.Errorf("读取导入批次失败：%v", err)
 		}
 		out = append(out, r)

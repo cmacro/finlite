@@ -17,4 +17,35 @@
   --color-sider: #e5e5e5;
   --color-thead: #f7f7f7;
   --color-navactive: #eef4ff;
+
+  /* 侧栏 / 导航（对齐 docs/uidesign/tokens.css 的 canonical 值） */
+  --color-fg: #111111;
+  --color-fg-2: #374151;
+  --color-accent: #1677ff;
+  --color-accent-hover: #0f66e6;
+  --color-accent-active: #0b52c4;
+  --color-accent-soft: #eaf2ff;
+  --color-accent-border: #cfe0ff;
+  --color-accent-fg: #1457b8;
+  --color-on-accent: #ffffff;
+  --color-border: #d9dee7;
+  --color-border-soft: #eceff4;
+  --color-border-strong: #c3ccd9;
+  --color-surface-2: #fbfcfe;
+  --color-subtle: #9aa3b2;
+  --color-dot-neutral: #a7b0bf;
+  --color-navhover: #f1f3f7;
+  --color-focusring: rgb(22 119 255 / 0.24);
+
+  /* 状态语义（status 色一律 oklch，禁止写死 hex） */
+  --color-err: oklch(0.58 0.2 25);
+  --color-ok-bg: oklch(0.965 0.03 145);
+  --color-ok-border: oklch(0.86 0.07 145);
+  --color-ok-fg: oklch(0.45 0.13 145);
+  --color-warn-bg: oklch(0.975 0.045 75);
+  --color-warn-border: oklch(0.87 0.1 75);
+  --color-warn-fg: oklch(0.48 0.11 75);
+  --color-err-bg: oklch(0.965 0.035 25);
+  --color-err-border: oklch(0.86 0.09 25);
+  --color-err-fg: oklch(0.46 0.17 25);
 }
