@@ -267,6 +267,163 @@ type SaveSummaryReq struct {
 	Operator      string `json:"operator"`
 }
 
+// ---------- 店面收款（F9） ----------
+
+// Collection 店面收款登记记录。金额为 decimal 字符串，日期 YYYY-MM-DD。
+type Collection struct {
+	ID              string `json:"id"`   // 收款单号 SCYYMMDDNNN
+	Date            string `json:"date"` // 收款日期
+	Store           string `json:"store"`
+	Customer        string `json:"customer"`
+	Phone           string `json:"phone"`
+	Project         string `json:"project"`
+	PayMethod       string `json:"payMethod"` // cash / wechat / alipay / bank_transfer / other
+	Account         string `json:"account"`   // cash / personal / corporate
+	Amount          string `json:"amount"`
+	ReceiptNo       string `json:"receiptNo"`
+	Operator        string `json:"operator"`
+	Invoiced        bool   `json:"invoiced"`
+	AttachmentCount int    `json:"attachmentCount"`
+	Status          string `json:"status"` // draft / confirmed / summarized / voided
+	VoidReason      string `json:"voidReason"`
+	SummaryID       string `json:"summaryId"`
+	Note            string `json:"note"`
+	CreatedAt       string `json:"createdAt"`
+	UpdatedAt       string `json:"updatedAt"`
+}
+
+// CollectionAttachment 附件元数据（内容不随列表返回）。
+type CollectionAttachment struct {
+	ID           string `json:"id"`
+	CollectionID string `json:"collectionId"`
+	FileName     string `json:"fileName"`
+	Ext          string `json:"ext"`
+	SizeBytes    int    `json:"sizeBytes"`
+	SortNo       int    `json:"sortNo"`
+	CreatedAt    string `json:"createdAt"`
+}
+
+// CollectionAttachmentData 附件内容（base64）：仅在查看/预览时按需读取。
+type CollectionAttachmentData struct {
+	ID         string `json:"id"`
+	FileName   string `json:"fileName"`
+	Ext        string `json:"ext"`
+	MimeType   string `json:"mimeType"`
+	SizeBytes  int    `json:"sizeBytes"`
+	DataBase64 string `json:"dataBase64"` // 不含 data: 前缀
+}
+
+// CollectionAttachmentInput 保存时提交的附件：ID 非空=保留已有，DataBase64 非空=新增。
+type CollectionAttachmentInput struct {
+	ID         string `json:"id"`
+	FileName   string `json:"fileName"`
+	DataBase64 string `json:"dataBase64"`
+}
+
+// CollectionStats 期间统计（不受门店/方式/关键字等筛选影响，对齐原型统计卡）。
+type CollectionStats struct {
+	ValidCount      int    `json:"validCount"`
+	TotalAmount     string `json:"totalAmount"`
+	DraftCount      int    `json:"draftCount"`
+	DraftAmount     string `json:"draftAmount"`
+	ConfirmedCount  int    `json:"confirmedCount"`
+	ConfirmedAmount string `json:"confirmedAmount"`
+	SummarizedCount int    `json:"summarizedCount"`
+	VoidCount       int    `json:"voidCount"`
+	CashAmount      string `json:"cashAmount"`
+	PersonalAmount  string `json:"personalAmount"`
+	CorporateAmount string `json:"corporateAmount"`
+}
+
+// CollectionFilter 店面收款筛选（一次性完整展示，不分页）。
+type CollectionFilter struct {
+	DateFrom  string `json:"dateFrom"`
+	DateTo    string `json:"dateTo"`
+	Store     string `json:"store"`
+	PayMethod string `json:"payMethod"`
+	Account   string `json:"account"`
+	Operator  string `json:"operator"`
+	Status    string `json:"status"`
+	Keyword   string `json:"keyword"`
+}
+
+// CollectionPage 收款登记页数据：items 为筛选结果，stats 为期间统计。
+type CollectionPage struct {
+	Items       []Collection    `json:"items"`
+	Total       int             `json:"total"` // 筛选命中条数（含作废）
+	ValidCount  int             `json:"validCount"`
+	VoidCount   int             `json:"voidCount"`
+	TotalAmount string          `json:"totalAmount"`
+	Stats       CollectionStats `json:"stats"`
+	Stores      []string        `json:"stores"`
+	Projects    []string        `json:"projects"`
+	Operators   []string        `json:"operators"`
+}
+
+// SaveCollectionReq 新增/编辑收款。Submit=true 表示保存并提交（直接 confirmed）。
+type SaveCollectionReq struct {
+	ID          string                      `json:"id"`
+	Date        string                      `json:"date"`
+	Store       string                      `json:"store"`
+	Customer    string                      `json:"customer"`
+	Phone       string                      `json:"phone"`
+	Project     string                      `json:"project"`
+	PayMethod   string                      `json:"payMethod"`
+	Account     string                      `json:"account"`
+	Amount      string                      `json:"amount"`
+	ReceiptNo   string                      `json:"receiptNo"`
+	Operator    string                      `json:"operator"`
+	Invoiced    bool                        `json:"invoiced"`
+	Note        string                      `json:"note"`
+	Submit      bool                        `json:"submit"`
+	Attachments []CollectionAttachmentInput `json:"attachments"`
+}
+
+// CollectionDetail 收款详情：主记录 + 附件元数据 + 操作记录 + 关联汇总状态。
+type CollectionDetail struct {
+	Collection    Collection             `json:"collection"`
+	Attachments   []CollectionAttachment `json:"attachments"`
+	AuditLogs     []AuditLog             `json:"auditLogs"`
+	SummaryStatus string                 `json:"summaryStatus"`
+}
+
+// CollectionChannel 通道对账一行（非银通道 / 对公转账）。
+type CollectionChannel struct {
+	Key           string `json:"key"`
+	Name          string `json:"name"`
+	RegisterTotal string `json:"registerTotal"`
+	RegisterCount int    `json:"registerCount"`
+	ReconTotal    string `json:"reconTotal"`
+	Diff          string `json:"diff"`
+	Status        string `json:"status"` // matched / pending
+	Note          string `json:"note"`
+}
+
+// CollectionPending 通道对账待处理项。
+type CollectionPending struct {
+	ID      string `json:"id"`
+	Title   string `json:"title"`
+	Meta    string `json:"meta"`
+	Amount  string `json:"amount"`
+	Channel string `json:"channel"`
+}
+
+// CollectionRecon 通道对账视图数据。
+type CollectionRecon struct {
+	DateFrom     string              `json:"dateFrom"`
+	DateTo       string              `json:"dateTo"`
+	Channels     []CollectionChannel `json:"channels"`
+	Pending      []CollectionPending `json:"pending"`
+	PendingCount int                 `json:"pendingCount"`
+}
+
+// CollectionSummaryRef 生成数据汇总后的返回引用。
+type CollectionSummaryRef struct {
+	CollectionID string `json:"collectionId"`
+	SummaryID    string `json:"summaryId"`
+	Status       string `json:"status"`
+}
+
 // ---------- 凭证 ----------
 
 type VoucherEntry struct {

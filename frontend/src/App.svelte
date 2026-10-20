@@ -7,6 +7,7 @@
   import ImportPage from './routes/Import.svelte';
   import BankFlowPage from './routes/BankFlow.svelte';
   import OrderFlowPage from './routes/OrderFlow.svelte';
+  import CollectionPage from './routes/Collection.svelte';
   import ReconPage from './routes/Recon.svelte';
   import SummaryPage from './routes/Summary.svelte';
   import VoucherPage from './routes/Voucher.svelte';
@@ -25,6 +26,7 @@
       items: [
         { key: 'bank-flow', label: '银行流水', icon: 'wallet' },
         { key: 'order-flow', label: '订单流水', icon: 'receipt' },
+        { key: 'collection', label: '店面收款', icon: 'store' },
       ],
     },
     {
@@ -50,6 +52,8 @@
 
   // 侧栏「银行流水」余额不平徽标：由 BankFlow 页广播（finlite:bankflow-mismatch）。
   let navMismatch = $state(0);
+  // 侧栏「店面收款」待审核草稿徽标：由 Collection 页广播（finlite:collection-drafts）。
+  let navDrafts = $state(0);
 
   // 顶栏「会计期间」胶囊：当前年月（业务日期均为本地时区）。
   const period = (() => {
@@ -86,6 +90,15 @@
     window.addEventListener('finlite:bankflow-mismatch', handler);
     return () => window.removeEventListener('finlite:bankflow-mismatch', handler);
   });
+
+  $effect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<number>).detail;
+      navDrafts = typeof detail === 'number' ? detail : 0;
+    };
+    window.addEventListener('finlite:collection-drafts', handler);
+    return () => window.removeEventListener('finlite:collection-drafts', handler);
+  });
 </script>
 
 <!-- 布局：main 锁定视口高度（overflow-hidden），仅右侧内容区独立滚动，左侧导航固定不随内容滚动。 -->
@@ -110,6 +123,8 @@
               <span>{item.label}</span>
               {#if item.key === 'bank-flow' && navMismatch > 0}
                 <span class="nav-badge">{navMismatch}</span>
+              {:else if item.key === 'collection' && navDrafts > 0}
+                <span class="nav-badge">{navDrafts}</span>
               {/if}
             </button>
           {/each}
@@ -125,7 +140,7 @@
         <span class="topbar-cat">{currentGroup}</span>
         <span class="topbar-sep">|</span>{currentLabel}
       </h1>
-      {#if route === 'bank-flow' || route === 'order-flow'}
+      {#if route === 'bank-flow' || route === 'order-flow' || route === 'collection'}
         <button class="period-pill" type="button" title="当前会计期间">
           <Icon name="calendar" size={14} />
           会计期间 {period}
@@ -136,6 +151,27 @@
           <button class="btn" type="button" onclick={requestExport} title="按当前筛选导出 TSV">
             <Icon name="download" size={15} />
             导出 TSV
+          </button>
+        {/if}
+        {#if route === 'collection'}
+          <button
+            class="btn"
+            type="button"
+            title="批量导入店面收款"
+            onclick={() =>
+              window.dispatchEvent(new CustomEvent('finlite:collection-batch-import'))}
+          >
+            <Icon name="download" size={15} />
+            批量导入
+          </button>
+          <button
+            class="btn btn-primary"
+            type="button"
+            title="新增店面收款"
+            onclick={() => window.dispatchEvent(new CustomEvent('finlite:collection-new'))}
+          >
+            <Icon name="plus" size={15} />
+            新增收款
           </button>
         {/if}
         <button
@@ -162,7 +198,8 @@
     </header>
     <div
       class="min-h-0 flex-1 overflow-y-auto px-[22px] pt-5 pb-14 {route === 'bank-flow' ||
-      route === 'order-flow'
+      route === 'order-flow' ||
+      route === 'collection'
         ? 'bg-canvas'
         : ''}"
     >
@@ -172,6 +209,8 @@
       <BankFlowPage onGoto={go} />
     {:else if route === 'order-flow'}
       <OrderFlowPage onGoto={go} />
+    {:else if route === 'collection'}
+      <CollectionPage onGoto={go} />
     {:else if route === 'recon'}
       <ReconPage />
     {:else if route === 'summary'}

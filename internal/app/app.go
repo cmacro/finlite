@@ -26,6 +26,7 @@ func Run(assets embed.FS) error {
 			application.NewService(services.NewImportService(db)),
 			application.NewService(services.NewBankFlowService(db)),
 			application.NewService(services.NewOrderFlowService(db)),
+			application.NewService(services.NewCollectionService(db)),
 			application.NewService(services.NewReconService(db)),
 			application.NewService(services.NewSummaryService(db)),
 			application.NewService(services.NewVoucherService(db)),

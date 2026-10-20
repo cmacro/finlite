@@ -5,6 +5,7 @@ import * as AccountService from "./accountservice.js";
 import * as AuditService from "./auditservice.js";
 import * as BackupService from "./backupservice.js";
 import * as BankFlowService from "./bankflowservice.js";
+import * as CollectionService from "./collectionservice.js";
 import * as FeeRateService from "./feerateservice.js";
 import * as ImportService from "./importservice.js";
 import * as OrderFlowService from "./orderflowservice.js";
@@ -17,6 +18,7 @@ export {
     AuditService,
     BackupService,
     BankFlowService,
+    CollectionService,
     FeeRateService,
     ImportService,
     OrderFlowService,
@@ -34,6 +36,18 @@ export type {
     BankFlowBatch,
     BankFlowFilter,
     BankFlowPage,
+    Collection,
+    CollectionAttachment,
+    CollectionAttachmentData,
+    CollectionAttachmentInput,
+    CollectionChannel,
+    CollectionDetail,
+    CollectionFilter,
+    CollectionPage,
+    CollectionPending,
+    CollectionRecon,
+    CollectionStats,
+    CollectionSummaryRef,
     ColumnMapping,
     CreateVoucherReq,
     DailyRow,
@@ -50,6 +64,7 @@ export type {
     RawScan,
     ReconDiff,
     ReconResult,
+    SaveCollectionReq,
     SaveSummaryReq,
     Summary,
     SummaryFilter,

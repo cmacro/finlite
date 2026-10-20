@@ -7,6 +7,7 @@ export type RouteKey =
   | 'import'
   | 'bank-flow'
   | 'order-flow'
+  | 'collection'
   | 'recon'
   | 'summary'
   | 'voucher'

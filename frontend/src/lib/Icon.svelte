@@ -35,7 +35,11 @@
     | 'inbox'
     | 'plus'
     | 'calendar'
-    | 'lock';
+    | 'lock'
+    | 'store'
+    | 'paperclip'
+    | 'image'
+    | 'trash';
 </script>
 
 <script lang="ts">
@@ -59,8 +63,10 @@
     House,
     Inbox,
     Info,
+    Image,
     ListChecks,
     Lock,
+    Paperclip,
     Plus,
     Receipt,
     RefreshCw,
@@ -68,7 +74,9 @@
     Search,
     Settings,
     SquareCheck,
+    Store,
     Target,
+    Trash2,
     TriangleAlert,
     Upload,
     Users,
@@ -117,6 +125,10 @@
     plus: Plus,
     calendar: Calendar,
     lock: Lock,
+    store: Store,
+    paperclip: Paperclip,
+    image: Image,
+    trash: Trash2,
   };
 
   const C = $derived(map[name] ?? House);

@@ -84,9 +84,11 @@ func (s *ReconService) ReconcileByDate(ctx context.Context, date string) (ReconR
 	}
 	brows.Close()
 
-	// 3) 汇总：date = D 的收入行 Σincome（实际收入口径）
+	// 3) 汇总：date = D 的收入行 Σincome（实际收入口径）。
+	//    店面收款（source='collection'）经 F9 通道对账单独核对，不参与订单 POS 三方勾稽，
+	//    否则现金/个人码收款会凭空拉高当日汇总收入、把本该匹配的日期误判为差异。
 	srows, err := s.DB.Pool().QueryContext(ctx,
-		`SELECT income_amount FROM data_summaries WHERE date=? AND category='收入'`, date)
+		`SELECT income_amount FROM data_summaries WHERE date=? AND category='收入' AND source<>'collection'`, date)
 	if err != nil {
 		return ReconResult{}, fmt.Errorf("汇总数据汇总失败：%v", err)
 	}

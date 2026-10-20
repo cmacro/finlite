@@ -110,6 +110,197 @@ export interface BankFlowPage {
 }
 
 /**
+ * Collection 店面收款登记记录。金额为 decimal 字符串，日期 YYYY-MM-DD。
+ */
+export interface Collection {
+    /**
+     * 收款单号 SCYYMMDDNNN
+     */
+    "id": string;
+
+    /**
+     * 收款日期
+     */
+    "date": string;
+    "store": string;
+    "customer": string;
+    "phone": string;
+    "project": string;
+
+    /**
+     * cash / wechat / alipay / bank_transfer / other
+     */
+    "payMethod": string;
+
+    /**
+     * cash / personal / corporate
+     */
+    "account": string;
+    "amount": string;
+    "receiptNo": string;
+    "operator": string;
+    "invoiced": boolean;
+    "attachmentCount": number;
+
+    /**
+     * draft / confirmed / summarized / voided
+     */
+    "status": string;
+    "voidReason": string;
+    "summaryId": string;
+    "note": string;
+    "createdAt": string;
+    "updatedAt": string;
+}
+
+/**
+ * CollectionAttachment 附件元数据（内容不随列表返回）。
+ */
+export interface CollectionAttachment {
+    "id": string;
+    "collectionId": string;
+    "fileName": string;
+    "ext": string;
+    "sizeBytes": number;
+    "sortNo": number;
+    "createdAt": string;
+}
+
+/**
+ * CollectionAttachmentData 附件内容（base64）：仅在查看/预览时按需读取。
+ */
+export interface CollectionAttachmentData {
+    "id": string;
+    "fileName": string;
+    "ext": string;
+    "mimeType": string;
+    "sizeBytes": number;
+
+    /**
+     * 不含 data: 前缀
+     */
+    "dataBase64": string;
+}
+
+/**
+ * CollectionAttachmentInput 保存时提交的附件：ID 非空=保留已有，DataBase64 非空=新增。
+ */
+export interface CollectionAttachmentInput {
+    "id": string;
+    "fileName": string;
+    "dataBase64": string;
+}
+
+/**
+ * CollectionChannel 通道对账一行（非银通道 / 对公转账）。
+ */
+export interface CollectionChannel {
+    "key": string;
+    "name": string;
+    "registerTotal": string;
+    "registerCount": number;
+    "reconTotal": string;
+    "diff": string;
+
+    /**
+     * matched / pending
+     */
+    "status": string;
+    "note": string;
+}
+
+/**
+ * CollectionDetail 收款详情：主记录 + 附件元数据 + 操作记录 + 关联汇总状态。
+ */
+export interface CollectionDetail {
+    "collection": Collection;
+    "attachments": CollectionAttachment[] | null;
+    "auditLogs": AuditLog[] | null;
+    "summaryStatus": string;
+}
+
+/**
+ * CollectionFilter 店面收款筛选（一次性完整展示，不分页）。
+ */
+export interface CollectionFilter {
+    "dateFrom": string;
+    "dateTo": string;
+    "store": string;
+    "payMethod": string;
+    "account": string;
+    "operator": string;
+    "status": string;
+    "keyword": string;
+}
+
+/**
+ * CollectionPage 收款登记页数据：items 为筛选结果，stats 为期间统计。
+ */
+export interface CollectionPage {
+    "items": Collection[] | null;
+
+    /**
+     * 筛选命中条数（含作废）
+     */
+    "total": number;
+    "validCount": number;
+    "voidCount": number;
+    "totalAmount": string;
+    "stats": CollectionStats;
+    "stores": string[] | null;
+    "projects": string[] | null;
+    "operators": string[] | null;
+}
+
+/**
+ * CollectionPending 通道对账待处理项。
+ */
+export interface CollectionPending {
+    "id": string;
+    "title": string;
+    "meta": string;
+    "amount": string;
+    "channel": string;
+}
+
+/**
+ * CollectionRecon 通道对账视图数据。
+ */
+export interface CollectionRecon {
+    "dateFrom": string;
+    "dateTo": string;
+    "channels": CollectionChannel[] | null;
+    "pending": CollectionPending[] | null;
+    "pendingCount": number;
+}
+
+/**
+ * CollectionStats 期间统计（不受门店/方式/关键字等筛选影响，对齐原型统计卡）。
+ */
+export interface CollectionStats {
+    "validCount": number;
+    "totalAmount": string;
+    "draftCount": number;
+    "draftAmount": string;
+    "confirmedCount": number;
+    "confirmedAmount": string;
+    "summarizedCount": number;
+    "voidCount": number;
+    "cashAmount": string;
+    "personalAmount": string;
+    "corporateAmount": string;
+}
+
+/**
+ * CollectionSummaryRef 生成数据汇总后的返回引用。
+ */
+export interface CollectionSummaryRef {
+    "collectionId": string;
+    "summaryId": string;
+    "status": string;
+}
+
+/**
  * ColumnMapping 导入前预览：识别到的关键列、缺失列与样本行（§7 F1「预览列映射」）。
  */
 export interface ColumnMapping {
@@ -325,6 +516,27 @@ export interface ReconResult {
     "summaryActual": string;
     "matched": boolean;
     "diff": string;
+}
+
+/**
+ * SaveCollectionReq 新增/编辑收款。Submit=true 表示保存并提交（直接 confirmed）。
+ */
+export interface SaveCollectionReq {
+    "id": string;
+    "date": string;
+    "store": string;
+    "customer": string;
+    "phone": string;
+    "project": string;
+    "payMethod": string;
+    "account": string;
+    "amount": string;
+    "receiptNo": string;
+    "operator": string;
+    "invoiced": boolean;
+    "note": string;
+    "submit": boolean;
+    "attachments": CollectionAttachmentInput[] | null;
 }
 
 export interface SaveSummaryReq {

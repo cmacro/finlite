@@ -1,0 +1,707 @@
+/* 店面收款（F9）页级样式：视图切换 / 统计卡 / 筛选条 / 密集表格（sticky 表头 + 固定操作列）
+ * / 表尾合计 / 通道对账卡片与待处理队列 / 新增·详情抽屉 / 确认弹窗 / 灯箱 / Toast。
+ * 结构对齐 docs/uidesign/collection.html；颜色只取 tokens.css，金额列 tabular-nums。
+ * 类名统一 cl- 前缀，避免与导入中心 / 银行流水 / 订单流水页样式冲突。 */
+@layer components {
+  /* ---------- 视图切换 ---------- */
+  .cl-tabs {
+    @apply mb-3.5 inline-flex gap-0.5 rounded-lg border border-border bg-canvas p-0.5;
+  }
+  .cl-tab {
+    @apply h-7 cursor-pointer rounded-md border-0 bg-transparent px-3.5 text-[13px] font-medium text-fg-2 transition-colors hover:text-fg focus-visible:shadow-[0_0_0_3px_var(--color-focusring)] focus-visible:outline-none;
+  }
+  .cl-tab.active {
+    @apply bg-surface font-semibold text-accent shadow-sm;
+  }
+
+  /* ---------- 提示条 ---------- */
+  .cl-banner {
+    @apply mb-3 flex items-start gap-2.5 rounded-lg border border-accent-border bg-accent-soft px-3.5 py-2.5;
+  }
+  .cl-banner .ico {
+    @apply mt-0.5 shrink-0 text-accent;
+  }
+  .cl-banner .bt {
+    @apply text-[13px] font-semibold text-accent-fg;
+  }
+  .cl-banner .bb {
+    @apply mt-0.5 text-[12.5px] leading-[1.55] text-fg-2;
+  }
+  .cl-banner.danger {
+    @apply border-err-border bg-err-bg;
+  }
+  .cl-banner.danger .ico,
+  .cl-banner.danger .bt,
+  .cl-banner.danger .bb {
+    @apply text-err-fg;
+  }
+
+  /* ---------- 统计卡 ---------- */
+  .cl-stats {
+    @apply grid grid-cols-4 gap-3;
+  }
+  .cl-stat {
+    @apply min-w-0 rounded-lg border border-border bg-surface px-4 py-3;
+  }
+  .cl-stat.is-warn {
+    @apply border-warn-border bg-warn-bg;
+  }
+  .cl-stat-label {
+    @apply flex items-center gap-1.5 text-[12.5px] text-muted;
+  }
+  .cl-stat.is-warn .cl-stat-label {
+    @apply text-warn-fg;
+  }
+  .cl-stat-value {
+    @apply mt-2 text-[23px] leading-[1.15] font-bold tracking-[-0.01em] whitespace-nowrap text-fg;
+    font-variant-numeric: tabular-nums;
+  }
+  .cl-stat.is-warn .cl-stat-value {
+    @apply text-warn-fg;
+  }
+  .cl-stat-value .cur {
+    @apply ml-1 text-sm font-semibold text-muted;
+  }
+  .cl-stat.is-warn .cl-stat-value .cur {
+    @apply text-warn-fg;
+  }
+  .cl-stat-sub {
+    @apply mt-1.5 text-xs text-muted;
+    font-variant-numeric: tabular-nums;
+  }
+  .cl-stat-sub b {
+    @apply font-semibold text-fg;
+  }
+  .cl-stat.is-warn .cl-stat-sub,
+  .cl-stat.is-warn .cl-stat-sub b {
+    @apply text-warn-fg;
+  }
+  .cl-mini-rows {
+    @apply mt-2.5 flex flex-col gap-[5px];
+  }
+  .cl-mini-row {
+    @apply flex items-center gap-[7px] text-[12.5px] text-fg-2;
+  }
+  .cl-mini-row b {
+    @apply ml-auto font-semibold text-fg;
+    font-variant-numeric: tabular-nums;
+  }
+  .cl-dot {
+    @apply h-[7px] w-[7px] shrink-0 rounded-full bg-dot-neutral;
+  }
+  .cl-dot-ok {
+    @apply bg-ok;
+  }
+  .cl-dot-accent {
+    @apply bg-accent;
+  }
+  .cl-dot-violet {
+    background: oklch(0.62 0.18 295);
+  }
+
+  /* ---------- 面板 / 筛选条 ---------- */
+  .cl-panel {
+    @apply mt-3.5 overflow-hidden rounded-lg border border-border bg-surface;
+  }
+  .cl-panel-gap {
+    @apply mt-3.5;
+  }
+  .cl-panel-head {
+    @apply flex flex-wrap items-center gap-2 border-b border-border-soft px-3.5 py-2.5;
+  }
+  .cl-panel-head.spread {
+    @apply justify-between;
+  }
+  .cl-panel-title {
+    @apply text-[13px] font-semibold text-fg;
+  }
+  .cl-filters {
+    @apply flex min-w-0 flex-1 flex-wrap items-center gap-2;
+  }
+  .cl-fin {
+    @apply inline-flex h-[30px] items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 text-[12.5px] text-fg-2;
+  }
+  .cl-fin:focus-within {
+    @apply border-accent shadow-[0_0_0_3px_rgba(22,119,255,0.14)];
+  }
+  .cl-fin svg {
+    @apply h-3.5 w-3.5 shrink-0 text-muted;
+  }
+  .cl-fin input,
+  .cl-fin select {
+    @apply h-full min-w-0 border-0 bg-transparent text-[12.5px] text-fg outline-none;
+  }
+  .cl-fin input[type='date'] {
+    @apply w-[118px] cursor-pointer text-fg-2;
+    font-variant-numeric: tabular-nums;
+  }
+  .cl-fin select {
+    @apply cursor-pointer pr-4;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+  }
+  .cl-fin .sep {
+    @apply text-muted;
+  }
+  .cl-fin-search {
+    @apply min-w-[190px] max-w-[280px] flex-1;
+  }
+  .cl-fin-search input {
+    @apply w-full;
+  }
+  .cl-filter-note {
+    @apply ml-auto text-xs text-muted;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- 表格 ---------- */
+  .cl-scroll {
+    @apply relative min-h-[240px] overflow-auto;
+    max-height: calc(100vh - 402px);
+  }
+  .cl-scroll.recon {
+    max-height: calc(100vh - 470px);
+  }
+  .cl-table {
+    @apply w-full border-separate border-spacing-0 text-[13px];
+    min-width: 1180px;
+    table-layout: fixed;
+  }
+  .cl-table.recon {
+    min-width: 880px;
+  }
+  .cl-table thead th {
+    @apply sticky top-0 z-[3] border-b border-border bg-canvas px-3 py-2 text-left text-[12.5px] font-medium whitespace-nowrap text-muted;
+  }
+  .cl-table th.num,
+  .cl-table td.num {
+    @apply text-right;
+  }
+  .cl-table tbody td {
+    @apply border-b border-border-soft bg-surface px-3 py-2 align-middle whitespace-nowrap text-fg-2;
+  }
+  .cl-table tbody tr:last-child > td {
+    @apply border-b-0;
+  }
+  .cl-table tbody tr.cl-row {
+    @apply cursor-pointer transition-colors;
+  }
+  .cl-table tbody tr.cl-row:hover > td {
+    @apply bg-navhover;
+  }
+  .cl-table tbody tr.cl-row:focus-visible {
+    @apply outline-2 -outline-offset-2 outline-accent;
+  }
+  .cl-table tbody tr.row-void > td {
+    @apply text-muted;
+  }
+  .cl-table td.mono {
+    @apply font-mono text-[12.5px];
+    font-variant-numeric: tabular-nums;
+  }
+  .cl-table td.num.mono {
+    @apply font-medium text-fg;
+  }
+  .cl-table tr.row-void td.num.mono {
+    @apply text-muted;
+  }
+  .cl-table td.store {
+    @apply text-fg-2;
+  }
+  .cl-table td.cust {
+    @apply font-medium text-fg;
+  }
+  .cl-table td.proj {
+    @apply text-fg-2;
+  }
+  .cl-table td.acct {
+    @apply text-muted;
+  }
+  .cl-table td.receipt {
+    @apply text-fg-2;
+  }
+  .cl-table td.chan {
+    @apply font-medium text-fg;
+  }
+  .cl-table td.ok-text {
+    @apply font-semibold text-ok-fg;
+  }
+  .cl-table td.warn-text {
+    @apply font-semibold text-warn-fg;
+  }
+  .cl-void-amt {
+    @apply text-muted line-through;
+  }
+  .cl-attach {
+    @apply inline-flex items-center gap-1 font-mono text-fg-2;
+  }
+  .cl-attach svg {
+    @apply h-3.5 w-3.5 text-muted;
+  }
+  .cl-attach.none {
+    @apply text-muted;
+  }
+
+  /* 固定操作列（原型 .col-actions） */
+  .cl-table .col-actions {
+    @apply sticky right-0 z-[2] text-right;
+    background: var(--color-surface);
+    box-shadow: -8px 0 12px -8px rgb(17 17 17 / 0.06);
+  }
+  .cl-table thead th.col-actions {
+    @apply z-[4];
+    background: var(--color-canvas);
+  }
+  .cl-table tbody tr.cl-row:hover .col-actions {
+    background: var(--color-navhover);
+  }
+  .cl-table tbody tr.row-void .col-actions {
+    background: var(--color-surface);
+  }
+  .cl-row-actions {
+    @apply flex items-center justify-end gap-1;
+  }
+  .cl-link {
+    @apply cursor-pointer rounded-[5px] border-0 bg-transparent px-1.5 py-[3px] text-[12.5px] text-accent transition-colors hover:bg-accent-soft focus-visible:shadow-[0_0_0_3px_var(--color-focusring)] focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .cl-link.strong {
+    @apply font-semibold;
+  }
+
+  /* ---------- 状态徽标 ---------- */
+  .cl-badge {
+    @apply inline-flex h-[21px] items-center gap-1.5 rounded-full border border-transparent px-2.5 text-[12px] font-medium whitespace-nowrap;
+  }
+  .cl-badge::before {
+    @apply h-1.5 w-1.5 shrink-0 rounded-full;
+    content: '';
+    background: currentColor;
+  }
+  .cl-badge.draft {
+    @apply border-border bg-surface-2 text-fg-2;
+  }
+  .cl-badge.confirmed {
+    @apply border-ok-border bg-ok-bg text-ok-fg;
+  }
+  .cl-badge.summarized {
+    @apply border-accent-border bg-accent-soft text-accent-fg;
+  }
+  .cl-badge.voided {
+    @apply border-border bg-canvas text-muted;
+  }
+  .cl-badge.voided .t {
+    @apply line-through;
+  }
+
+  /* ---------- 空态 / 表尾 ---------- */
+  .cl-empty {
+    @apply flex flex-col items-center justify-center gap-3 px-5 py-14 text-center;
+  }
+  .cl-empty-ico {
+    @apply grid h-[52px] w-[52px] place-items-center rounded-xl bg-navhover text-muted;
+  }
+  .cl-empty-title {
+    @apply text-sm font-semibold text-fg-2;
+  }
+  .cl-empty-sub {
+    @apply max-w-[360px] text-[12.5px] text-muted;
+  }
+  .cl-empty-sm {
+    @apply px-4 py-6 text-center text-[12.5px] text-muted;
+  }
+  .cl-panel-foot {
+    @apply flex flex-wrap items-center gap-4 border-t border-border bg-canvas px-3.5 py-2.5;
+  }
+  .cl-foot-total {
+    @apply flex flex-wrap items-center gap-2 text-[12.5px] text-muted;
+    font-variant-numeric: tabular-nums;
+  }
+  .cl-foot-total b {
+    @apply font-semibold text-fg;
+  }
+  .cl-foot-total b.n {
+    @apply text-[13px] font-semibold text-fg;
+  }
+  .cl-foot-total .sep {
+    @apply text-border-strong;
+  }
+  .cl-foot-total .void-note {
+    @apply text-muted;
+  }
+  .cl-foot-meta {
+    @apply ml-auto text-xs text-muted;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- 通道对账 ---------- */
+  .cl-recon-cards {
+    @apply grid grid-cols-2 gap-3;
+  }
+  .cl-recon-card {
+    @apply rounded-lg border border-border bg-surface px-4 py-3.5;
+  }
+  .cl-recon-hd {
+    @apply mb-3 flex items-center justify-between gap-3;
+  }
+  .cl-recon-name {
+    @apply flex items-center gap-2 text-[13.5px] font-semibold text-fg;
+  }
+  .cl-recon-compare {
+    @apply grid grid-cols-3 gap-2.5;
+  }
+  .cl-recon-cell {
+    @apply rounded-md border border-border-soft bg-canvas px-2.5 py-2;
+  }
+  .cl-recon-cell .k {
+    @apply text-[11.5px] text-muted;
+  }
+  .cl-recon-cell .v {
+    @apply mt-1 text-[15px] font-semibold text-fg;
+    font-variant-numeric: tabular-nums;
+  }
+  .cl-recon-cell .v.ok {
+    @apply text-ok-fg;
+  }
+  .cl-recon-cell .v.warn {
+    @apply text-warn-fg;
+  }
+  .cl-pending-list {
+    @apply flex flex-col px-4 pb-2;
+  }
+  .cl-pending-item {
+    @apply flex items-center gap-2.5 border-b border-border-soft px-1 py-2.5 text-[12.5px] last:border-b-0;
+  }
+  .cl-pd-ic {
+    @apply grid h-[26px] w-[26px] shrink-0 place-items-center rounded-md border border-warn-border bg-warn-bg text-warn-fg;
+  }
+  .cl-pd-main {
+    @apply min-w-0 flex-1;
+  }
+  .cl-pd-main b {
+    @apply block font-semibold text-fg;
+  }
+  .cl-pd-main i {
+    @apply font-mono text-[11.5px] not-italic text-muted;
+  }
+  .cl-pd-amt {
+    @apply font-mono font-semibold text-warn-fg;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- 抽屉 ---------- */
+  .cl-overlay {
+    @apply fixed inset-0 z-[60] bg-mask;
+  }
+  .cl-drawer {
+    @apply fixed inset-y-0 right-0 z-[65] flex w-[472px] max-w-[94vw] flex-col border-l border-border bg-surface shadow-2xl;
+  }
+  .cl-drawer-head {
+    @apply flex shrink-0 items-center gap-3 border-b border-border px-5 py-3.5;
+  }
+  .cl-drawer-head .ttl {
+    @apply text-[15px] font-bold tracking-[-0.01em] text-fg;
+  }
+  .cl-drawer-head .sub {
+    @apply mt-px font-mono text-xs text-muted;
+  }
+  .cl-icon-btn {
+    @apply ml-auto grid h-[30px] w-[30px] shrink-0 cursor-pointer place-items-center rounded-md border border-transparent text-muted transition-colors hover:bg-canvas hover:text-fg focus-visible:shadow-[0_0_0_3px_var(--color-focusring)] focus-visible:outline-none;
+  }
+  .cl-drawer-body {
+    @apply min-h-0 flex-1 overflow-y-auto px-5 pt-4 pb-6;
+  }
+  .cl-drawer-foot {
+    @apply flex shrink-0 items-center gap-2.5 border-t border-border bg-surface px-5 py-3;
+  }
+  .cl-drawer-foot .left {
+    @apply mr-auto;
+  }
+  .cl-foot-note {
+    @apply self-center text-[12.5px] text-muted;
+  }
+
+  /* ---------- 表单 ---------- */
+  .cl-section-title {
+    @apply mb-3 flex items-center gap-2 text-xs font-semibold tracking-[0.03em] text-muted;
+  }
+  .cl-section-title::after {
+    @apply h-px flex-1 bg-border-soft;
+    content: '';
+  }
+  .cl-section-title.with-gap {
+    @apply mt-5;
+  }
+  .cl-form-grid {
+    @apply grid grid-cols-2 gap-x-4 gap-y-3.5;
+  }
+  .cl-form-item {
+    @apply flex min-w-0 flex-col gap-1.5;
+  }
+  .cl-form-item.full {
+    @apply col-span-2;
+  }
+  .cl-form-item .lbl {
+    @apply text-[12.5px] font-medium not-italic text-fg-2;
+  }
+  .cl-form-item .req {
+    @apply not-italic text-err;
+  }
+  .cl-form-item .hint {
+    @apply text-[11.5px] font-normal not-italic text-muted;
+  }
+  .cl-input,
+  .cl-select,
+  .cl-textarea {
+    @apply h-[34px] w-full rounded-md border border-border bg-surface px-2.5 text-[13.5px] text-fg transition-colors focus:border-accent focus:shadow-[0_0_0_3px_rgba(22,119,255,0.14)] focus:outline-none;
+  }
+  .cl-input.num {
+    @apply text-right font-mono;
+    font-variant-numeric: tabular-nums;
+  }
+  .cl-select {
+    @apply cursor-pointer pr-7;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 9px center;
+  }
+  .cl-textarea {
+    @apply h-auto min-h-[64px] resize-y px-2.5 py-2 leading-[1.45];
+  }
+  .cl-amount {
+    @apply flex items-center gap-1.5;
+  }
+  .cl-amount .cur {
+    @apply font-mono text-[13.5px] text-muted;
+  }
+  .cl-switch-row {
+    @apply flex h-[34px] items-center gap-2.5;
+  }
+  .cl-switch {
+    @apply relative h-[21px] w-[38px] shrink-0 cursor-pointer;
+  }
+  .cl-switch input {
+    @apply absolute h-0 w-0 opacity-0;
+  }
+  .cl-switch .track {
+    @apply absolute inset-0 cursor-pointer rounded-full bg-border-strong transition-colors;
+  }
+  .cl-switch .track::after {
+    @apply absolute top-0.5 left-0.5 h-[17px] w-[17px] rounded-full bg-surface shadow transition-transform;
+    content: '';
+  }
+  .cl-switch input:checked + .track {
+    @apply bg-accent;
+  }
+  .cl-switch input:checked + .track::after {
+    transform: translateX(17px);
+  }
+  .cl-switch input:focus-visible + .track {
+    @apply shadow-[0_0_0_3px_var(--color-focusring)];
+  }
+  .cl-switch-row .sw-label {
+    @apply text-[13px] text-fg-2;
+  }
+  .cl-form-error {
+    @apply mb-3 flex items-start gap-2 rounded-md border border-err-border bg-err-bg px-2.5 py-2 text-[12.5px] text-err-fg;
+  }
+  .cl-form-error svg {
+    @apply mt-px shrink-0;
+  }
+
+  /* ---------- 附件 ---------- */
+  .cl-attach-area {
+    @apply mt-1.5;
+  }
+  .cl-attach-grid {
+    @apply grid grid-cols-4 gap-2.5;
+  }
+  .cl-thumb {
+    @apply relative aspect-square overflow-hidden rounded-lg border border-border bg-canvas;
+  }
+  .cl-thumb img {
+    @apply block h-full w-full cursor-zoom-in object-cover;
+  }
+  .cl-thumb-file {
+    @apply flex h-full w-full flex-col items-center justify-center gap-1.5 px-2 text-center text-[11px] text-muted;
+  }
+  .cl-thumb-file span {
+    @apply line-clamp-2 break-all;
+  }
+  .cl-thumb-del {
+    @apply absolute top-1 right-1 grid h-[22px] w-[22px] cursor-pointer place-items-center rounded-md border-0 bg-[rgba(17,17,17,0.62)] text-on-accent opacity-0 transition-opacity hover:bg-err focus-visible:opacity-100 focus-visible:outline-none;
+  }
+  .cl-thumb:hover .cl-thumb-del {
+    @apply opacity-100;
+  }
+  .cl-thumb-tag {
+    @apply absolute bottom-1 left-1 rounded-[4px] bg-[rgba(17,17,17,0.62)] px-1 py-px font-mono text-[10.5px] text-on-accent;
+  }
+  .cl-attach-add {
+    @apply flex aspect-square cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border-[1.5px] border-dashed border-border bg-surface px-1.5 text-center text-[11.5px] text-muted transition-colors hover:border-accent hover:bg-accent-soft hover:text-accent focus-within:shadow-[0_0_0_3px_var(--color-focusring)];
+  }
+  .cl-attach-add svg {
+    @apply h-5 w-5;
+  }
+  .cl-attach-hint {
+    @apply mt-2.5 text-[11.5px] leading-[1.5] text-muted;
+  }
+
+  /* ---------- 详情信息 / 状态流转 ---------- */
+  .cl-info-list {
+    @apply grid grid-cols-2 overflow-hidden rounded-lg border border-border-soft;
+  }
+  .cl-info-row {
+    @apply flex justify-between gap-3 border-b border-border-soft px-3.5 py-2 text-[13px] last:border-b-0;
+  }
+  .cl-info-row:nth-child(odd) {
+    @apply bg-surface-2;
+  }
+  .cl-info-row.full {
+    @apply col-span-2;
+  }
+  .cl-info-row .k {
+    @apply shrink-0 text-muted;
+  }
+  .cl-info-row .v {
+    @apply text-right font-medium text-fg;
+  }
+  .cl-info-row .v.mono {
+    @apply font-mono;
+    font-variant-numeric: tabular-nums;
+  }
+  .cl-info-row .v.big {
+    @apply font-mono text-[15px];
+    font-variant-numeric: tabular-nums;
+  }
+  .cl-info-row .v.note {
+    @apply text-left font-normal text-fg-2;
+  }
+  .cl-stepper {
+    @apply flex items-center;
+  }
+  .cl-step {
+    @apply flex min-w-0 flex-1 items-center gap-2;
+  }
+  .cl-bullet {
+    @apply grid h-6 w-6 shrink-0 place-items-center rounded-full border-[1.5px] border-border bg-surface font-mono text-xs text-muted;
+  }
+  .cl-step-txt {
+    @apply min-w-0 text-[12.5px] leading-[1.25] text-muted;
+  }
+  .cl-step-txt b {
+    @apply block text-[12.5px] font-semibold text-fg-2;
+  }
+  .cl-step-txt i {
+    @apply font-mono text-[11px] not-italic;
+  }
+  .cl-step .cl-bar {
+    @apply mx-2.5 h-0.5 flex-1 rounded bg-border;
+  }
+  .cl-step:last-child .cl-bar {
+    @apply hidden;
+  }
+  .cl-step.done .cl-bullet {
+    @apply border-ok bg-ok text-on-accent;
+  }
+  .cl-step.done .cl-step-txt b {
+    @apply text-fg;
+  }
+  .cl-step.done .cl-bar {
+    @apply bg-ok-border;
+  }
+  .cl-step.current .cl-bullet {
+    @apply border-accent font-semibold text-accent shadow-[0_0_0_3px_var(--color-accent-soft)];
+  }
+  .cl-step.current .cl-step-txt b {
+    @apply text-accent;
+  }
+  .cl-void-strip {
+    @apply mt-2.5 flex items-center gap-2 rounded-md border border-err-border bg-err-bg px-3 py-2 text-[12.5px] text-err-fg;
+  }
+  .cl-audit {
+    @apply flex flex-col gap-2;
+  }
+  .cl-audit-item {
+    @apply flex gap-2 text-[12.5px] text-fg-2;
+  }
+  .cl-audit-item .when {
+    @apply shrink-0 font-mono text-muted;
+  }
+  .cl-audit-item .what b {
+    @apply font-semibold text-fg;
+  }
+
+  /* ---------- 确认弹窗 ---------- */
+  .cl-modal-mask {
+    @apply fixed inset-0 z-[70] flex items-center justify-center bg-mask p-6;
+  }
+  .cl-modal {
+    @apply w-[420px] max-w-full rounded-xl bg-surface px-5 py-5 shadow-2xl;
+  }
+  .cl-modal h3 {
+    @apply mb-2 flex items-center gap-2 text-base font-bold tracking-[-0.01em] text-fg;
+  }
+  .cl-modal h3 svg {
+    @apply shrink-0 text-warn;
+  }
+  .cl-modal h3.danger svg {
+    @apply text-err;
+  }
+  .cl-modal p {
+    @apply mb-4 text-[13px] leading-[1.55] text-fg-2;
+  }
+  .cl-modal .cl-textarea {
+    @apply mb-3;
+  }
+  .cl-modal-actions {
+    @apply mt-1 flex justify-end gap-2.5;
+  }
+
+  /* ---------- 灯箱 ---------- */
+  .cl-lightbox {
+    @apply fixed inset-0 z-[80] flex flex-col items-center justify-center gap-4 bg-[rgba(17,17,17,0.8)] p-8;
+  }
+  .cl-lightbox img {
+    @apply max-h-[78vh] max-w-[min(560px,80vw)] rounded-lg bg-surface shadow-2xl;
+  }
+  .cl-lb-close {
+    @apply absolute top-5 right-6 grid h-9 w-9 cursor-pointer place-items-center rounded-lg border-0 bg-[rgba(255,255,255,0.14)] text-on-accent hover:bg-[rgba(255,255,255,0.26)] focus-visible:outline-none;
+  }
+  .cl-lb-cap {
+    @apply font-mono text-[13px] text-on-accent;
+  }
+
+  /* ---------- Toast ---------- */
+  .cl-toasts {
+    @apply pointer-events-none fixed bottom-7 left-1/2 z-[90] flex w-[min(560px,90vw)] -translate-x-1/2 flex-col items-center gap-2;
+  }
+  .cl-toast {
+    @apply pointer-events-auto flex w-full items-center gap-2.5 rounded-lg bg-fg px-4 py-2.5 text-[13px] text-on-accent shadow-2xl;
+  }
+  .cl-toast svg {
+    @apply shrink-0 text-ok;
+  }
+  .cl-toast.warn svg {
+    @apply text-warn;
+  }
+  .cl-toast.err svg {
+    @apply text-err;
+  }
+  .cl-toast.info svg {
+    @apply text-accent;
+  }
+  .cl-toast-close {
+    @apply ml-auto grid h-6 w-6 shrink-0 cursor-pointer place-items-center rounded border-0 bg-transparent text-on-accent opacity-70 hover:opacity-100 focus-visible:outline-none;
+  }
+
+  @media (max-width: 1240px) {
+    .cl-stats {
+      @apply grid-cols-2;
+    }
+  }
+}

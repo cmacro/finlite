@@ -143,7 +143,22 @@ description: finlite 单账套业务唯一依据：银行流水 + 订单流水 +
 [6 报表] 科目余额表 / 收支日报（首版仅此两张）
 ```
 
-页面映射（Svelte）：导入中心 → 银行流水 → 订单流水 → 对账中心 → 数据汇总 → 凭证管理 → 科目余额表 → 系统设置（科目/费率/备份）。
+页面映射（Svelte）：导入中心 → 银行流水 → 订单流水 → 店面收款 → 对账中心 → 数据汇总 → 凭证管理 → 科目余额表 → 系统设置（科目/费率/备份）。
+
+并行支线（F9 店面收款，线下收款不经过 POS）：
+
+```
+[1 登记] 门店经手人录入收款（现金 / 个人码 / 对公转账）+ 单据照片附件
+            ↓
+[2 审核] 出纳/会计确认收款（或驳回草稿），可作废
+            ↓
+[3 汇总] 生成数据汇总草稿（source='collection'，一收款一汇总）
+            ↓
+[4 制单] 与其他汇总一致：审核 → 生成凭证 → 科目余额表
+```
+
+店面收款汇总单独走「通道对账」核对（现金/个人码对汇总，对公转账对银行到账），
+不参与订单 POS 三方勾稽（见 §6.4 / §6.7）。
 
 状态机：
 
@@ -192,6 +207,7 @@ description: finlite 单账套业务唯一依据：银行流水 + 订单流水 +
 - 日粒度：`订单(结算日= D) Σ实收 == 银行(D) POS转入 == 汇总(D) Σ实际收入`。
 - 已验证匹配例：7-11 `446.88`、7-10 `9256.80`、7-09 `11970.00` 全对上；7-01 差 0.45 元进待处理（疑补贴/立减）。
 - 未匹配行单独列示，不阻止其他行制单。
+- 店面收款生成的汇总行 `source='collection'` **不参与**本三方勾稽：现金/个人码收款不进银行，混入会使当日汇总收入虚高、误报差异；该部分由 §6.7 通道对账单独核对。
 
 ### 6.5 凭证生成模板（首版 5 类）
 
@@ -227,6 +243,21 @@ description: finlite 单账套业务唯一依据：银行流水 + 订单流水 +
 科目为树形 `code/name/parent_id/type`，首版内置导入，不做完整准则科目表。
 
 ---
+### 6.7 店面收款与通道对账（F9）
+
+- 店面收款是**线下登记台账**，与银行/订单原始表无关，页面可增删改（原始表只读约束不适用于本模块）。
+- 状态机：`draft`（门店录入）→ `confirmed`（出纳/会计确认）→ `summarized`（已生成数据汇总）；`draft`/`confirmed` 可作废 `voided`。已汇总记录不可编辑/作废，需先在数据汇总中作废关联汇总。
+- 金额 `TEXT` + `shopspring/decimal`，必须大于 0，展示 2 位；日期 `YYYY-MM-DD`。
+- 收款方式 → 默认到账账户自动推荐：现金→现金账户、微信/支付宝个人码→个人收款账户、对公转账→对公银行账户；可手工改。
+- 收据号在 `collections` 内唯一（空号不占号）；一收款一汇总（`collections.summary_id` 唯一关联），重复生成直接拒绝。
+- 生成汇总写入 `data_summaries`：`source='collection'`、`status='draft'`、项目「营业收入」、实际收入=收款金额、收据号沿用收款收据号（与既有汇总冲突时留空，避免阻断生成）。
+- 通道对账（按收款日期区间）：
+  - 非银通道（现金 + 个人码）：登记合计 vs 已生成汇总合计；差额与「已确认未生成汇总」进待处理队列。
+  - 对公通道：登记合计 vs 银行流水转**入**合计；按「金额相等 + 收款日 ≤ 银行到账日 ≤ 收款日+7 天」贪心匹配，一笔银行流水只匹配一笔收款；未匹配收款进待处理队列。
+  - 差异与未匹配项不阻止其他记录制单（与 §6.4 同原则）。
+- 附件：jpg/png/webp/pdf，单张 ≤ 10MB，单条 ≤ 10 张，内容存 SQLite BLOB，保证 `finlite.db` 单文件备份完整。
+- 所有状态变更（创建/提交/修改/确认/驳回/作废/生成汇总）写 `audit_logs`，详情页展示操作记录。
+
 
 ## 7. 功能模块（MVP 清单）
 
@@ -240,6 +271,7 @@ description: finlite 单账套业务唯一依据：银行流水 + 订单流水 +
 | F6 | 凭证管理 | 列表/详情/按 §6.5 模板由已审核汇总一键生成、审核/反审核、打印预览 | 借贷不等禁止保存 |
 | F7 | 科目余额表 | 期初+本期借贷+期末，按期间筛 | 期末=期初+借-贷（按方向） |
 | F8 | 基础设置 | 科目维护、费率维护、备份/恢复（sqlite `.backup` 级拷贝） | 备份文件可恢复打开 |
+| F9 | 店面收款 | 收款登记（门店/客户/项目/方式/账户/金额/收据号/经手人/开票）、单据照片附件、草稿→确认→生成汇总状态机、作废/驳回、通道对账视图与待处理队列 | 状态流转留审计日志；一收款一汇总；通道差异进队列不阻塞 |
 
 非目标（明确不做）：多账套、OCR、AI、税务申报、固定资产、应收账龄、微信自动同步。
 
@@ -282,9 +314,22 @@ audit_logs(id TEXT PK, entity_type TEXT, entity_id TEXT, action TEXT,
 
 -- 本地界面偏好（当前仅导入中心 raw_dir）
 app_settings(key TEXT PK, value TEXT, updated_at TEXT);
+
+-- 店面收款登记（F9）
+collections(id TEXT PK, collect_date TEXT, store TEXT, customer TEXT, phone TEXT,
+  project TEXT, pay_method TEXT, -- cash/wechat/alipay/bank_transfer/other
+  account TEXT, -- cash/personal/corporate
+  amount TEXT, receipt_no TEXT,
+  operator TEXT, invoiced INT DEFAULT 0,
+  status TEXT DEFAULT 'draft', -- draft/confirmed/summarized/voided
+  void_reason TEXT, summary_id TEXT, note TEXT, created_at TEXT, updated_at TEXT);
+
+-- 收款单据附件（内容存 BLOB，与主库同文件）
+collection_attachments(id TEXT PK, collection_id TEXT, file_name TEXT, ext TEXT,
+  size_bytes INT DEFAULT 0, content BLOB, sort_no INT DEFAULT 0, created_at TEXT);
 ```
 
-索引：`bank_flows(txn_time)`、`order_flows(settle_date, icbc_order_no)`、`data_summaries(date, status)`、`vouchers(voucher_date)`。
+索引：`bank_flows(txn_time)`、`order_flows(settle_date, icbc_order_no)`、`data_summaries(date, status)`、`vouchers(voucher_date)`、`collections(collect_date, status)`、`collection_attachments(collection_id)`；`collections.receipt_no` 部分唯一（空串不占号）。
 
 ---
 
