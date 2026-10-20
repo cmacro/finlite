@@ -71,3 +71,8 @@ func WithinTolerance(a, b, tol decimal.Decimal) bool {
 	diff := a.Sub(b).Abs()
 	return diff.LessThanOrEqual(tol)
 }
+
+// RatePercent 费率转展示用百分数：0.0025 → "0.25%"。
+func RatePercent(rate decimal.Decimal) string {
+	return rate.Mul(decimal.NewFromInt(100)).String() + "%"
+}

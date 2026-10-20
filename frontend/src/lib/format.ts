@@ -99,3 +99,11 @@ export function feeFlagText(f: string): string {
     default: return '';
   }
 }
+
+/** 业务日期（YYYY-MM-DD）→ 中文星期，如 `2026-07-01` → `周三`；非法日期返回空串。 */
+export function weekdayCN(date: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return '';
+  const d = new Date(`${date}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return '';
+  return ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][d.getDay()] ?? '';
+}

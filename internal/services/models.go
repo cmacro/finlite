@@ -135,6 +135,8 @@ type ImportRawResult struct {
 
 // ---------- 订单流水 ----------
 
+// OrderFlow 订单流水单行（原始表只读）。
+// 费率复算字段（FeeRate / ExpectedFee / FeeDiff / NetDiff）全部由 Go decimal 计算，前端只格式化。
 type OrderFlow struct {
 	ID              string `json:"id"`
 	BatchID         string `json:"batchId"`
@@ -148,22 +150,49 @@ type OrderFlow struct {
 	PayMethod       string `json:"payMethod"`
 	DebitCreditFlag string `json:"debitCreditFlag"`
 	FeeFlag         string `json:"feeFlag"`
+	FeeRate         string `json:"feeRate"`
+	ExpectedFee     string `json:"expectedFee"`
+	ExpectedNet     string `json:"expectedNet"`
+	FeeDiff         string `json:"feeDiff"`
+	NetDiff         string `json:"netDiff"`
 	CreatedAt       string `json:"createdAt"`
+	FileName        string `json:"fileName"`
+	ImportedAt      string `json:"importedAt"`
+	SourceRowNo     int    `json:"sourceRowNo"`
+	RawJSON         string `json:"rawJson"`
 }
 
+// OrderFlowFilter 订单流水筛选（页面一次性完整展示，不分页）。
 type OrderFlowFilter struct {
 	SettleDate string `json:"settleDate"`
 	Keyword    string `json:"keyword"`
 	OnlyFeeAdj string `json:"onlyFeeAdj"`
-	Page       int    `json:"page"`
-	PageSize   int    `json:"pageSize"`
 }
 
+// OrderFlowGroup 按结算日期（收入归属日）归集的小计行。
+type OrderFlowGroup struct {
+	SettleDate    string      `json:"settleDate"`
+	Count         int         `json:"count"`
+	OrderTotal    string      `json:"orderTotal"`
+	FeeTotal      string      `json:"feeTotal"`
+	NetTotal      string      `json:"netTotal"`
+	AnomalyCount  int         `json:"anomalyCount"`
+	ParseErrCount int         `json:"parseErrCount"`
+	Items         []OrderFlow `json:"items"`
+}
+
+// OrderFlowPage 订单流水列表页数据：按结算日期分组 + 全量筛选合计。
 type OrderFlowPage struct {
-	Items    []OrderFlow `json:"items"`
-	Total    int         `json:"total"`
-	Page     int         `json:"page"`
-	PageSize int         `json:"pageSize"`
+	Groups        []OrderFlowGroup `json:"groups"`
+	Total         int              `json:"total"`
+	OrderTotal    string           `json:"orderTotal"`
+	FeeTotal      string           `json:"feeTotal"`
+	NetTotal      string           `json:"netTotal"`
+	ReconDiff     string           `json:"reconDiff"`
+	FeeDiffCount  int              `json:"feeDiffCount"`
+	NetDiffCount  int              `json:"netDiffCount"`
+	ParseErrCount int              `json:"parseErrCount"`
+	AnomalyCount  int              `json:"anomalyCount"`
 }
 
 // ---------- 对账 ----------

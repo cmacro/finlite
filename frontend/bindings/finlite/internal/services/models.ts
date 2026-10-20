@@ -194,6 +194,10 @@ export interface ImportResult {
     "importedAt": string;
 }
 
+/**
+ * OrderFlow 订单流水单行（原始表只读）。
+ * 费率复算字段（FeeRate / ExpectedFee / FeeDiff / NetDiff）全部由 Go decimal 计算，前端只格式化。
+ */
 export interface OrderFlow {
     "id": string;
     "batchId": string;
@@ -207,22 +211,55 @@ export interface OrderFlow {
     "payMethod": string;
     "debitCreditFlag": string;
     "feeFlag": string;
+    "feeRate": string;
+    "expectedFee": string;
+    "expectedNet": string;
+    "feeDiff": string;
+    "netDiff": string;
     "createdAt": string;
+    "fileName": string;
+    "importedAt": string;
+    "sourceRowNo": number;
+    "rawJson": string;
 }
 
+/**
+ * OrderFlowFilter 订单流水筛选（页面一次性完整展示，不分页）。
+ */
 export interface OrderFlowFilter {
     "settleDate": string;
     "keyword": string;
     "onlyFeeAdj": string;
-    "page": number;
-    "pageSize": number;
 }
 
-export interface OrderFlowPage {
+/**
+ * OrderFlowGroup 按结算日期（收入归属日）归集的小计行。
+ */
+export interface OrderFlowGroup {
+    "settleDate": string;
+    "count": number;
+    "orderTotal": string;
+    "feeTotal": string;
+    "netTotal": string;
+    "anomalyCount": number;
+    "parseErrCount": number;
     "items": OrderFlow[] | null;
+}
+
+/**
+ * OrderFlowPage 订单流水列表页数据：按结算日期分组 + 全量筛选合计。
+ */
+export interface OrderFlowPage {
+    "groups": OrderFlowGroup[] | null;
     "total": number;
-    "page": number;
-    "pageSize": number;
+    "orderTotal": string;
+    "feeTotal": string;
+    "netTotal": string;
+    "reconDiff": string;
+    "feeDiffCount": number;
+    "netDiffCount": number;
+    "parseErrCount": number;
+    "anomalyCount": number;
 }
 
 /**

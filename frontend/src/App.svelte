@@ -125,7 +125,7 @@
         <span class="topbar-cat">{currentGroup}</span>
         <span class="topbar-sep">|</span>{currentLabel}
       </h1>
-      {#if route === 'bank-flow'}
+      {#if route === 'bank-flow' || route === 'order-flow'}
         <button class="period-pill" type="button" title="当前会计期间">
           <Icon name="calendar" size={14} />
           会计期间 {period}
@@ -147,11 +147,11 @@
         >
           <Icon name="refresh" size={15} />
         </button>
-        {#if route === 'bank-flow'}
+        {#if route === 'bank-flow' || route === 'order-flow'}
           <button
             class="btn btn-primary"
             type="button"
-            title="前往导入中心导入银行流水"
+            title={route === 'order-flow' ? '前往导入中心导入订单流水' : '前往导入中心导入银行流水'}
             onclick={() => go('import')}
           >
             <Icon name="upload" size={15} />
@@ -161,14 +161,17 @@
       </div>
     </header>
     <div
-      class="min-h-0 flex-1 overflow-y-auto px-[22px] pt-5 pb-14 {route === 'bank-flow' ? 'bg-canvas' : ''}"
+      class="min-h-0 flex-1 overflow-y-auto px-[22px] pt-5 pb-14 {route === 'bank-flow' ||
+      route === 'order-flow'
+        ? 'bg-canvas'
+        : ''}"
     >
     {#if route === 'import'}
       <ImportPage onGoto={go} />
     {:else if route === 'bank-flow'}
       <BankFlowPage onGoto={go} />
     {:else if route === 'order-flow'}
-      <OrderFlowPage />
+      <OrderFlowPage onGoto={go} />
     {:else if route === 'recon'}
       <ReconPage />
     {:else if route === 'summary'}

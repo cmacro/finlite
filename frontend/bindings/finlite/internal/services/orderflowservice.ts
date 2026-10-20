@@ -3,6 +3,7 @@
 
 /**
  * OrderFlowService 订单流水：列表 / 费率复算。
+ * 原始表只读，不提供任何写接口；费率与金额恒等式校验在 Go decimal 中完成。
  * @module
  */
 
@@ -15,7 +16,8 @@ import { Call as $Call, CancellablePromise as $CancellablePromise } from "@wails
 import * as $models from "./models.js";
 
 /**
- * List 订单流水分页；feeFlag 标出手改/费率异常（fee_diff 黄标），±0.01 外标异。
+ * List 订单流水：按结算日期（T+1 收入归属日）归集，一次性返回全部明细（不分页）。
+ * feeFlag 标出费率异常：fee_diff 费率差异（黄）、net_diff 实收差异（红）、fee_parse_err 解析失败（红）。
  */
 export function List(f: $models.OrderFlowFilter): $CancellablePromise<$models.OrderFlowPage> {
     return $Call.ByID(3037717702, f);

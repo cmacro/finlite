@@ -44,6 +44,7 @@ export type {
     ImportResult,
     OrderFlow,
     OrderFlowFilter,
+    OrderFlowGroup,
     OrderFlowPage,
     RawFile,
     RawScan,
