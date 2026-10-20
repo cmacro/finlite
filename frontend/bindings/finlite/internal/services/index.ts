@@ -31,6 +31,7 @@ export type {
     AuditLog,
     BalanceRow,
     BankFlow,
+    BankFlowBatch,
     BankFlowFilter,
     BankFlowPage,
     ColumnMapping,

@@ -5,6 +5,7 @@
 @theme {
   --color-ink: #222;
   --color-surface: #fff;
+  --color-canvas: #f7f8fa; /* 页面底色（对齐 docs/uidesign/tokens.css 的 --surface） */
   --color-mask: rgb(0 0 0 / 0.45);
   --color-muted: #999;
   --color-danger: #c00;

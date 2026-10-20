@@ -38,21 +38,29 @@ type ColumnMapping struct {
 // ---------- 银行流水 ----------
 
 type BankFlow struct {
-	ID               string `json:"id"`
-	BatchID          string `json:"batchId"`
-	FileName         string `json:"fileName"`
-	RowNo            int    `json:"rowNo"`
-	TxnTime          string `json:"txnTime"`
-	Counterparty     string `json:"counterparty"`
-	Summary          string `json:"summary"`
-	Remark           string `json:"remark"`
-	InAmount         string `json:"inAmount"`
-	OutAmount        string `json:"outAmount"`
-	Balance          string `json:"balance"`
-	BalanceStatus    string `json:"balanceStatus"`
-	BalanceConfirmed string `json:"balanceConfirmedAt"`
-	DisplayStatus    string `json:"displayStatus"`
-	CreatedAt        string `json:"createdAt"`
+	ID                  string `json:"id"`
+	BatchID             string `json:"batchId"`
+	FileName            string `json:"fileName"`
+	RowNo               int    `json:"rowNo"`
+	TxnTime             string `json:"txnTime"`
+	Counterparty        string `json:"counterparty"`
+	CounterpartyAccount string `json:"counterpartyAccount"` // raw_json 中保留的「对方账号」
+	Summary             string `json:"summary"`
+	Remark              string `json:"remark"`
+	InAmount            string `json:"inAmount"`
+	OutAmount           string `json:"outAmount"`
+	Balance             string `json:"balance"`
+	BalanceStatus       string `json:"balanceStatus"`
+	BalanceConfirmed    string `json:"balanceConfirmedAt"`
+	DisplayStatus       string `json:"displayStatus"`
+	PrevBalance         string `json:"prevBalance"`     // 同一批次上行余额；空=首行
+	ExpectedBalance     string `json:"expectedBalance"` // 上行余额 + 转入 - 转出
+	BalanceDiff         string `json:"balanceDiff"`     // 本行余额 - 应到余额（带符号）
+	IsPOS               bool   `json:"isPos"`
+	VoucherID           string `json:"voucherId"`
+	VoucherNo           string `json:"voucherNo"`
+	RawJSON             string `json:"rawJson"`
+	CreatedAt           string `json:"createdAt"`
 }
 
 type BankFlowFilter struct {
@@ -60,15 +68,32 @@ type BankFlowFilter struct {
 	Keyword  string `json:"keyword"`
 	DateFrom string `json:"dateFrom"`
 	DateTo   string `json:"dateTo"`
-	Page     int    `json:"page"`
-	PageSize int    `json:"pageSize"`
 }
 
+// BankFlowPage 一次性返回全部明细（DESIGN.md §7 禁止分页），附带筛选结果的汇总统计。
 type BankFlowPage struct {
-	Items    []BankFlow `json:"items"`
-	Total    int        `json:"total"`
-	Page     int        `json:"page"`
-	PageSize int        `json:"pageSize"`
+	Items          []BankFlow `json:"items"`
+	Total          int        `json:"total"`
+	TotalIn        string     `json:"totalIn"`
+	TotalOut       string     `json:"totalOut"`
+	InCount        int        `json:"inCount"`
+	OutCount       int        `json:"outCount"`
+	MismatchCount  int        `json:"mismatchCount"`
+	ConfirmedCount int        `json:"confirmedCount"`
+	SkipCount      int        `json:"skipCount"`
+}
+
+// BankFlowBatch 批次信息栏用：导入统计 + 余额不平 / 已确认行数。
+type BankFlowBatch struct {
+	BatchID        string `json:"batchId"`
+	FileName       string `json:"fileName"`
+	RowCount       int    `json:"rowCount"`
+	SuccessCount   int    `json:"successCount"`
+	SkipCount      int    `json:"skipCount"`
+	ImportedAt     string `json:"importedAt"`
+	MismatchCount  int    `json:"mismatchCount"`
+	ConfirmedCount int    `json:"confirmedCount"`
+	ConfirmedAt    string `json:"confirmedAt"`
 }
 
 // ---------- 默认路径导入（导入中心「默认路径导入」） ----------

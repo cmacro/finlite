@@ -24,6 +24,9 @@
   .btn-danger {
     @apply border-danger text-danger;
   }
+  .btn-ghost {
+    @apply border-transparent bg-transparent text-fg-2 hover:border-transparent hover:bg-canvas hover:text-fg;
+  }
 
   /* 文字按钮（表格行内操作，如「查看错误明细」「刷新」） */
   .link-btn {

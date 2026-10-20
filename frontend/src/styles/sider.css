@@ -49,6 +49,15 @@
     content: '';
   }
 
+  /* 导航徽标（余额不平笔数，对齐原型 .nav-badge） */
+  .nav-badge {
+    @apply ml-auto rounded-full border border-err-border bg-err-bg px-1.5 text-[11px] leading-4 font-semibold text-err-fg;
+    font-variant-numeric: tabular-nums;
+  }
+  .nav-item.active .nav-badge {
+    @apply border-accent bg-accent text-on-accent;
+  }
+
   /* 底部账套状态条 */
   .nav-foot {
     @apply flex items-center gap-[7px] border-t border-border-soft px-4 pt-[10px] pb-[14px] text-[11px] text-muted;

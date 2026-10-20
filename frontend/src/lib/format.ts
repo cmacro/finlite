@@ -9,6 +9,25 @@ export function formatMoney(v: string | number | null | undefined): string {
   return n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+/** 带符号金额展示：保留后端差额的 +/- 号，其余同 formatMoney。 */
+export function formatSignedMoney(v: string | null | undefined): string {
+  if (v === null || v === undefined || v === '') return '0.00';
+  const t = String(v).trim();
+  const neg = t.startsWith('-');
+  const pos = t.startsWith('+');
+  const body = formatMoney(t.replace(/^[+-]/, ''));
+  return (neg ? '-' : pos ? '+' : '') + body;
+}
+
+/** 时间戳展示：RFC3339 → `YYYY-MM-DD HH:mm:ss`（本地时区）；非 RFC3339 原样返回。 */
+export function formatDateTime(v: string | null | undefined): string {
+  if (!v) return '—';
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return v;
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+
 /** 余额校验状态 → 中文。 */
 export function statusText(s: string): string {
   switch (s) {
@@ -28,6 +47,27 @@ export function statusClass(s: string): string {
     case 'confirmed': return 'text-ok';
     case 'skip': return 'text-muted';
     default: return '';
+  }
+}
+
+/**
+ * 银行流水行展示状态：已确认 / 不平 / 无上行余额（跳过）/ 正常。
+ * 只做展示映射；校验本身在 Go 导入时完成（首行无上行余额 = 跳过）。
+ */
+export function bankRowState(f: { displayStatus: string; prevBalance: string }): string {
+  if (f.displayStatus === 'confirmed') return 'confirmed';
+  if (f.displayStatus === 'mismatch') return 'mismatch';
+  if (!f.prevBalance) return 'skip';
+  return 'ok';
+}
+
+/** 原始 JSON 字符串 → 两空格缩进的展示文本（解析失败原样返回）。 */
+export function prettyJson(raw: string): string {
+  if (!raw) return '{}';
+  try {
+    return JSON.stringify(JSON.parse(raw), null, 2);
+  } catch {
+    return raw;
   }
 }
 

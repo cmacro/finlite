@@ -27,6 +27,9 @@
     | 'x'
     | 'alert-triangle'
     | 'arrow-right'
+    | 'arrow-up'
+    | 'arrow-down'
+    | 'chevron-right'
     | 'refresh'
     | 'folder'
     | 'inbox'
@@ -38,11 +41,14 @@
 <script lang="ts">
   import type { Component } from 'svelte';
   import {
+    ArrowDown,
     ArrowRight,
+    ArrowUp,
     Book,
     BookOpen,
     Building2,
     Calendar,
+    ChevronRight,
     ChartNoAxesColumnIncreasing,
     Check,
     CircleCheck,
@@ -102,6 +108,9 @@
     x: X,
     'alert-triangle': TriangleAlert,
     'arrow-right': ArrowRight,
+    'arrow-up': ArrowUp,
+    'arrow-down': ArrowDown,
+    'chevron-right': ChevronRight,
     refresh: RefreshCw,
     folder: Folder,
     inbox: Inbox,

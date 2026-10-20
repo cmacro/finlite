@@ -7,7 +7,23 @@
     @apply min-w-[320px] max-w-[480px] rounded-lg bg-surface px-6 py-5;
   }
   .modal-msg {
-    @apply mb-4 text-sm;
+    @apply mb-4 text-sm whitespace-pre-line text-fg-2;
+  }
+  /* 带图标与标题的确认框（银行流水确认/撤销余额） */
+  .modal-head {
+    @apply mb-2.5 flex items-center gap-2.5;
+  }
+  .modal-ico {
+    @apply grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[9px] border;
+  }
+  .modal-ico.info {
+    @apply border-accent-border bg-accent-soft text-accent-fg;
+  }
+  .modal-ico.danger {
+    @apply border-err-border bg-err-bg text-err-fg;
+  }
+  .modal-title {
+    @apply text-[15px] font-bold tracking-[-0.01em] text-fg;
   }
   .modal-actions {
     @apply flex justify-end gap-2;

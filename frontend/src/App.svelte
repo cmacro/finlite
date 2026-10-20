@@ -48,6 +48,15 @@
 
   let route = $state<RouteKey>('import');
 
+  // 侧栏「银行流水」余额不平徽标：由 BankFlow 页广播（finlite:bankflow-mismatch）。
+  let navMismatch = $state(0);
+
+  // 顶栏「会计期间」胶囊：当前年月（业务日期均为本地时区）。
+  const period = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  })();
+
   const currentLabel = $derived(navItems.find((n) => n.key === route)?.label ?? '');
   // 顶栏分类：当前页所属导航分组。
   const currentGroup = $derived.by(() => {
@@ -63,6 +72,20 @@
   function requestRefresh(): void {
     window.dispatchEvent(new CustomEvent('finlite:refresh'));
   }
+
+  /** 顶栏导出 TSV：由银行流水页按当前筛选导出（保存对话框在该页处理）。 */
+  function requestExport(): void {
+    window.dispatchEvent(new CustomEvent('finlite:export-bankflow'));
+  }
+
+  $effect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<number>).detail;
+      navMismatch = typeof detail === 'number' ? detail : 0;
+    };
+    window.addEventListener('finlite:bankflow-mismatch', handler);
+    return () => window.removeEventListener('finlite:bankflow-mismatch', handler);
+  });
 </script>
 
 <!-- 布局：main 锁定视口高度（overflow-hidden），仅右侧内容区独立滚动，左侧导航固定不随内容滚动。 -->
@@ -85,6 +108,9 @@
             >
               <Icon name={item.icon} size={16} />
               <span>{item.label}</span>
+              {#if item.key === 'bank-flow' && navMismatch > 0}
+                <span class="nav-badge">{navMismatch}</span>
+              {/if}
             </button>
           {/each}
         </div>
@@ -99,7 +125,19 @@
         <span class="topbar-cat">{currentGroup}</span>
         <span class="topbar-sep">|</span>{currentLabel}
       </h1>
+      {#if route === 'bank-flow'}
+        <button class="period-pill" type="button" title="当前会计期间">
+          <Icon name="calendar" size={14} />
+          会计期间 {period}
+        </button>
+      {/if}
       <div class="topbar-actions">
+        {#if route === 'bank-flow'}
+          <button class="btn" type="button" onclick={requestExport} title="按当前筛选导出 TSV">
+            <Icon name="download" size={15} />
+            导出 TSV
+          </button>
+        {/if}
         <button
           class="icon-btn"
           type="button"
@@ -117,16 +155,18 @@
             onclick={() => go('import')}
           >
             <Icon name="upload" size={15} />
-            前往导入中心
+            导入明细
           </button>
         {/if}
       </div>
     </header>
-    <div class="min-h-0 flex-1 overflow-y-auto px-[22px] pt-5 pb-14">
+    <div
+      class="min-h-0 flex-1 overflow-y-auto px-[22px] pt-5 pb-14 {route === 'bank-flow' ? 'bg-canvas' : ''}"
+    >
     {#if route === 'import'}
       <ImportPage onGoto={go} />
     {:else if route === 'bank-flow'}
-      <BankFlowPage />
+      <BankFlowPage onGoto={go} />
     {:else if route === 'order-flow'}
       <OrderFlowPage />
     {:else if route === 'recon'}

@@ -222,6 +222,7 @@ func (s *ImportService) ImportBankFile(ctx context.Context, filePath string) (Im
 
 // bankRow 解析后的银行流水行（未写库）。
 type bankRow struct {
+	id           string // bank_flows.id（导入时为空；列表重算衔接顺序时回填）
 	rowNo        int
 	txnTime      string
 	counterparty string

@@ -1,0 +1,502 @@
+/* 银行流水（F2）页级样式：提示条 / 批次信息栏 / 统计卡 / 筛选 / 密集表格 / 行内余额衔接 / 抽屉。
+ * 结构对齐 docs/uidesign/bank-flow.html；颜色只取 tokens.css，金额列 tabular-nums。
+ * 类名统一 bf- 前缀，避免与导入中心等页面复用类冲突。 */
+@layer components {
+  /* ---------- 提示条 ---------- */
+  .bf-alert {
+    @apply mb-3 flex items-start gap-2.5 rounded-lg border px-3 py-2.5 text-[13px];
+  }
+  .bf-alert .ico {
+    @apply mt-px shrink-0;
+  }
+  .bf-alert .txt {
+    @apply flex-1 leading-[1.45];
+  }
+  .bf-alert .close {
+    @apply cursor-pointer rounded p-0.5 text-inherit opacity-65 hover:opacity-100;
+  }
+  .bf-alert-info {
+    @apply border-accent-border bg-accent-soft text-accent-fg;
+  }
+  .bf-alert-ok {
+    @apply border-ok-border bg-ok-bg text-ok-fg;
+  }
+  .bf-alert-warn {
+    @apply border-warn-border bg-warn-bg text-warn-fg;
+  }
+  .bf-alert-danger {
+    @apply border-err-border bg-err-bg text-err-fg;
+  }
+
+  /* ---------- 批次信息栏 ---------- */
+  .bf-batch {
+    @apply flex flex-wrap items-center gap-[18px] rounded-xl border border-border bg-surface px-4 py-3.5;
+  }
+  .bf-batch-main {
+    @apply min-w-0 flex-1 basis-[420px];
+  }
+  .bf-batch-file {
+    @apply flex items-center gap-2 text-sm font-semibold tracking-[-0.01em] text-fg;
+  }
+  .bf-batch-file .ico {
+    @apply text-accent;
+  }
+  .bf-batch-file .alllabel {
+    @apply font-semibold text-fg-2;
+  }
+  .bf-batch-meta {
+    @apply mt-2 flex flex-wrap items-center gap-4 text-[12.5px] text-muted;
+  }
+  .bf-kv {
+    @apply flex items-center gap-1.5;
+  }
+  .bf-kv b {
+    @apply font-semibold tabular-nums text-fg-2;
+  }
+  .bf-kv.fail b {
+    @apply text-warn-fg;
+  }
+  .bf-kv b.is-err {
+    @apply text-err-fg;
+  }
+  .bf-chips {
+    @apply mt-2.5 flex flex-wrap items-center gap-2;
+  }
+  .bf-chip {
+    @apply inline-flex h-[22px] items-center gap-1.5 rounded-full border border-border bg-canvas px-2.5 text-xs font-medium whitespace-nowrap text-fg-2;
+    font-variant-numeric: tabular-nums;
+  }
+  .bf-chip-ok {
+    @apply border-ok-border bg-ok-bg text-ok-fg;
+  }
+  .bf-chip-warn {
+    @apply border-warn-border bg-warn-bg text-warn-fg;
+  }
+  .bf-chip-err {
+    @apply border-err-border bg-err-bg text-err-fg;
+  }
+  .bf-chip-dot {
+    @apply h-1.5 w-1.5 rounded-full bg-current;
+  }
+  .bf-batch-actions {
+    @apply flex shrink-0 items-center gap-2.5;
+  }
+
+  /* ---------- 统计卡 ---------- */
+  .bf-stats {
+    @apply mt-3 grid grid-cols-4 gap-3;
+  }
+  .bf-stat {
+    @apply relative overflow-hidden rounded-xl border border-border bg-surface px-4 py-3.5;
+  }
+  .bf-stat-head {
+    @apply flex items-center gap-1.5 text-[12.5px] font-medium text-muted;
+  }
+  .bf-stat-val {
+    @apply mt-2 text-[26px] leading-[1.1] font-bold tracking-[-0.02em];
+    font-variant-numeric: tabular-nums;
+  }
+  .bf-stat-val .unit {
+    @apply ml-1 text-[13px] font-medium text-muted;
+  }
+  .bf-stat-sub {
+    @apply mt-1 text-xs text-muted;
+    font-variant-numeric: tabular-nums;
+  }
+  .bf-stat.is-warn {
+    @apply border-warn-border bg-warn-bg;
+  }
+  .bf-stat.is-warn .bf-stat-head,
+  .bf-stat.is-warn .bf-stat-val,
+  .bf-stat.is-warn .bf-stat-sub,
+  .bf-stat.is-warn .bf-stat-head .ico {
+    @apply text-warn-fg;
+  }
+  .bf-stat.is-ok .bf-stat-val {
+    @apply text-ok-fg;
+  }
+  .bf-stat-in .bf-stat-val {
+    @apply text-ok-fg;
+  }
+  .bf-stat-out .bf-stat-val {
+    @apply text-err-fg;
+  }
+
+  /* ---------- 筛选条 ---------- */
+  .bf-filters {
+    @apply mt-3 flex flex-wrap items-end gap-3 rounded-xl border border-border bg-surface px-4 py-3;
+  }
+  .bf-field {
+    @apply flex flex-col gap-1.5;
+  }
+  .bf-field label {
+    @apply text-[11.5px] font-semibold tracking-[0.02em] text-muted;
+  }
+  .bf-field select,
+  .bf-field input {
+    @apply h-8 rounded-md border border-border bg-surface px-2.5 text-[13px] text-fg outline-none transition-colors hover:border-border-strong focus:border-accent focus-visible:shadow-[0_0_0_3px_var(--color-focusring)];
+  }
+  .bf-field select {
+    @apply min-w-[230px] cursor-pointer;
+  }
+  .bf-field input[type='date'] {
+    @apply w-[150px] cursor-pointer;
+  }
+  .bf-field input[type='text'] {
+    @apply w-[230px];
+  }
+  .bf-daterange {
+    @apply flex items-center gap-1.5 text-muted;
+  }
+  .bf-filters-right {
+    @apply ml-auto flex items-center gap-3 pb-1;
+  }
+  .bf-count-line {
+    @apply text-[12.5px] text-muted;
+    font-variant-numeric: tabular-nums;
+  }
+  .bf-count-line b {
+    @apply font-semibold text-fg-2;
+  }
+
+  /* ---------- 表格容器 ---------- */
+  .bf-table-card {
+    @apply mt-3 overflow-hidden rounded-xl border border-border bg-surface;
+  }
+  .bf-table-toolbar {
+    @apply flex flex-wrap items-center gap-3 border-b border-border-soft px-4 py-3;
+  }
+  .bf-table-title {
+    @apply text-sm font-semibold tracking-[-0.01em] text-fg;
+  }
+  .bf-legend {
+    @apply ml-auto flex flex-wrap items-center gap-3.5;
+  }
+  .bf-legend-item {
+    @apply flex items-center gap-1.5 text-xs text-muted;
+  }
+  .bf-legend-key {
+    @apply h-3 w-3 rounded-[3px] border;
+  }
+  .bf-legend-ok {
+    @apply border-ok-border bg-ok-bg;
+  }
+  .bf-legend-err {
+    @apply border-err-border bg-err-bg;
+  }
+  .bf-legend-skip {
+    @apply border-border bg-canvas;
+  }
+  .bf-legend-conf {
+    @apply border-ok bg-ok-bg;
+  }
+
+  /* ---------- 密集表格 ---------- */
+  .bf-scroll {
+    @apply overflow-auto;
+    max-height: calc(100vh - 424px);
+    min-height: 200px;
+  }
+  .bf-table {
+    @apply w-full border-separate border-spacing-0 text-[13px];
+    min-width: 1120px;
+  }
+  .bf-table thead th {
+    @apply sticky top-0 z-[2] border-b border-border bg-canvas px-3 py-2 text-left text-[11.5px] font-semibold tracking-[0.03em] whitespace-nowrap text-muted;
+  }
+  .bf-table th.num {
+    @apply text-right;
+  }
+  .bf-table td {
+    @apply border-b border-border-soft px-3 py-2 align-middle;
+  }
+  .bf-table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .bf-row {
+    @apply cursor-pointer transition-colors hover:bg-navhover;
+  }
+  .bf-row-mismatch:hover {
+    @apply bg-err-bg;
+  }
+  .bf-row-confirmed:hover {
+    @apply bg-ok-bg;
+  }
+  .bf-row td:first-child {
+    border-left: 3px solid transparent;
+  }
+  .bf-row-mismatch {
+    @apply bg-err-bg;
+  }
+  .bf-row-mismatch td:first-child {
+    border-left-color: var(--color-err);
+  }
+  .bf-row-ok td:first-child {
+    border-left-color: var(--color-ok-border);
+  }
+  .bf-row-confirmed {
+    @apply bg-ok-bg;
+  }
+  .bf-row-confirmed td:first-child {
+    border-left-color: var(--color-ok);
+  }
+  .bf-row-skip td:first-child {
+    border-left-color: var(--color-border);
+  }
+
+  .bf-time {
+    @apply whitespace-nowrap text-[12.5px] text-fg-2;
+    font-variant-numeric: tabular-nums;
+  }
+  .bf-acct {
+    @apply font-mono text-xs tracking-[-0.01em] whitespace-nowrap text-fg-2;
+  }
+  .bf-cell-cp {
+    @apply flex min-w-[180px] items-center gap-2;
+  }
+  .bf-cp-name {
+    @apply text-fg;
+  }
+  .bf-num {
+    @apply text-right whitespace-nowrap font-medium text-fg;
+    font-variant-numeric: tabular-nums;
+  }
+  .bf-num.bal {
+    @apply font-semibold;
+  }
+
+  /* 类型/附言/核对标签 */
+  .bf-tag-pos {
+    @apply inline-flex shrink-0 items-center gap-1 rounded-[4px] border border-accent-border bg-accent-soft px-1.5 text-[11px] leading-4 font-semibold text-accent-fg;
+  }
+  .bf-memo-pos {
+    @apply rounded-[4px] bg-accent-soft px-1.5 py-px font-mono text-[11.5px] text-accent-fg;
+  }
+  .bf-memo-empty {
+    @apply text-muted;
+  }
+  .bf-checked-tag {
+    @apply ml-1.5 inline-flex h-4 items-center rounded-full border border-accent-border bg-accent-soft px-1.5 text-[11px] font-medium text-accent-fg;
+  }
+
+  /* 状态徽标 */
+  .bf-badge {
+    @apply inline-flex h-5 items-center gap-1 rounded-full border px-2 text-[11.5px] leading-none font-semibold whitespace-nowrap;
+  }
+  .bf-badge svg {
+    @apply h-[11px] w-[11px];
+  }
+  .bf-badge-ok {
+    @apply border-ok-border bg-ok-bg text-ok-fg;
+  }
+  .bf-badge-err {
+    @apply border-err-border bg-err-bg text-err-fg;
+  }
+  .bf-badge-skip {
+    @apply border-border bg-canvas text-muted;
+  }
+  .bf-badge-conf {
+    @apply border-ok-fg bg-ok-fg text-on-accent;
+  }
+
+  /* 展开按钮 + 余额衔接明细行 */
+  .bf-expand-btn {
+    @apply grid h-[22px] w-[22px] cursor-pointer place-items-center rounded-[5px] border border-transparent text-muted transition-all hover:bg-navhover hover:text-fg focus-visible:shadow-[0_0_0_3px_var(--color-focusring)] focus-visible:outline-none;
+  }
+  .bf-expand-btn.open {
+    @apply rotate-90 text-accent;
+  }
+  .bf-detail-row {
+    @apply bg-surface-2;
+  }
+  .bf-detail-row td {
+    @apply p-0;
+  }
+  .bf-eq-wrap {
+    @apply flex flex-col gap-3 px-5 py-4 pl-[52px];
+  }
+  .bf-eq-title {
+    @apply flex items-center gap-1.5 text-xs font-semibold text-fg-2;
+  }
+  .bf-eq-title .ico {
+    @apply text-accent;
+  }
+  .bf-eq-line {
+    @apply flex flex-wrap items-center gap-2 text-[13px];
+    font-variant-numeric: tabular-nums;
+  }
+  .bf-eq-term {
+    @apply rounded-md border border-border bg-surface px-2.5 py-0.5 text-fg;
+  }
+  .bf-eq-term .lbl {
+    @apply mr-1.5 text-[11px] text-muted;
+    font-variant-numeric: normal;
+  }
+  .bf-eq-op {
+    @apply text-[15px] font-semibold text-muted;
+  }
+  .bf-eq-eq {
+    @apply font-bold text-fg-2;
+  }
+  .bf-eq-term.is-err {
+    @apply border-err-border bg-err-bg text-err-fg;
+  }
+  .bf-eq-term.is-ok {
+    @apply border-ok-border bg-ok-bg text-ok-fg;
+  }
+  .bf-eq-verdict {
+    @apply text-[12.5px];
+  }
+  .bf-eq-verdict.err {
+    @apply font-medium text-err-fg;
+  }
+  .bf-eq-verdict.ok {
+    @apply font-medium text-ok-fg;
+  }
+  .bf-eq-verdict.skip {
+    @apply text-muted;
+  }
+  .bf-eq-actions {
+    @apply mt-0.5 flex items-center gap-2.5;
+  }
+  .bf-eq-actions .divider {
+    @apply h-4 w-px bg-border;
+  }
+
+  /* ---------- 空态 ---------- */
+  .bf-empty {
+    @apply flex flex-col items-center justify-center px-5 py-16 text-center;
+  }
+  .bf-empty-ico {
+    @apply mb-4 grid h-[52px] w-[52px] place-items-center rounded-[14px] border border-border bg-canvas text-muted;
+  }
+  .bf-empty h3 {
+    @apply mb-1.5 text-[15px] font-semibold text-fg;
+  }
+  .bf-empty p {
+    @apply mb-4 text-[13px] text-muted;
+  }
+
+  /* ---------- 右侧抽屉 ---------- */
+  .bf-drawer-overlay {
+    @apply fixed inset-0 z-50 bg-mask;
+  }
+  .bf-drawer {
+    @apply fixed inset-y-0 right-0 z-[55] flex w-[460px] max-w-[94vw] flex-col border-l border-border bg-surface shadow-2xl;
+  }
+  .bf-drawer-head {
+    @apply flex h-14 shrink-0 items-center gap-2.5 border-b border-border px-[18px];
+  }
+  .bf-drawer-head h2 {
+    @apply text-[15px] font-bold tracking-[-0.01em] text-fg;
+  }
+  .bf-drawer-close {
+    @apply ml-auto grid h-[30px] w-[30px] cursor-pointer place-items-center rounded-md border border-transparent text-muted hover:bg-canvas hover:text-fg;
+  }
+  .bf-drawer-body {
+    @apply min-h-0 flex-1 overflow-y-auto px-[18px] pt-4 pb-8;
+  }
+  .bf-dsection {
+    @apply mb-[22px];
+  }
+  .bf-dsection > h3 {
+    @apply mb-2.5 text-[11.5px] font-semibold tracking-[0.05em] uppercase text-muted;
+  }
+  .bf-dlist {
+    @apply overflow-hidden rounded-lg border border-border;
+  }
+  .bf-drow {
+    @apply flex gap-3.5 border-b border-border-soft px-3 py-2 text-[13px] last:border-b-0;
+  }
+  .bf-dk {
+    @apply w-24 shrink-0 text-[12.5px] text-muted;
+  }
+  .bf-dv {
+    @apply min-w-0 flex-1 break-all text-fg;
+  }
+  .bf-dv.amt-in {
+    @apply font-semibold text-ok-fg;
+  }
+  .bf-dv.amt-out {
+    @apply font-semibold text-err-fg;
+  }
+  .bf-dv.mono-num {
+    font-variant-numeric: tabular-nums;
+  }
+  .bf-dnone {
+    @apply text-[12.5px] text-muted;
+  }
+  .bf-json {
+    @apply overflow-auto rounded-lg bg-fg p-3 font-mono text-xs leading-[1.7] text-on-accent;
+  }
+  .bf-ctx {
+    @apply overflow-hidden rounded-lg border border-border;
+  }
+  .bf-ctx-row {
+    @apply grid grid-cols-[64px_1fr_auto] items-center gap-2.5 border-b border-border-soft px-3 py-2 text-[12.5px] last:border-b-0;
+  }
+  .bf-ctx-row.current {
+    @apply bg-accent-soft;
+  }
+  .bf-ctx-mark {
+    @apply text-[11px] font-semibold text-muted;
+  }
+  .bf-ctx-row.current .bf-ctx-mark {
+    @apply text-accent-fg;
+  }
+  .bf-ctx-desc {
+    @apply truncate text-fg-2;
+  }
+  .bf-ctx-bal {
+    @apply font-semibold text-fg;
+    font-variant-numeric: tabular-nums;
+  }
+  .bf-voucher-link {
+    @apply flex w-full items-center gap-2 rounded-lg border border-accent-border bg-accent-soft px-3 py-2.5 text-[13px] font-medium text-accent-fg hover:brightness-[0.98];
+  }
+
+  /* ---------- Toast ---------- */
+  .bf-toasts {
+    @apply fixed top-16 right-5 z-[90] flex w-[340px] max-w-[calc(100vw-32px)] flex-col gap-2;
+  }
+  .bf-toast {
+    @apply flex items-start gap-2 rounded-lg border border-border bg-surface p-3 text-[13px] shadow-lg;
+  }
+  .bf-toast-bar {
+    @apply w-[3px] self-stretch rounded-sm;
+  }
+  .bf-toast.info .bf-toast-bar {
+    @apply bg-accent;
+  }
+  .bf-toast.ok .bf-toast-bar {
+    @apply bg-ok;
+  }
+  .bf-toast.warn .bf-toast-bar {
+    @apply bg-warn;
+  }
+  .bf-toast.danger .bf-toast-bar {
+    @apply bg-err;
+  }
+  .bf-toast-body {
+    @apply flex-1 text-fg-2;
+  }
+  .bf-toast-body b {
+    @apply text-fg;
+  }
+  .bf-toast-close {
+    @apply cursor-pointer text-muted hover:text-fg;
+  }
+}
+
+/* 定位相邻行时的高亮闪烁 */
+@keyframes bf-flash {
+  0% {
+    background: var(--color-accent-soft);
+  }
+  100% {
+    background: transparent;
+  }
+}
+.bf-flash {
+  animation: bf-flash 1.4s cubic-bezier(0.2, 0, 0, 1);
+}

@@ -37,6 +37,11 @@ export interface BankFlow {
     "rowNo": number;
     "txnTime": string;
     "counterparty": string;
+
+    /**
+     * raw_json 中保留的「对方账号」
+     */
+    "counterpartyAccount": string;
     "summary": string;
     "remark": string;
     "inAmount": string;
@@ -45,7 +50,41 @@ export interface BankFlow {
     "balanceStatus": string;
     "balanceConfirmedAt": string;
     "displayStatus": string;
+
+    /**
+     * 同一批次上行余额；空=首行
+     */
+    "prevBalance": string;
+
+    /**
+     * 上行余额 + 转入 - 转出
+     */
+    "expectedBalance": string;
+
+    /**
+     * 本行余额 - 应到余额（带符号）
+     */
+    "balanceDiff": string;
+    "isPos": boolean;
+    "voucherId": string;
+    "voucherNo": string;
+    "rawJson": string;
     "createdAt": string;
+}
+
+/**
+ * BankFlowBatch 批次信息栏用：导入统计 + 余额不平 / 已确认行数。
+ */
+export interface BankFlowBatch {
+    "batchId": string;
+    "fileName": string;
+    "rowCount": number;
+    "successCount": number;
+    "skipCount": number;
+    "importedAt": string;
+    "mismatchCount": number;
+    "confirmedCount": number;
+    "confirmedAt": string;
 }
 
 export interface BankFlowFilter {
@@ -53,15 +92,21 @@ export interface BankFlowFilter {
     "keyword": string;
     "dateFrom": string;
     "dateTo": string;
-    "page": number;
-    "pageSize": number;
 }
 
+/**
+ * BankFlowPage 一次性返回全部明细（DESIGN.md §7 禁止分页），附带筛选结果的汇总统计。
+ */
 export interface BankFlowPage {
     "items": BankFlow[] | null;
     "total": number;
-    "page": number;
-    "pageSize": number;
+    "totalIn": string;
+    "totalOut": string;
+    "inCount": number;
+    "outCount": number;
+    "mismatchCount": number;
+    "confirmedCount": number;
+    "skipCount": number;
 }
 
 /**
