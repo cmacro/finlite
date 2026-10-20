@@ -35,6 +35,10 @@ http://127.0.0.1:7456/api/projects/finlite-uidesign/raw/{文件名}
 | `DESIGN.md` | 统一设计规范 |
 | `tokens.css` | 设计 token（机器可读） |
 
+## 侧栏基准
+
+所有页面的左侧导航以 `order-flow.html` 为唯一基准：品牌区（F + Finlite + 单账套）、5 组 9 项导航、底部状态条，仅当前高亮项不同。新增页面必须复用同结构，不得自创导航分组或样式。
+
 ## 新增原型流程
 
 1. 在 `finlite-uidesign` 项目内生成 / 写入新 HTML（放项目根，文件名即 URL 路径）。

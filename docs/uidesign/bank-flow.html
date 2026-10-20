@@ -73,40 +73,35 @@ svg{display:block;flex:0 0 auto;}
 /* ---------------- layout ---------------- */
 .app{display:flex;height:100vh;overflow:hidden;}
 
-/* ---------------- sidebar ---------------- */
-.sidebar{
-  width:220px;flex:0 0 220px;background:var(--bg);
-  border-right:1px solid var(--border);
-  display:flex;flex-direction:column;
+/* ---------- Sidebar (canonical: order-flow.html) ---------- */
+.sidebar{width:220px;flex:0 0 220px;height:100vh;background:var(--bg);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.brand{height:52px;flex:0 0 52px;display:flex;align-items:center;gap:9px;padding:0 16px;border-bottom:1px solid var(--border)}
+.brand-mark{width:26px;height:26px;border-radius:7px;flex:0 0 26px;background:linear-gradient(150deg,oklch(0.62 0.19 255),var(--accent));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;letter-spacing:-.02em}
+.brand-name{font-size:16px;font-weight:700;letter-spacing:-.02em}
+.brand-sub{font-size:11px;color:var(--muted);margin-left:auto;font-weight:500}
+.nav{flex:1;overflow-y:auto;padding:12px 10px 18px}
+.nav-group{margin-bottom:14px}
+.nav-label{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.04em;padding:0 10px 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:var(--fg-2,#374151);font-size:13px;font-weight:500;cursor:pointer;position:relative;border:1px solid transparent;transition:background .12s,color .12s;width:100%;text-align:left;background:none;font-family:inherit}
+.nav-item svg{width:16px;height:16px;flex:0 0 16px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
+.nav-item:hover{background:#f1f3f7;color:var(--fg)}
+.nav-item.active{background:#e9f2ff;color:var(--accent);font-weight:600}
+.nav-item.active svg{opacity:1}
+.nav-item.active::before{content:"";position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:3px;height:18px;border-radius:0 3px 3px 0;background:var(--accent)}
+.nav-item:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(22,119,255,.24)}
+.nav-foot{padding:10px 16px 14px;border-top:1px solid var(--border-soft,#edf0f5);font-size:11px;color:var(--muted);display:flex;align-items:center;gap:7px}
+.nav-foot .dot{width:6px;height:6px;border-radius:50%;background:var(--ok)}
+.nav-badge,.nav-count{margin-left:auto;font-size:11px;font-weight:600;line-height:16px;padding:0 6px;border-radius:9999px;color:oklch(0.49 0.18 25);background:oklch(0.974 0.028 25);border:1px solid oklch(0.86 0.09 25)}
+.nav-count{font-family:var(--font-mono,ui-monospace,monospace)}
+.nav-item.active .nav-count{background:var(--accent);color:#fff;border-color:var(--accent)}
+@media (max-width:900px){
+  .sidebar{width:64px;flex:0 0 64px}
+  .brand{padding:0 12px;justify-content:center}
+  .brand-sub,.nav-label,.nav-item span:not(.nav-badge):not(.nav-count),.nav-foot span{display:none}
+  .nav{padding:12px 8px 18px}
+  .nav-item{justify-content:center;padding:8px}
+  .nav-item.active::before{left:-8px}
 }
-.brand{
-  height:52px;flex:0 0 52px;display:flex;align-items:center;gap:10px;
-  padding:0 16px;border-bottom:1px solid var(--border-soft);
-}
-.brand-mark{
-  width:26px;height:26px;border-radius:7px;background:var(--accent);color:var(--accent-on);
-  display:grid;place-items:center;font-size:14px;font-weight:700;letter-spacing:-.02em;
-}
-.brand-name{font-size:15px;font-weight:700;letter-spacing:-.015em;}
-.brand-sub{font-size:11px;color:var(--muted);margin-top:-2px;}
-.nav{flex:1;overflow-y:auto;padding:10px 8px 16px;}
-.nav-group-label{
-  font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--muted);
-  padding:12px 10px 6px;text-transform:uppercase;
-}
-.nav-item{
-  display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;margin:1px 0;
-  border-radius:var(--radius-sm);color:var(--fg-2);font-size:13px;cursor:pointer;
-  border:1px solid transparent;user-select:none;
-  transition:background var(--motion-fast) var(--ease-standard),color var(--motion-fast) var(--ease-standard);
-}
-.nav-item svg{color:var(--muted);transition:color var(--motion-fast);}
-.nav-item:hover{background:var(--surface);color:var(--fg);}
-.nav-item:hover svg{color:var(--fg-2);}
-.nav-item:focus-visible{outline:none;box-shadow:var(--focus-ring);}
-.nav-item.active{background:var(--accent-soft);color:var(--accent-text);font-weight:600;border-color:var(--accent-border);}
-.nav-item.active svg{color:var(--accent);}
-.nav-badge{margin-left:auto;font-size:11px;font-weight:600;color:var(--err-text);background:var(--err-bg);border:1px solid var(--err-border);border-radius:9999px;padding:0 6px;line-height:16px;}
 
 /* ---------------- main ---------------- */
 .main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--surface);}
@@ -122,7 +117,7 @@ svg{display:block;flex:0 0 auto;}
 .period-pill{
   display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px;
   border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);
-  font-size:13px;color:var(--fg-2);cursor:pointer;transition:background var(--motion-fast),border-color var(--motion-fast);
+  font-size:13px;color:var(--fg-2,#374151);cursor:pointer;transition:background var(--motion-fast),border-color var(--motion-fast);
 }
 .period-pill:hover{background:var(--surface);}
 .period-pill svg{color:var(--muted);}
@@ -148,7 +143,7 @@ svg{display:block;flex:0 0 auto;}
 .btn-danger:hover{background:var(--err-bg);border-color:var(--err);}
 .btn-danger:disabled{background:var(--bg);border-color:var(--border);color:var(--muted);}
 .btn-sm{height:28px;padding:0 10px;font-size:12px;}
-.btn-ghost{border-color:transparent;background:transparent;color:var(--fg-2);}
+.btn-ghost{border-color:transparent;background:transparent;color:var(--fg-2,#374151);}
 .btn-ghost:hover{background:var(--surface);border-color:transparent;color:var(--fg);}
 .btn-link{border:none;background:none;color:var(--accent-text);font-weight:500;padding:0 4px;height:auto;}
 .btn-link:hover{text-decoration:underline;background:none;}
@@ -175,15 +170,15 @@ svg{display:block;flex:0 0 auto;}
 .batch-main{min-width:0;flex:1 1 420px;}
 .batch-file{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;letter-spacing:-.01em;}
 .batch-file svg{color:var(--accent);}
-.batch-file .alllabel{color:var(--fg-2);font-weight:600;}
+.batch-file .alllabel{color:var(--fg-2,#374151);font-weight:600;}
 .batch-meta{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:12.5px;color:var(--muted);}
 .batch-meta .kv{display:flex;align-items:center;gap:6px;}
-.batch-meta .kv b{color:var(--fg-2);font-weight:600;font-variant-numeric:tabular-nums;}
+.batch-meta .kv b{color:var(--fg-2,#374151);font-weight:600;font-variant-numeric:tabular-nums;}
 .batch-meta .kv.fail b{color:var(--warn-text);}
 .chips{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;}
 .chip{
   display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 9px;border-radius:9999px;
-  font-size:12px;font-weight:500;border:1px solid var(--border);background:var(--surface);color:var(--fg-2);
+  font-size:12px;font-weight:500;border:1px solid var(--border);background:var(--surface);color:var(--fg-2,#374151);
   font-variant-numeric:tabular-nums;
 }
 .chip-ok{background:var(--ok-bg);border-color:var(--ok-border);color:var(--ok-text);}
@@ -232,11 +227,11 @@ svg{display:block;flex:0 0 auto;}
 .ff .daterange{display:flex;align-items:center;gap:6px;color:var(--muted);}
 .filters .filters-right{margin-left:auto;display:flex;align-items:center;gap:12px;padding-bottom:5px;}
 .count-line{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;}
-.count-line b{color:var(--fg-2);font-weight:600;}
+.count-line b{color:var(--fg-2,#374151);font-weight:600;}
 
 /* ---------------- table ---------------- */
 .table-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);margin-top:12px;overflow:hidden;}
-.table-toolbar{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border-soft);flex-wrap:wrap;}
+.table-toolbar{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border-soft,#edf0f5);flex-wrap:wrap;}
 .table-toolbar .tt-title{font-size:14px;font-weight:600;letter-spacing:-.01em;}
 .legend{display:flex;align-items:center;gap:14px;margin-left:auto;flex-wrap:wrap;}
 .legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
@@ -254,7 +249,7 @@ thead th{
   padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap;
 }
 th.num{text-align:right;}
-td{padding:9px 12px;border-bottom:1px solid var(--border-soft);vertical-align:middle;}
+td{padding:9px 12px;border-bottom:1px solid var(--border-soft,#edf0f5);vertical-align:middle;}
 tbody tr:last-child td{border-bottom:none;}
 tbody tr{--row-bg:var(--bg);background:var(--row-bg);cursor:pointer;transition:background var(--motion-fast);}
 tbody tr:hover{--row-bg:var(--row-hover);}
@@ -268,8 +263,8 @@ tr.row-confirmed:hover{--row-bg:color-mix(in oklab,var(--ok-bg),var(--ok) 7%);}
 tr.row-confirmed td:first-child{border-left-color:var(--ok);}
 tr.row-skip td:first-child{border-left-color:var(--skip-border);}
 
-td.td-time{font-size:12.5px;color:var(--fg-2);font-variant-numeric:tabular-nums;white-space:nowrap;}
-td.td-acct{font-family:var(--font-mono);font-size:12px;color:var(--fg-2);letter-spacing:-.01em;white-space:nowrap;}
+td.td-time{font-size:12.5px;color:var(--fg-2,#374151);font-variant-numeric:tabular-nums;white-space:nowrap;}
+td.td-acct{font-family:var(--font-mono);font-size:12px;color:var(--fg-2,#374151);letter-spacing:-.01em;white-space:nowrap;}
 td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
 td.num.in{color:var(--fg);font-weight:500;}
 td.num.out{color:var(--fg);font-weight:500;}
@@ -307,15 +302,15 @@ td.td-expand{padding-right:0;width:36px;}
 /* detail row */
 tr.detail-row{background:color-mix(in oklab,var(--surface) 70%, var(--bg));cursor:default;}
 tr.detail-row:hover{--row-bg:color-mix(in oklab,var(--surface) 70%, var(--bg));}
-tr.detail-row td{padding:0;border-bottom:1px solid var(--border-soft);}
+tr.detail-row td{padding:0;border-bottom:1px solid var(--border-soft,#edf0f5);}
 .eq-wrap{padding:14px 20px 16px 52px;display:flex;flex-direction:column;gap:12px;}
-.eq-title{font-size:12px;font-weight:600;color:var(--fg-2);display:flex;align-items:center;gap:7px;}
+.eq-title{font-size:12px;font-weight:600;color:var(--fg-2,#374151);display:flex;align-items:center;gap:7px;}
 .eq-title svg{color:var(--accent);}
 .eq-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;font-variant-numeric:tabular-nums;}
 .eq-term{padding:3px 10px;border-radius:var(--radius-sm);background:var(--bg);border:1px solid var(--border);color:var(--fg);}
 .eq-term .lbl{font-size:11px;color:var(--muted);margin-right:6px;font-variant-numeric:normal;}
 .eq-op{color:var(--muted);font-weight:600;font-size:15px;}
-.eq-eq{color:var(--fg-2);font-weight:700;}
+.eq-eq{color:var(--fg-2,#374151);font-weight:700;}
 .eq-term.is-err{background:var(--err-bg);border-color:var(--err-border);color:var(--err-text);}
 .eq-term.is-ok{background:var(--ok-bg);border-color:var(--ok-border);color:var(--ok-text);}
 .eq-verdict{font-size:12.5px;}
@@ -353,7 +348,7 @@ tr.detail-row td{padding:0;border-bottom:1px solid var(--border-soft);}
 .dsection{margin-bottom:22px;}
 .dsection h3{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
 .dlist{border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;}
-.drow{display:flex;gap:14px;padding:9px 12px;border-bottom:1px solid var(--border-soft);font-size:13px;}
+.drow{display:flex;gap:14px;padding:9px 12px;border-bottom:1px solid var(--border-soft,#edf0f5);font-size:13px;}
 .drow:last-child{border-bottom:none;}
 .drow .dk{width:96px;flex:0 0 96px;color:var(--muted);font-size:12.5px;}
 .drow .dv{flex:1;color:var(--fg);word-break:break-all;}
@@ -366,12 +361,12 @@ tr.detail-row td{padding:0;border-bottom:1px solid var(--border-soft);}
 .json .n{color:#f0b07c;}
 .json .b{color:#e0a0d0;}
 .ctx{border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;}
-.ctx-row{display:grid;grid-template-columns:64px 1fr auto;gap:10px;padding:9px 12px;border-bottom:1px solid var(--border-soft);font-size:12.5px;align-items:center;}
+.ctx-row{display:grid;grid-template-columns:64px 1fr auto;gap:10px;padding:9px 12px;border-bottom:1px solid var(--border-soft,#edf0f5);font-size:12.5px;align-items:center;}
 .ctx-row:last-child{border-bottom:none;}
 .ctx-row.current{background:var(--accent-soft);}
 .ctx-row .cmark{font-size:11px;color:var(--muted);font-weight:600;}
 .ctx-row.current .cmark{color:var(--accent-text);}
-.ctx-row .cdesc{color:var(--fg-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ctx-row .cdesc{color:var(--fg-2,#374151);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .ctx-row .cbal{font-variant-numeric:tabular-nums;color:var(--fg);font-weight:600;}
 .voucher-link{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--accent-border);background:var(--accent-soft);border-radius:var(--radius-md);color:var(--accent-text);font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;}
 .voucher-link:hover{background:color-mix(in oklab,var(--accent-soft),var(--accent) 6%);}
@@ -387,7 +382,7 @@ tr.detail-row td{padding:0;border-bottom:1px solid var(--border-soft);}
 .modal-ico.info{background:var(--accent-soft);color:var(--accent-text);border:1px solid var(--accent-border);}
 .modal-ico.danger{background:var(--err-bg);color:var(--err-text);border:1px solid var(--err-border);}
 .modal h3{font-size:15px;font-weight:700;letter-spacing:-.01em;}
-.modal-body{padding:12px 20px 4px;font-size:13px;color:var(--fg-2);line-height:1.6;}
+.modal-body{padding:12px 20px 4px;font-size:13px;color:var(--fg-2,#374151);line-height:1.6;}
 .modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:16px 20px 20px;}
 
 /* ---------------- toasts ---------------- */
@@ -404,7 +399,7 @@ tr.detail-row td{padding:0;border-bottom:1px solid var(--border-soft);}
 .toast.ok .tbar{background:var(--ok);}
 .toast.warn .tbar{background:var(--warn);}
 .toast.danger .tbar{background:var(--err);}
-.toast .tbody{flex:1;color:var(--fg-2);}
+.toast .tbody{flex:1;color:var(--fg-2,#374151);}
 .toast .tbody b{color:var(--fg);}
 .toast .tclose{background:none;border:none;color:var(--muted);cursor:pointer;padding:0;line-height:1;}
 .toast .tclose:hover{color:var(--fg);}
@@ -418,54 +413,64 @@ tr.detail-row td{padding:0;border-bottom:1px solid var(--border-soft);}
   <aside class="sidebar" data-od-id="sidebar">
     <div class="brand" data-od-id="brand">
       <div class="brand-mark">F</div>
-      <div>
-        <div class="brand-name">Finlite</div>
-        <div class="brand-sub">财务助手 · 单账套</div>
-      </div>
+      <div class="brand-name">Finlite</div>
+      <div class="brand-sub">单账套</div>
     </div>
-    <nav class="nav" data-od-id="nav">
-      <div class="nav-group-label">数据</div>
-      <div class="nav-item" tabindex="0" data-od-id="nav-import">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        导入中心
+    <nav class="nav" data-od-id="nav" aria-label="主导航">
+      <div class="nav-group">
+        <div class="nav-label">数据接入</div>
+        <button class="nav-item" data-od-id="nav-import">
+          <svg viewBox="0 0 16 16"><path d="M8 10.5V3M8 3 5.2 5.8M8 3l2.8 2.8"/><path d="M2.8 10.5v2.2A1.3 1.3 0 0 0 4.1 14h7.8a1.3 1.3 0 0 0 1.3-1.3v-2.2"/></svg>
+          <span>导入中心</span>
+        </button>
       </div>
-      <div class="nav-item active" tabindex="0" data-od-id="nav-bank-flow" data-current="true">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-        银行流水
-        <span class="nav-badge" id="navMismatchBadge">1</span>
+      <div class="nav-group">
+        <div class="nav-label">流水账务</div>
+        <button class="nav-item active" data-od-id="nav-bank" aria-current="page">
+          <svg viewBox="0 0 16 16"><path d="M2.4 6.4 8 3l5.6 3.4"/><path d="M3.6 6.6v4.8M6.2 6.6v4.8M9.8 6.6v4.8M12.4 6.6v4.8"/><path d="M2.4 13.2h11.2"/></svg>
+          <span>银行流水</span>
+          <span class="nav-badge" id="navMismatchBadge">1</span>
+        </button>
+        <button class="nav-item" data-od-id="nav-order">
+          <svg viewBox="0 0 16 16"><path d="M4.2 2.5h5.1l2.5 2.5v8a.5.5 0 0 1-.5.5H4.2a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 .5-.5Z"/><path d="M9.2 2.5V5h2.6"/><path d="M5.6 8h4.8M5.6 10.4h4.8"/></svg>
+          <span>订单流水</span>
+        </button>
+        <button class="nav-item" data-od-id="nav-store">
+          <svg viewBox="0 0 16 16"><path d="M2.6 6 4 3.2h8L13.4 6"/><path d="M3.2 6v6.8h9.6V6"/><path d="M3 6a1.9 1.9 0 0 0 3.3 1.2A1.9 1.9 0 0 0 8 8.3a1.9 1.9 0 0 0 1.7-1.1A1.9 1.9 0 0 0 13 6"/></svg>
+          <span>店面收款</span>
+        </button>
       </div>
-      <div class="nav-item" tabindex="0" data-od-id="nav-orders">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-        订单流水
+      <div class="nav-group">
+        <div class="nav-label">对账与汇总</div>
+        <button class="nav-item" data-od-id="nav-recon">
+          <svg viewBox="0 0 16 16"><path d="M8 3v10M4.5 13.2h7"/><path d="M4 6 2.2 9.6h3.6L4 6Zm8 0L10.2 9.6h3.6L12 6Z"/><path d="M3.6 6h8.8"/></svg>
+          <span>对账中心</span>
+        </button>
+        <button class="nav-item" data-od-id="nav-summary">
+          <svg viewBox="0 0 16 16"><path d="M2.8 13V8.4M6.4 13V3.4M10 13V9.6M13.2 13V6.2"/></svg>
+          <span>数据汇总</span>
+        </button>
       </div>
-      <div class="nav-item" tabindex="0" data-od-id="nav-store">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-        店面收款
+      <div class="nav-group">
+        <div class="nav-label">账务处理</div>
+        <button class="nav-item" data-od-id="nav-voucher">
+          <svg viewBox="0 0 16 16"><path d="M4.4 2.5h7.2v11H4.4z"/><path d="M6.2 5.4h3.6M6.2 8h3.6M6.2 10.6h2.2"/></svg>
+          <span>凭证管理</span>
+        </button>
+        <button class="nav-item" data-od-id="nav-balance">
+          <svg viewBox="0 0 16 16"><path d="M2.4 3.5h11.2v9H2.4z"/><path d="M2.4 6.5h11.2M6.6 3.5v9"/></svg>
+          <span>科目余额表</span>
+        </button>
       </div>
-      <div class="nav-group-label">核对</div>
-      <div class="nav-item" tabindex="0" data-od-id="nav-recon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v6a3 3 0 0 0 3 3h6"/><path d="M18 15V9a3 3 0 0 0-3-3H9"/></svg>
-        对账中心
-      </div>
-      <div class="nav-item" tabindex="0" data-od-id="nav-summary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
-        数据汇总
-      </div>
-      <div class="nav-group-label">账务</div>
-      <div class="nav-item" tabindex="0" data-od-id="nav-vouchers">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
-        凭证管理
-      </div>
-      <div class="nav-item" tabindex="0" data-od-id="nav-balances">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3h13a3 3 0 0 1 3 3v15H7a3 3 0 0 1-3-3z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="16" y2="11"/></svg>
-        科目余额表
-      </div>
-      <div class="nav-group-label">系统</div>
-      <div class="nav-item" tabindex="0" data-od-id="nav-settings">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        基础设置
+      <div class="nav-group">
+        <div class="nav-label">系统</div>
+        <button class="nav-item" data-od-id="nav-settings">
+          <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.9v1.5M8 12.6v1.5M1.9 8h1.5M12.6 8h1.5M3.7 3.7l1.1 1.1M11.2 11.2l1.1 1.1M12.3 3.7l-1.1 1.1M4.8 11.2l-1.1 1.1"/></svg>
+          <span>基础设置</span>
+        </button>
       </div>
     </nav>
+    <div class="nav-foot"><span class="dot"></span><span>账套正常 · 2026 年度</span></div>
   </aside>
 
   <!-- ================= MAIN ================= -->
@@ -792,13 +797,13 @@ function renderBatchBar(){
       kv('导入行数', sel.total + ' 行') +
       kv('成功', sel.ok + ' 行') +
       kvFail(sel.fail) +
-      '<span class="kv">余额不平 <b style="color:'+(mismatchCount>0?'var(--err-text)':'var(--fg-2)')+'">'+ mismatchCount +' 笔</b></span>';
+      '<span class="kv">余额不平 <b style="color:'+(mismatchCount>0?'var(--err-text)':'var(--fg-2,#374151)')+'">'+ mismatchCount +' 笔</b></span>';
   } else {
     el.innerHTML = '<span class="alllabel">全部批次</span> · ' + BATCHES.length + ' 个文件';
     meta.innerHTML =
       kv('银行流水批次', BATCHES.length + ' 个') +
       kv('合计记录', batchRows.length + ' 行') +
-      '<span class="kv">余额不平 <b style="color:'+(mismatchCount>0?'var(--err-text)':'var(--fg-2)')+'">'+ mismatchCount +' 笔</b></span>';
+      '<span class="kv">余额不平 <b style="color:'+(mismatchCount>0?'var(--err-text)':'var(--fg-2,#374151)')+'">'+ mismatchCount +' 笔</b></span>';
   }
 
   var cc = '';
