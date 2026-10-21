@@ -31,6 +31,12 @@
   const MAX_ATTACHMENTS = 10;
   const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
   const ALLOWED_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
+  const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'webp'];
+  // 上传前统一压缩：长边 ≤ 2000px、JPEG 质量 0.7。手机原图 3–4MB → 200–400KB，
+  // 账套照片年增量从 ~200GB 降到 ~15GB（见业务文档 §8.1）。
+  const IMAGE_MAX_EDGE = 2000;
+  const IMAGE_QUALITY = 0.7;
+  const IMAGE_SKIP_BYTES = 400 * 1024;
 
   const PAY_METHODS = [
     { value: 'cash', label: '现金' },
@@ -101,7 +107,81 @@
     return STATUS_OPTIONS.find((s) => s.value === v)?.label ?? (v || '—');
   }
   function isImageExt(ext: string): boolean {
-    return ['jpg', 'jpeg', 'png', 'webp'].includes((ext || '').toLowerCase());
+    return IMAGE_EXTS.includes((ext || '').toLowerCase());
+  }
+
+  /** 读取 Blob 为 data URL（保留原始字节，后端再做 base64 解码）。 */
+  function readAsDataURL(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result ?? ''));
+      reader.onerror = () => reject(new Error('读取文件失败'));
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  function loadImage(src: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('图片解码失败'));
+      img.src = src;
+    });
+  }
+
+  function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality: number): Promise<Blob | null> {
+    return new Promise((resolve) => canvas.toBlob((b) => resolve(b), type, quality));
+  }
+
+  function replaceExt(name: string, ext: string): string {
+    const stem = name.includes('.') ? name.slice(0, name.lastIndexOf('.')) : name;
+    return `${stem}.${ext}`;
+  }
+
+  interface PreparedUpload {
+    name: string;
+    ext: string;
+    size: number;
+    dataBase64: string;
+    previewUrl: string;
+  }
+
+  /** 图片按需缩放重编码为 JPEG；PDF 与非图片原样上传。压不动（更大）时保留原图。 */
+  async function prepareUpload(file: File): Promise<PreparedUpload> {
+    const ext = (file.name.split('.').pop() ?? '').toLowerCase();
+    if (!isImageExt(ext)) {
+      const data = await readAsDataURL(file);
+      return { name: file.name, ext, size: file.size, dataBase64: data, previewUrl: data };
+    }
+
+    const url = URL.createObjectURL(file);
+    try {
+      const img = await loadImage(url);
+      const maxEdge = Math.max(img.naturalWidth, img.naturalHeight);
+      if (maxEdge <= IMAGE_MAX_EDGE && file.size <= IMAGE_SKIP_BYTES) {
+        const data = await readAsDataURL(file);
+        return { name: file.name, ext, size: file.size, dataBase64: data, previewUrl: data };
+      }
+      const scale = Math.min(1, IMAGE_MAX_EDGE / Math.max(1, maxEdge));
+      const width = Math.max(1, Math.round(img.naturalWidth * scale));
+      const height = Math.max(1, Math.round(img.naturalHeight * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('当前环境不支持图片压缩');
+      ctx.drawImage(img, 0, 0, width, height);
+      const blob = await canvasToBlob(canvas, 'image/jpeg', IMAGE_QUALITY);
+      if (!blob || blob.size >= file.size) {
+        const data = await readAsDataURL(file);
+        return { name: file.name, ext, size: file.size, dataBase64: data, previewUrl: data };
+      }
+      const data = await readAsDataURL(blob);
+      // 重编码后内容是 JPEG，扩展名同步改为 jpg，避免 MIME 与内容不一致。
+      return { name: replaceExt(file.name, 'jpg'), ext: 'jpg', size: blob.size, dataBase64: data, previewUrl: data };
+    } finally {
+      URL.revokeObjectURL(url);
+    }
   }
 
   // ---------- Toast ----------
@@ -347,9 +427,10 @@
     form.account = METHOD_RECOMMEND[form.payMethod] ?? 'cash';
   }
 
-  function onFiles(e: Event): void {
+  async function onFiles(e: Event): Promise<void> {
     const input = e.currentTarget as HTMLInputElement;
     const files = Array.from(input.files ?? []);
+    input.value = '';
     for (const f of files) {
       if (editAttachments.length >= MAX_ATTACHMENTS) {
         toast('err', `单条记录最多 ${MAX_ATTACHMENTS} 张附件`);
@@ -364,17 +445,20 @@
         toast('err', `「${f.name}」超过 10MB，已跳过`);
         continue;
       }
-      const reader = new FileReader();
-      reader.onload = () => {
-        const url = String(reader.result ?? '');
+      try {
+        const p = await prepareUpload(f);
+        if (p.size > MAX_ATTACHMENT_BYTES) {
+          toast('err', `「${f.name}」压缩后仍超过 10MB，已跳过`);
+          continue;
+        }
         editAttachments = [
           ...editAttachments,
-          { id: '', name: f.name, ext, size: f.size, dataBase64: url, previewUrl: url },
+          { id: '', name: p.name, ext: p.ext, size: p.size, dataBase64: p.dataBase64, previewUrl: p.previewUrl },
         ];
-      };
-      reader.readAsDataURL(f);
+      } catch (err) {
+        toast('err', `「${f.name}」处理失败：${err instanceof Error ? err.message : String(err)}`);
+      }
     }
-    input.value = '';
   }
 
   function removeAttachment(index: number): void {
@@ -1118,7 +1202,7 @@
           {/if}
         </div>
         <div class="cl-attach-hint">
-          支持 jpg / png / webp / pdf，单张 ≤ 10MB，单条记录 ≤ 10 张。用于留存收款凭据，形成「收款记录 → 附件 → 数据汇总 → 凭证」可追溯链。
+          支持 jpg / png / webp / pdf，单张 ≤ 10MB，单条记录 ≤ 10 张。照片上传前自动压缩（长边 ≤ 2000px、JPEG 质量 0.7），PDF 不压缩；附件保存在账套 attachments/ 目录（内容寻址，同图只存一份），形成「收款记录 → 附件 → 数据汇总 → 凭证」可追溯链。
         </div>
       </div>
     </div>

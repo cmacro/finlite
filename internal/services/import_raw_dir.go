@@ -2,7 +2,9 @@ package services
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -20,7 +22,7 @@ const (
 	rawArchiveDir    = "archived"
 )
 
-// GetRawDir 返回默认原始数据目录：优先读本地设置，未设置则回退到「库文件同目录 /raw」。
+// GetRawDir 返回默认原始数据目录：优先读本地设置（外部投放区），未设置则回退到账套 raw/inbox。
 func (s *ImportService) GetRawDir(ctx context.Context) (string, error) {
 	var dir string
 	err := s.DB.Pool().QueryRowContext(ctx,
@@ -122,7 +124,8 @@ func (s *ImportService) ScanRawDir(ctx context.Context) (RawScan, error) {
 			continue
 		}
 		f.MissingColumns = missingColumnsFor(sourceType, header)
-		if importedAt, done := s.rawFileImported(ctx, name, info.ModTime()); done {
+		sum := sha256.Sum256(content)
+		if importedAt, done := s.rawFileImported(ctx, hex.EncodeToString(sum[:])); done {
 			f.State = "done"
 			f.ImportedAt = importedAt
 		} else {
@@ -200,9 +203,10 @@ func (s *ImportService) ImportRawFiles(ctx context.Context, req ImportRawReq) ([
 	return out, nil
 }
 
-// defaultRawDir 默认目录：库文件同目录 /raw（单机单账套，随库目录走，便于整体迁移）。
+// defaultRawDir 默认目录：本账套 <ledger>/raw/inbox（随账套目录整体迁移）。
+// 原始文件导入后一律复制进 <ledger>/raw/archive/YYYY/MM/，外部目录只当投放区。
 func (s *ImportService) defaultRawDir() string {
-	return filepath.Join(filepath.Dir(s.DB.Path()), "raw")
+	return s.DB.Ledger().RawInboxDir()
 }
 
 // resolveRawPath 把「文件名」解析成默认目录内的绝对路径；拒绝子目录与路径分隔符，防路径穿越。
@@ -217,18 +221,14 @@ func (s *ImportService) resolveRawPath(ctx context.Context, name string) (string
 	return filepath.Join(dir, name), nil
 }
 
-// rawFileImported 同名批次已导入且导入时间不早于文件修改时间 → 视为已导入（file done）。
-// 返回该批次的导入时间（RFC3339），供扫描列表展示「已导入时间」。
-func (s *ImportService) rawFileImported(ctx context.Context, name string, modTime time.Time) (string, bool) {
+// rawFileImported 按内容指纹判定「已导入」：同一份文件改过名、mtime 未变/已变都算得准。
+// 返回该指纹最近一次导入时间（RFC3339），供扫描列表展示。
+func (s *ImportService) rawFileImported(ctx context.Context, sha string) (string, bool) {
 	var importedAt string
 	if err := s.DB.Pool().QueryRowContext(ctx,
-		`SELECT COALESCE(MAX(imported_at),'') FROM import_batches WHERE file_name=?`, name).
+		`SELECT COALESCE(MAX(b.imported_at),'') FROM import_batches b
+		 JOIN raw_files r ON r.sha256 = b.raw_sha256 WHERE r.sha256=?`, sha).
 		Scan(&importedAt); err != nil || importedAt == "" {
-		return "", false
-	}
-	t, err := time.Parse(time.RFC3339, importedAt)
-	// imported_at 只到秒，mtime 带纳秒：截断到秒再比，避免同一秒内误判「未导入」。
-	if err != nil || modTime.Truncate(time.Second).After(t) {
 		return "", false
 	}
 	return importedAt, true

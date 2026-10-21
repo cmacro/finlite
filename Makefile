@@ -37,7 +37,8 @@ vet:
 	go vet $(GO_TAGS) ./...
 
 test:
-	go test ./internal/store/... ./internal/decimal/... ./internal/services/...
+	# -timeout 120s：单测挂住（如事务内误用连接池导致自锁）时快速失败，而不是等默认 10 分钟
+	go test -timeout 120s ./internal/store/... ./internal/decimal/... ./internal/services/...
 
 gobuild:
 	go build $(GO_TAGS) .

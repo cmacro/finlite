@@ -213,11 +213,15 @@ func (s *ImportService) ImportBankFile(ctx context.Context, filePath string) (Im
 		return ImportResult{}, fmt.Errorf("打不开文件：%v", err)
 	}
 	name := filepath.Base(filePath)
+	raw, rerr := s.registerRaw(ctx, name, "bank_flow", data)
+	if rerr != nil {
+		return ImportResult{}, rerr
+	}
 	header, rows, err := ParseAnyFile(name, string(data))
 	if err != nil {
 		return ImportResult{}, fmt.Errorf("%s：%v", name, err)
 	}
-	return s.importBankRows(ctx, name, header, rows)
+	return s.importBankRows(ctx, name, raw.SHA256, header, rows)
 }
 
 // bankRow 解析后的银行流水行（未写库）。
@@ -237,7 +241,7 @@ type bankRow struct {
 
 // importBankRows 银行流水导入核心（文件入口与 ImportFile 统一入口共用）。
 // 余额校验：按 txn_time 升序重排后再逐行/整批校验（业务文档 §6.3）。
-func (s *ImportService) importBankRows(ctx context.Context, fileName string, header []string, rows [][]string) (ImportResult, error) {
+func (s *ImportService) importBankRows(ctx context.Context, fileName, rawSHA string, header []string, rows [][]string) (ImportResult, error) {
 	iAcct := colIdx(header, "对方账号")
 	iTxn := colIdx(header, "交易时间")
 	iCounter := colIdx(header, "对方单位")
@@ -254,7 +258,8 @@ func (s *ImportService) importBankRows(ctx context.Context, fileName string, hea
 
 	batchID := uuid.NewString()
 	now := time.Now().Format(time.RFC3339)
-	res := ImportResult{BatchID: batchID, SourceType: "bank_flow", FileName: fileName, RowCount: len(rows), ImportedAt: now}
+	res := ImportResult{BatchID: batchID, SourceType: "bank_flow", FileName: fileName,
+		RowCount: len(rows), ImportedAt: now, RawSHA256: rawSHA}
 
 	// 1) 解析全部行（解析失败/缺时间的记错跳过）
 	type parseErr struct {
@@ -338,15 +343,16 @@ func (s *ImportService) importBankRows(ctx context.Context, fileName string, hea
 		}
 		res.BalanceWarning = balanceWarn.batch
 		_, err := tx.Exec(`INSERT INTO import_batches
-			(id, source_type, file_name, row_count, success_count, skip_count, balance_warning, imported_at)
-			VALUES (?, 'bank_flow', ?, ?, ?, ?, ?, ?)`,
+			(id, source_type, file_name, row_count, success_count, skip_count, balance_warning, imported_at, raw_sha256)
+			VALUES (?, 'bank_flow', ?, ?, ?, ?, ?, ?, ?)`,
 			batchID, fileName, res.RowCount, res.SuccessCount, res.SkipCount,
-			nullStr(res.BalanceWarning), now)
+			nullStr(res.BalanceWarning), now, rawSHA)
 		return err
 	})
 	if err != nil {
 		return ImportResult{}, err
 	}
+	_ = s.DB.SetRawFileRowCount(ctx, rawSHA, res.RowCount)
 	return res, nil
 }
 
@@ -499,15 +505,19 @@ func (s *ImportService) ImportOrderFile(ctx context.Context, filePath string) (I
 		return ImportResult{}, fmt.Errorf("打不开文件：%v", err)
 	}
 	name := filepath.Base(filePath)
+	raw, rerr := s.registerRaw(ctx, name, "order_flow", data)
+	if rerr != nil {
+		return ImportResult{}, rerr
+	}
 	header, rows, err := ParseAnyFile(name, string(data))
 	if err != nil {
 		return ImportResult{}, fmt.Errorf("%s：%v", name, err)
 	}
-	return s.importOrderRows(ctx, name, header, rows)
+	return s.importOrderRows(ctx, name, raw.SHA256, header, rows)
 }
 
 // importOrderRows 订单流水导入核心（文件入口与 ImportFile 统一入口共用）。
-func (s *ImportService) importOrderRows(ctx context.Context, fileName string, header []string, rows [][]string) (ImportResult, error) {
+func (s *ImportService) importOrderRows(ctx context.Context, fileName, rawSHA string, header []string, rows [][]string) (ImportResult, error) {
 	iOrder := colIdx(header, "工行订单号", "订单号")
 	iThird := colIdx(header, "第三方订单号")
 	iTxn := colIdx(header, "交易时间")
@@ -523,7 +533,8 @@ func (s *ImportService) importOrderRows(ctx context.Context, fileName string, he
 
 	batchID := uuid.NewString()
 	now := time.Now().Format(time.RFC3339)
-	res := ImportResult{BatchID: batchID, SourceType: "order_flow", FileName: fileName, RowCount: len(rows), ImportedAt: now}
+	res := ImportResult{BatchID: batchID, SourceType: "order_flow", FileName: fileName,
+		RowCount: len(rows), ImportedAt: now, RawSHA256: rawSHA}
 
 	err := s.DB.WithWriteTx(ctx, func(tx *sql.Tx) error {
 		for idx, row := range rows {
@@ -572,14 +583,15 @@ func (s *ImportService) importOrderRows(ctx context.Context, fileName string, he
 			res.SuccessCount++
 		}
 		_, err := tx.Exec(`INSERT INTO import_batches
-			(id, source_type, file_name, row_count, success_count, skip_count, balance_warning, imported_at)
-			VALUES (?, 'order_flow', ?, ?, ?, ?, '', ?)`,
-			batchID, fileName, res.RowCount, res.SuccessCount, res.SkipCount, now)
+			(id, source_type, file_name, row_count, success_count, skip_count, balance_warning, imported_at, raw_sha256)
+			VALUES (?, 'order_flow', ?, ?, ?, ?, '', ?, ?)`,
+			batchID, fileName, res.RowCount, res.SuccessCount, res.SkipCount, now, rawSHA)
 		return err
 	})
 	if err != nil {
 		return ImportResult{}, err
 	}
+	_ = s.DB.SetRawFileRowCount(ctx, rawSHA, res.RowCount)
 	return res, nil
 }
 
@@ -607,24 +619,45 @@ func (s *ImportService) ImportFile(ctx context.Context, fileName, content string
 	if err != nil {
 		return ImportResult{}, err
 	}
-	header, rows, err := ParseAnyFile(fileName, content)
+	// 先登记归档再解析：解析失败也留下原始文件，保证「有数据必有依据」。
+	raw, err := s.registerRaw(ctx, fileName, sourceType, []byte(content))
 	if err != nil {
 		return ImportResult{}, err
 	}
+	header, rows, err := ParseAnyFile(fileName, content)
+	if err != nil {
+		return ImportResult{}, fmt.Errorf("%s：%v（原始文件已归档：%s）", fileName, err, raw.RelPath)
+	}
 	switch sourceType {
 	case "bank_flow":
-		return s.importBankRows(ctx, fileName, header, rows)
+		return s.importBankRows(ctx, fileName, raw.SHA256, header, rows)
 	case "order_flow":
-		return s.importOrderRows(ctx, fileName, header, rows)
+		return s.importOrderRows(ctx, fileName, raw.SHA256, header, rows)
 	default:
 		return ImportResult{}, fmt.Errorf("不支持的导入类型：%s", sourceType)
 	}
 }
 
+// registerRaw 登记原始文件：sha256 去重 + 归档落盘 + 写清单（账套内相对路径）。
+func (s *ImportService) registerRaw(ctx context.Context, fileName, sourceType string, data []byte) (store.RawFile, error) {
+	// 同一内容（sha256 相同）只落盘一份，重复导入自动复用既有归档。
+	raw, _, err := s.DB.RegisterRawFile(ctx, store.RegisterRawReq{
+		OrigName:   fileName,
+		SourceType: sourceType,
+		Data:       data,
+		Operator:   defaultOperator,
+	})
+	if err != nil {
+		return store.RawFile{}, fmt.Errorf("归档原始文件失败：%v", err)
+	}
+	return raw, nil
+}
+
 // ListBatches 导入批次列表（导入中心用）。
 func (s *ImportService) ListBatches(ctx context.Context, sourceType string) ([]ImportResult, error) {
 	q := `SELECT id, source_type, file_name, row_count, success_count, skip_count,
-			COALESCE(balance_warning,''), COALESCE(imported_at,'') FROM import_batches`
+			COALESCE(balance_warning,''), COALESCE(imported_at,''), COALESCE(raw_sha256,'')
+			FROM import_batches`
 	var args []any
 	if sourceType != "" {
 		q += ` WHERE source_type=?`
@@ -639,7 +672,7 @@ func (s *ImportService) ListBatches(ctx context.Context, sourceType string) ([]I
 	var out []ImportResult
 	for rows.Next() {
 		var r ImportResult
-		if err := rows.Scan(&r.BatchID, &r.SourceType, &r.FileName, &r.RowCount, &r.SuccessCount, &r.SkipCount, &r.BalanceWarning, &r.ImportedAt); err != nil {
+		if err := rows.Scan(&r.BatchID, &r.SourceType, &r.FileName, &r.RowCount, &r.SuccessCount, &r.SkipCount, &r.BalanceWarning, &r.ImportedAt, &r.RawSHA256); err != nil {
 			return nil, fmt.Errorf("读取导入批次失败：%v", err)
 		}
 		out = append(out, r)

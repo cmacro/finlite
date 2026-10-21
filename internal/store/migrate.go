@@ -246,6 +246,14 @@ func (d *DB) migrate() error {
 	}
 
 	// 旧库：按目标版本升序补齐；版本号可跳过（如 v2 库依次执行 03、04、101）。
+	// 但历史脚本已合并进全量文件时，过低版本不存在可达路径：宁可报错，也不做半升级
+	// （否则会只建出 05 的账套表，而缺 collections/app_settings 等旧表）。
+	if len(steps) > 0 {
+		if minTo := steps[0].to; version < minTo-1 {
+			return fmt.Errorf("库版本过旧（v%d），缺少 v%d→v%d 的升级脚本（历史增量脚本已合并进全量文件）：请从 backups/ 恢复较新备份，或用旧版程序导出后重新导入",
+				version, version, minTo)
+		}
+	}
 	for _, s := range steps {
 		if s.to <= version {
 			continue

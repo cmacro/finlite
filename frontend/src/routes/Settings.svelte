@@ -1,13 +1,26 @@
 <!-- 系统设置（F8）：科目维护、费率维护、备份/恢复（恢复需二次确认后重启）。
      数据经 AccountService / FeeRateService / BackupService（Wails 绑定）。 -->
 <script lang="ts">
-  import { AccountService, FeeRateService, BackupService } from '../../bindings/finlite/internal/services';
-  import type { Account, FeeRate } from '../../bindings/finlite/internal/services/models';
+  import { AccountService, FeeRateService, BackupService, RawFileService } from '../../bindings/finlite/internal/services';
+  import type {
+    Account,
+    FeeRate,
+    BackupFile,
+    LedgerInfo,
+    EvidenceBundle,
+    EvidenceVerify,
+  } from '../../bindings/finlite/internal/services/models';
+  import { formatBytes, formatDateTime, evidenceIssueText } from '../lib/format';
   import Confirm from '../lib/Confirm.svelte';
 
   let accounts = $state<Account[]>([]);
   let rates = $state<FeeRate[]>([]);
-  let backups = $state<string[]>([]);
+  let backups = $state<BackupFile[]>([]);
+
+  // 账套与原始数据（证据层）
+  let ledger = $state<LedgerInfo | null>(null);
+  let verify = $state<EvidenceVerify | null>(null);
+  let bundle = $state<EvidenceBundle | null>(null);
 
   let busy = $state(false);
   let notice = $state('');
@@ -27,6 +40,7 @@
       accounts = (await AccountService.List()) ?? [];
       rates = (await FeeRateService.List()) ?? [];
       backups = (await BackupService.ListBackups()) ?? [];
+      ledger = await RawFileService.Info();
     } catch (e) {
       notice = `加载设置失败：${e instanceof Error ? e.message : String(e)}`;
       noticeClass = 'text-danger';
@@ -44,6 +58,54 @@
       await refresh();
     } catch (e) {
       notice = `备份失败：${e instanceof Error ? e.message : String(e)}`;
+      noticeClass = 'text-danger';
+    } finally {
+      busy = false;
+    }
+  }
+
+  async function doVerify(): Promise<void> {
+    busy = true;
+    try {
+      verify = await RawFileService.Verify();
+      const issues = verify.issues ?? [];
+      notice =
+        issues.length === 0
+          ? `校验通过：${verify.checked} 份原始文件指纹一致。`
+          : `校验发现 ${issues.length} 个问题：缺失 ${verify.missing}、被改动 ${verify.modified}、未登记 ${verify.unregistered}。`;
+      noticeClass = issues.length === 0 ? 'text-ok' : 'text-danger';
+      await refresh();
+    } catch (e) {
+      notice = `校验失败：${e instanceof Error ? e.message : String(e)}`;
+      noticeClass = 'text-danger';
+    } finally {
+      busy = false;
+    }
+  }
+
+  async function doExportBundle(): Promise<void> {
+    busy = true;
+    try {
+      bundle = await RawFileService.ExportBundle();
+      notice = `交接包已导出：${bundle.path}`;
+      noticeClass = 'text-ok';
+    } catch (e) {
+      notice = `导出交接包失败：${e instanceof Error ? e.message : String(e)}`;
+      noticeClass = 'text-danger';
+    } finally {
+      busy = false;
+    }
+  }
+
+  async function doMigrateEvidence(): Promise<void> {
+    busy = true;
+    try {
+      const r = await RawFileService.MigrateLegacy();
+      notice = r.message;
+      noticeClass = 'text-ok';
+      await refresh();
+    } catch (e) {
+      notice = `存量迁移失败：${e instanceof Error ? e.message : String(e)}`;
       noticeClass = 'text-danger';
     } finally {
       busy = false;
@@ -161,6 +223,47 @@
     </tbody>
   </table>
 
+  <h3 class="section-title">账套与原始数据</h3>
+  <div class="toolbar">
+    <button class="btn" onclick={doVerify} disabled={busy}>校验原始文件</button>
+    <button class="btn" onclick={doExportBundle} disabled={busy}>导出交接包</button>
+    <button class="btn" onclick={doMigrateEvidence} disabled={busy}>迁移存量原始文件</button>
+    <span class="text-sm text-muted">原始文件只增不改：归档在账套目录内，库内只存 sha256 与相对路径</span>
+  </div>
+  {#if ledger}
+    <table class="data-table">
+      <tbody>
+        <tr><th style="width:180px">账套</th><td>{ledger.code} · {ledger.displayName}</td></tr>
+        <tr><th>账套目录</th><td class="break-all">{ledger.root}</td></tr>
+        <tr><th>库文件</th><td class="break-all">{ledger.dbPath}</td></tr>
+        <tr><th>原始文件归档</th><td class="break-all">{ledger.rawArchive}</td></tr>
+        <tr><th>已登记原始文件</th><td>{ledger.rawFileCount} 份 · {formatBytes(ledger.rawBytes)}</td></tr>
+        <tr><th>附件 / 备份 / 交接包</th><td class="break-all">{ledger.attachments}<br />{ledger.backups}<br />{ledger.packages}</td></tr>
+      </tbody>
+    </table>
+  {/if}
+  {#if bundle}
+    <p class="my-2 text-sm text-muted">
+      交接包 <span class="break-all">{bundle.path}</span><br />
+      指纹 <code>{bundle.sha256.slice(0, 16)}…</code> · {formatBytes(bundle.sizeBytes)} ·
+      原始文件 {bundle.rawFiles} 份 · 附件 {bundle.attachments} 份
+    </p>
+  {/if}
+  {#if verify && (verify.issues ?? []).length > 0}
+    <table class="data-table">
+      <thead><tr><th>问题</th><th>文件</th><th>说明</th></tr></thead>
+      <tbody>
+        {#each verify.issues ?? [] as it, i (it.relPath + i)}
+          <tr>
+            <td class="text-danger">{evidenceIssueText(it.kind)}</td>
+            <td class="break-all">{it.relPath}</td>
+            <td class="break-all">{it.detail}</td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  {/if}
+
   <h3 class="section-title">备份与恢复</h3>
   <div class="toolbar">
     <button class="btn" onclick={doBackup} disabled={busy}>立即备份</button>
@@ -168,15 +271,17 @@
   </div>
   {#if notice}<p class="my-2 text-sm {noticeClass}">{notice}</p>{/if}
   <table class="data-table">
-    <thead><tr><th>备份文件</th><th>操作</th></tr></thead>
+    <thead><tr><th>备份文件</th><th class="num">大小</th><th>时间</th><th>操作</th></tr></thead>
     <tbody>
-      {#each backups as b (b)}
+      {#each backups as b (b.path)}
         <tr>
-          <td class="break-all">{b}</td>
-          <td><button class="btn btn-sm btn-danger" onclick={() => askRestore(b)} disabled={busy}>恢复</button></td>
+          <td class="break-all">{b.name}</td>
+          <td class="num">{formatBytes(b.sizeBytes)}</td>
+          <td class="whitespace-nowrap">{formatDateTime(b.modTime)}</td>
+          <td><button class="btn btn-sm btn-danger" onclick={() => askRestore(b.path)} disabled={busy}>恢复</button></td>
         </tr>
       {:else}
-        <tr><td colspan="2" class="empty">暂无备份</td></tr>
+        <tr><td colspan="4" class="empty">暂无备份</td></tr>
       {/each}
     </tbody>
   </table>

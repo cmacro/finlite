@@ -95,48 +95,51 @@ description: 补齐店面线下收款（现金/个人收款码/对公转账等�
 
 ## 4. 单据照片附件方案
 
-### 4.1 存储选型（推荐：库内 BLOB，单文件自洽）
+### 4.1 存储选型（**已定稿：账套目录外置 + 内容寻址**）
 
-| 方案 | 优点 | 缺点 |
-|---|---|---|
-| **A. SQLite BLOB（推荐）** | 与 `finlite.db` 单文件一致；现有 `BackupService` 备份/恢复**无需改动**即含附件；无孤儿文件；事务一致 | 库体积增大；单连接下大 BLOB 读会短暂占用写锁 |
-| B. 磁盘目录 | 库体积小 | 备份须额外打包附件目录；有孤儿文件风险；恢复需同步 |
+> 2026-10-21 修订：初版选择库内 BLOB（单文件自洽）；按"100 条/天 × 2 张照片"实测量级
+> （未压缩约 150–290 GB/年），BLOB 会让全量备份、恢复、交接全部失效，改为外置文件。
 
-**结论：采用方案 A**。理由：项目核心承诺是"单文件 `finlite.db` + 备份即拷贝"（业务文档 §8/§10），BLOB 让备份、恢复、迁移、脱敏审计全部沿用既有路径，收益远大于体积成本。单机单用户、每日单据量小，性能可接受。
+| 方案 | 优点 | 缺点 | 结论 |
+|---|---|---|---|
+| A. SQLite BLOB | 单文件自洽、事务一致 | 库体积暴涨；全量备份 OOM/耗时；`UPDATE` 元数据会重写整条 BLOB | 已废弃（v5 及以前） |
+| **B. 账套目录外置 + 内容寻址（采用）** | 库保持 MB 级；附件可 rsync 增量；交接包可校验；元数据更新不触碰内容 | 需引用计数与孤儿清理 | v6 起采用 |
 
-> 元数据与二进制分离两张表，列表查询永不触碰 BLOB：
-> - `attachments`：元数据（文件名/类型/大小/哈希/归属/操作人）；
-> - `attachment_blobs`：`attachment_id` 主键 + `data BLOB`。
-> 未来若需外置磁盘，仅迁移 `attachment_blobs`，元数据与业务代码不变。
+**定稿**：附件内容放 `<账套目录>/attachments/YYYY/MM/<sha256>.<ext>`，库内只留
+`sha256` + `rel_path`（相对账套目录，随账套整体搬迁）：
+
+- **内容寻址**：同一张照片被多条记录引用只存一份（`idx_collection_attachments_sha256`）；
+  删除时按引用计数清理，引用归零才删文件。
+- **上传前压缩**：前端 canvas 重编码为 JPEG（长边 ≤ 2000px、质量 0.7，已足够小的图跳过），
+  手机原图 3–4 MB → 200–400 KB；重编码后扩展名同步改 `jpg`，MIME 与内容一致。
+- **旧库迁移**：开库前置 `PreMigrateAttachments` 把 BLOB 写盘并回填指纹，`06-attachment-files.sql`
+  再重建表去掉 `content` 列（失败中止开库，不丢凭据）。
+- **备份/交接**：备份仍是账套内文件拷贝；交接包已把 `attachments/` 与 `manifest.tsv` 一并打包。
 
 ### 4.2 表结构
 
 ```sql
 CREATE TABLE store_collections ( ... );  -- §3.1
 
-CREATE TABLE attachments (
-    id          TEXT NOT NULL PRIMARY KEY,
-    owner_type  TEXT NOT NULL,          -- store_collection / data_summary
-    owner_id    TEXT NOT NULL,
-    file_name   TEXT NOT NULL,          -- 原始文件名
-    mime_type   TEXT NOT NULL,          -- image/jpeg, image/png, image/webp, application/pdf
-    size_bytes  INTEGER NOT NULL,
-    sha256      TEXT NOT NULL,          -- 完整性 + 同记录内去重
-    sort_no     INTEGER NOT NULL DEFAULT 0,
-    note        TEXT,
-    operator    TEXT,
-    created_at  TEXT NOT NULL
+-- 实际落地（v6）：单表 + 外置文件，无 BLOB 表
+CREATE TABLE collection_attachments (
+    id            TEXT NOT NULL PRIMARY KEY,
+    collection_id TEXT NOT NULL,
+    file_name     TEXT NOT NULL,        -- 原始文件名（压缩后扩展名改为 jpg）
+    ext           TEXT NOT NULL,        -- jpg / jpeg / png / webp / pdf（决定 MIME）
+    size_bytes    INTEGER NOT NULL DEFAULT 0,
+    sha256        TEXT NOT NULL DEFAULT '',  -- 内容指纹 = 去重键
+    rel_path      TEXT NOT NULL DEFAULT '',  -- attachments/YYYY/MM/<sha256>.<ext>（相对账套目录）
+    sort_no       INTEGER NOT NULL DEFAULT 0,
+    created_at    TEXT NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_attachments_owner ON attachments (owner_type, owner_id);
-CREATE INDEX IF NOT EXISTS idx_attachments_sha256 ON attachments (sha256);
-
-CREATE TABLE attachment_blobs (
-    attachment_id TEXT NOT NULL PRIMARY KEY,
-    data          BLOB NOT NULL
-);
+CREATE INDEX idx_collection_attachments_collection ON collection_attachments (collection_id);
+CREATE INDEX idx_collection_attachments_sha256 ON collection_attachments (sha256);
 ```
 
-`owner_type` 设计为通用，使"数据汇总行也可挂附件"（业务文档 §4.4「可选附件（截图）」）直接复用，无需第二套附件表。
+若后续要支持"数据汇总行也可挂附件"（业务文档 §4.4「可选附件（截图）」），按同一形态新增
+`summary_attachments` 并复用 `PutAttachmentFile` / `ReadAttachmentFile`（内容寻址天然跨表共享），
+不必再引 BLOB 表。
 
 ### 4.3 上传/查看/删除
 
@@ -146,7 +149,7 @@ CREATE TABLE attachment_blobs (
 - **限制**：单文件 ≤ 10 MB，单记录 ≤ 10 张；类型白名单 `image/jpeg|png|webp|application/pdf`；超限返回中文错误（"单张附件不能超过 10MB"）；
 - **查看**：列表只返回元数据（`Attachment`），点击缩略图/文件名时按需调 `GetData(id)` 返回 base64 data URL；列表页绝不批量拉 BLOB；
 - **删除**：需二次确认（`Confirm.svelte`），写 `audit_logs`（记录文件名/哈希，不写二进制内容）；`confirmed` 及以后状态的记录删除附件需审核权限；
-- **哈希**：`sha256` 用于同记录重复上传去重与完整性校验（不跨记录去重，避免共享删除问题）。
+- **哈希**：`sha256` 既是完整性校验依据，也是**跨记录去重键**；共享删除由引用计数处理，不会误删他人在用的文件。
 
 ### 4.4 缩略图
 
@@ -332,7 +335,7 @@ func (s *AttachmentService) Delete(ctx context.Context, id, operator string) err
 ## 12. 分期实施建议
 
 ### P0 — 登记与附件（本模块主体）
-- `03-store-collections.sql` + baseline + `SchemaVersion=4`；
+- 结构已在全量脚本 `00-latest-schema.sql`（历史增量已合并进基线，当前 `SchemaVersion=5`）；
 - `CollectionService`（List/Get/Save/Confirm/Reject/Void/Totals）+ `AttachmentService`（AddBase64/List/GetData/Delete）；
 - `Collection.svelte`：列表 + 录入弹窗 + 附件上传/预览/删除 + 审核；
 - `App.svelte` / `types.ts` 导航与路由接线；注册 Service；重新生成绑定。

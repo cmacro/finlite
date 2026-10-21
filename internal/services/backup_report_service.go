@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -17,7 +18,8 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-// BackupService 备份/恢复：文件级拷贝 finlite.db。
+// BackupService 备份/恢复：文件级拷贝账套内的 finlite.db（流式拷贝，不整库进内存）。
+// 备份文件落在 <账套目录>/backups/，文件名带账套码，恢复前校验账套身份。
 // 恢复需二次确认 + 重启（前端 confirm 对话框保证）。
 type BackupService struct {
 	DB *store.DB
@@ -25,54 +27,93 @@ type BackupService struct {
 
 func NewBackupService(db *store.DB) *BackupService { return &BackupService{DB: db} }
 
-func backupDir(dbPath string) string {
-	return filepath.Join(filepath.Dir(dbPath), "backups")
+// backupDir 备份目录：账套内 backups/（账套边界即备份边界）。
+func backupDir(db *store.DB) string {
+	return db.Ledger().BackupDir()
 }
 
-// Backup 立即备份，返回备份文件路径。
+// Backup 立即备份，返回备份文件路径（文件名带账套码：ledger-1001_20260101_120000.db）。
 func (s *BackupService) Backup(ctx context.Context) (string, error) {
 	src := s.DB.Path()
 	// WAL checkpoint 后再拷贝，保证一致性
 	if err := s.DB.Checkpoint(); err != nil {
 		return "", err
 	}
-	dir := backupDir(src)
+	dir := backupDir(s.DB)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", fmt.Errorf("创建备份目录失败：%v", err)
 	}
-	dst := filepath.Join(dir, "finlite_"+time.Now().Format("20060102_150405")+".db")
+	dst := filepath.Join(dir, s.DB.Ledger().Code+"_"+time.Now().Format("20060102_150405")+".db")
 	if err := copyFile(src, dst); err != nil {
 		return "", fmt.Errorf("备份失败：%v", err)
 	}
 	return dst, nil
 }
 
-// ListBackups 备份文件列表（倒序）。
-func (s *BackupService) ListBackups(ctx context.Context) ([]string, error) {
-	dir := backupDir(s.DB.Path())
+// ListBackups 备份文件列表（倒序，含大小与时间：大库也能看出备份成本）。
+func (s *BackupService) ListBackups(ctx context.Context) ([]BackupFile, error) {
+	dir := backupDir(s.DB)
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return []string{}, nil
+			return []BackupFile{}, nil
 		}
 		return nil, fmt.Errorf("读取备份目录失败：%v", err)
 	}
-	var out []string
+	out := make([]BackupFile, 0, len(entries))
 	for _, e := range entries {
-		if !e.IsDir() {
-			out = append(out, filepath.Join(dir, e.Name()))
+		if e.IsDir() {
+			continue
 		}
+		info, ierr := e.Info()
+		if ierr != nil {
+			continue
+		}
+		out = append(out, BackupFile{
+			Name:      e.Name(),
+			Path:      filepath.Join(dir, e.Name()),
+			SizeBytes: info.Size(),
+			ModTime:   info.ModTime().Format(time.RFC3339),
+		})
 	}
-	sort.Sort(sort.Reverse(sort.StringSlice(out)))
+	sort.Slice(out, func(i, j int) bool { return out[i].Name > out[j].Name })
 	return out, nil
 }
 
+// copyFile 流式拷贝（io.Copy + Sync）：百 GB 级库也不会把整库读进内存。
 func copyFile(src, dst string) error {
-	data, err := os.ReadFile(src)
+	in, err := os.Open(src)
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(dst, data, 0o644)
+	defer in.Close()
+	st, err := in.Stat()
+	if err != nil {
+		return err
+	}
+	out, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(out, in); err != nil {
+		out.Close()
+		os.Remove(dst)
+		return err
+	}
+	if err := out.Sync(); err != nil {
+		out.Close()
+		os.Remove(dst)
+		return err
+	}
+	if err := out.Close(); err != nil {
+		os.Remove(dst)
+		return err
+	}
+	if got, err := os.Stat(dst); err != nil || got.Size() != st.Size() {
+		os.Remove(dst)
+		return fmt.Errorf("备份文件大小不符（期望 %d 字节）", st.Size())
+	}
+	return nil
 }
 
 // Restore 用备份覆盖当前库（§7 F8「备份文件可恢复打开」）。
@@ -92,21 +133,25 @@ func (s *BackupService) Restore(ctx context.Context, backupPath string) (string,
 	if err := verifyBackupOpenable(backupPath); err != nil {
 		return "", err
 	}
-	// 2) 当前库 checkpoint，保证 WAL 内容已落盘
+	// 2) 账套身份互校：禁止把别的账套的备份恢复进本账套
+	if err := verifyBackupLedger(backupPath, s.DB.Ledger().Code); err != nil {
+		return "", err
+	}
+	// 3) 当前库 checkpoint，保证 WAL 内容已落盘
 	if err := s.DB.Checkpoint(); err != nil {
 		return "", err
 	}
 	cur := s.DB.Path()
-	// 3) 覆盖前留一份当前库快照，误恢复可回退
-	dir := backupDir(cur)
+	// 4) 覆盖前留一份当前库快照，误恢复可回退
+	dir := backupDir(s.DB)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", fmt.Errorf("创建备份目录失败：%v", err)
 	}
-	safety := filepath.Join(dir, "pre-restore_"+time.Now().Format("20060102_150405")+".db")
+	safety := filepath.Join(dir, "pre-restore_"+s.DB.Ledger().Code+"_"+time.Now().Format("20060102_150405")+".db")
 	if err := copyFile(cur, safety); err != nil {
 		return "", fmt.Errorf("留存当前库快照失败：%v", err)
 	}
-	// 4) 覆盖主库文件，并清掉旧 WAL/SHM，避免与旧内容混合
+	// 5) 覆盖主库文件，并清掉旧 WAL/SHM，避免与旧内容混合
 	if err := copyFile(backupPath, cur); err != nil {
 		return "", fmt.Errorf("恢复备份失败：%v", err)
 	}
@@ -130,6 +175,28 @@ func verifyBackupOpenable(backupPath string) error {
 		if err := conn.QueryRow(`SELECT COUNT(*) FROM ` + table).Scan(&n); err != nil {
 			return fmt.Errorf("备份文件缺少表 %s，可能不是 finlite 备份：%v", table, err)
 		}
+	}
+	return nil
+}
+
+// verifyBackupLedger 备份文件的账套码必须与当前账套一致，防止串档恢复。
+func verifyBackupLedger(backupPath, wantCode string) error {
+	conn, err := sql.Open("sqlite", backupPath)
+	if err != nil {
+		return fmt.Errorf("备份文件无法打开：%v", err)
+	}
+	defer conn.Close()
+	var code string
+	err = conn.QueryRow(`SELECT code FROM ledger_profile WHERE id=1`).Scan(&code)
+	if err == sql.ErrNoRows || code == "" {
+		// 旧版备份没有账套表：允许恢复，由开库时的身份校验兜底。
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("读取备份账套失败：%v", err)
+	}
+	if code != wantCode {
+		return fmt.Errorf("备份属于账套 %s，当前账套 %s，已拒绝恢复", code, wantCode)
 	}
 	return nil
 }

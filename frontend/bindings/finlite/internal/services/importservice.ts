@@ -16,7 +16,7 @@ import { Call as $Call, CancellablePromise as $CancellablePromise } from "@wails
 import * as $models from "./models.js";
 
 /**
- * GetRawDir 返回默认原始数据目录：优先读本地设置，未设置则回退到「库文件同目录 /raw」。
+ * GetRawDir 返回默认原始数据目录：优先读本地设置（外部投放区），未设置则回退到账套 raw/inbox。
  */
 export function GetRawDir(): $CancellablePromise<string> {
     return $Call.ByID(3553610882);

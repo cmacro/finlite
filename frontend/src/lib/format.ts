@@ -107,3 +107,27 @@ export function weekdayCN(date: string): string {
   if (Number.isNaN(d.getTime())) return '';
   return ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][d.getDay()] ?? '';
 }
+
+/** 字节数 → 人类可读（B/KB/MB/GB，1 位小数）；备份与原始文件体积展示用。 */
+export function formatBytes(v: number | null | undefined): string {
+  const n = Number(v ?? 0);
+  if (!Number.isFinite(n) || n <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let i = 0;
+  let x = n;
+  while (x >= 1024 && i < units.length - 1) {
+    x /= 1024;
+    i += 1;
+  }
+  return i === 0 ? `${Math.round(x)} B` : `${x.toFixed(1)} ${units[i]}`;
+}
+
+/** 原始文件校验问题类型 → 中文。 */
+export function evidenceIssueText(kind: string): string {
+  switch (kind) {
+    case 'missing': return '文件缺失';
+    case 'modified': return '内容被改动';
+    case 'unregistered': return '未登记文件';
+    default: return kind;
+  }
+}

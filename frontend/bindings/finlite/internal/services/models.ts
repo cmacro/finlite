@@ -21,6 +21,16 @@ export interface AuditLog {
     "remark": string;
 }
 
+/**
+ * BackupFile 备份文件（设置页展示大小与时间）。
+ */
+export interface BackupFile {
+    "name": string;
+    "path": string;
+    "sizeBytes": number;
+    "modTime": string;
+}
+
 export interface BalanceRow {
     "accountCode": string;
     "accountName": string;
@@ -325,6 +335,71 @@ export interface DailyRow {
     "expense": string;
 }
 
+/**
+ * EvidenceBundle 交接包导出结果。
+ */
+export interface EvidenceBundle {
+    "path": string;
+    "sha256": string;
+    "sizeBytes": number;
+    "rawFiles": number;
+    "attachments": number;
+    "ledgerCode": string;
+}
+
+/**
+ * EvidenceFile 原始文件清单行；Status: ok / missing / modified。
+ */
+export interface EvidenceFile {
+    "sha256": string;
+    "relPath": string;
+    "origName": string;
+    "sourceType": string;
+    "sizeBytes": number;
+    "rowCount": number;
+    "ingestedAt": string;
+    "operator": string;
+    "note": string;
+    "status": string;
+}
+
+/**
+ * EvidenceIssue 完整性校验发现的问题。Kind: missing / modified / unregistered。
+ */
+export interface EvidenceIssue {
+    "sha256": string;
+    "relPath": string;
+    "origName": string;
+    "kind": string;
+    "detail": string;
+}
+
+/**
+ * EvidenceMigrate 存量原始文件迁移结果（幂等，可重复执行）。
+ */
+export interface EvidenceMigrate {
+    "movedInbox": number;
+    "movedArchive": number;
+    "registered": number;
+    "linkedBatches": number;
+    "message": string;
+}
+
+/**
+ * EvidenceVerify 完整性校验结果（只读，不改数据）。
+ */
+export interface EvidenceVerify {
+    "ledgerCode": string;
+    "ledgerRoot": string;
+    "checkedAt": string;
+    "checked": number;
+    "ok": number;
+    "missing": number;
+    "modified": number;
+    "unregistered": number;
+    "issues": EvidenceIssue[] | null;
+}
+
 export interface FeeRate {
     "payMethod": string;
     "rate": string;
@@ -366,6 +441,9 @@ export interface ImportRawResult {
     "error": string;
 }
 
+/**
+ * ImportResult 一次导入的结果；RawSHA256 指向 raw_files（空=历史批次缺原始文件）。
+ */
 export interface ImportResult {
     "batchId": string;
 
@@ -383,6 +461,28 @@ export interface ImportResult {
      * RFC3339，导入中心批次历史展示用
      */
     "importedAt": string;
+
+    /**
+     * 原始文件内容指纹；空=缺原始文件
+     */
+    "rawSha256": string;
+}
+
+/**
+ * LedgerInfo 当前账套：目录布局与原始文件统计（路径均在账套目录内）。
+ */
+export interface LedgerInfo {
+    "code": string;
+    "displayName": string;
+    "root": string;
+    "dbPath": string;
+    "rawInbox": string;
+    "rawArchive": string;
+    "attachments": string;
+    "backups": string;
+    "packages": string;
+    "rawFileCount": number;
+    "rawBytes": number;
 }
 
 /**

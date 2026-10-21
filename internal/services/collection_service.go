@@ -376,15 +376,19 @@ func (s *CollectionService) GetAttachment(ctx context.Context, id string) (Colle
 		return CollectionAttachmentData{}, fmt.Errorf("附件不能为空")
 	}
 	var out CollectionAttachmentData
-	var content []byte
+	var relPath string
 	err := s.DB.Pool().QueryRowContext(ctx,
-		`SELECT id, file_name, ext, size_bytes, content FROM collection_attachments WHERE id=?`, id).
-		Scan(&out.ID, &out.FileName, &out.Ext, &out.SizeBytes, &content)
+		`SELECT id, file_name, ext, size_bytes, rel_path FROM collection_attachments WHERE id=?`, id).
+		Scan(&out.ID, &out.FileName, &out.Ext, &out.SizeBytes, &relPath)
 	if err == sql.ErrNoRows {
 		return CollectionAttachmentData{}, fmt.Errorf("附件不存在：%s", id)
 	}
 	if err != nil {
 		return CollectionAttachmentData{}, fmt.Errorf("读取附件失败：%v", err)
+	}
+	content, err := s.DB.ReadAttachmentFile(relPath)
+	if err != nil {
+		return CollectionAttachmentData{}, err
 	}
 	if mime, ok := collectionAttachmentMime[out.Ext]; ok {
 		out.MimeType = mime
@@ -510,7 +514,7 @@ func (s *CollectionService) Save(ctx context.Context, req SaveCollectionReq) (Co
 				return fmt.Errorf("写操作记录失败：%v", err)
 			}
 		}
-		if err := reconcileCollectionAttachments(tx, id, req.Attachments, now); err != nil {
+		if err := s.reconcileCollectionAttachments(ctx, tx, id, req.Attachments, now); err != nil {
 			return err
 		}
 		out, err = scanCollection(tx.QueryRow(collectionSelect+" WHERE c.id=?", id))
@@ -987,19 +991,22 @@ func nextCollectionID(tx *sql.Tx, date string) (string, error) {
 }
 
 // reconcileCollectionAttachments 附件对账：保留 ID 命中的旧附件，插入新附件，删除未列出的旧附件。
-func reconcileCollectionAttachments(tx *sql.Tx, collectionID string, items []CollectionAttachmentInput, now string) error {
-	rows, err := tx.Query(`SELECT id FROM collection_attachments WHERE collection_id=?`, collectionID)
+// 附件内容外置到账套 attachments/ 目录（内容寻址，同图只存一份），库内只写 sha256/rel_path。
+func (s *CollectionService) reconcileCollectionAttachments(ctx context.Context, tx *sql.Tx, collectionID string, items []CollectionAttachmentInput, now string) error {
+	rows, err := tx.Query(`SELECT id, sha256, rel_path FROM collection_attachments WHERE collection_id=?`, collectionID)
 	if err != nil {
 		return fmt.Errorf("读取收款附件失败：%v", err)
 	}
-	existing := map[string]bool{}
+	type oldAttach struct{ sha, rel string }
+	existing := map[string]oldAttach{}
 	for rows.Next() {
 		var id string
-		if err := rows.Scan(&id); err != nil {
+		var oa oldAttach
+		if err := rows.Scan(&id, &oa.sha, &oa.rel); err != nil {
 			rows.Close()
 			return fmt.Errorf("读取收款附件失败：%v", err)
 		}
-		existing[id] = true
+		existing[id] = oa
 	}
 	rows.Close()
 	if err := rows.Err(); err != nil {
@@ -1009,7 +1016,7 @@ func reconcileCollectionAttachments(tx *sql.Tx, collectionID string, items []Col
 	kept := map[string]bool{}
 	for i, it := range items {
 		if id := strings.TrimSpace(it.ID); id != "" {
-			if !existing[id] {
+			if _, ok := existing[id]; !ok {
 				return fmt.Errorf("附件不存在或已删除：%s", id)
 			}
 			kept[id] = true
@@ -1022,20 +1029,28 @@ func reconcileCollectionAttachments(tx *sql.Tx, collectionID string, items []Col
 		if err != nil {
 			return err
 		}
+		// 事务内必须用 tx 查询，避免单连接池自锁。
+		sha, rel, err := s.DB.PutAttachmentFile(ctx, tx, prepared.ext, prepared.content)
+		if err != nil {
+			return fmt.Errorf("保存附件文件失败：%v", err)
+		}
 		if _, err := tx.Exec(`INSERT INTO collection_attachments
-			(id, collection_id, file_name, ext, size_bytes, content, sort_no, created_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+			(id, collection_id, file_name, ext, size_bytes, sha256, rel_path, sort_no, created_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 			uuid.NewString(), collectionID, prepared.fileName, prepared.ext,
-			prepared.size, prepared.content, i, now); err != nil {
+			prepared.size, sha, rel, i, now); err != nil {
 			return fmt.Errorf("保存附件失败：%v", err)
 		}
 	}
-	for id := range existing {
+	for id, oa := range existing {
 		if kept[id] {
 			continue
 		}
 		if _, err := tx.Exec(`DELETE FROM collection_attachments WHERE id=?`, id); err != nil {
 			return fmt.Errorf("删除附件失败：%v", err)
+		}
+		if err := s.DB.RemoveAttachmentFileIfUnused(ctx, tx, oa.sha, oa.rel); err != nil {
+			return err
 		}
 	}
 	return nil

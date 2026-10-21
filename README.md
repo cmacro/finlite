@@ -39,20 +39,29 @@ Import（银行/订单 TSV）-> Bank/Order 列表 -> 按 settle_date 对账
 
 ## 软件架构
 
-### 单账套单库（与 ForgeFin 多库隔离的区别）
+### 单账套单目录（与 ForgeFin 多库隔离的区别）
 
 ForgeFin 是每公司独立 `.db`（`forgefin_system.db` + `companies/forgefin_company_{id}.db`），用户登录后按 `company_id` 路由。
 
-finlite 首版刻意做减法，单机单用户单库：
+finlite 首版刻意做减法：单机、单用户、单账套，但**一个账套 = 一个自包含目录**（原始文件必须归属于账套）：
 
 ```
-finlite.db                 # 唯一业务库：银行/订单/汇总/凭证/科目/审计
-└── backups/finlite_YYYYMMDD_HHmmss.db   # 设置页一键备份
+<data root>/                          # 默认可执行文件同目录；FINLITE_DATA 可覆盖
+└── ledgers/ledger-1001/
+    ├── finlite.db                    # 处理层：银行/订单/汇总/凭证/科目/审计
+    ├── ledger.json                   # 账套身份（与库内 ledger_profile 互校）
+    ├── raw/inbox/                    # 待导入投放区
+    ├── raw/archive/YYYY/MM/          # 原始文件，只增不改（sha256 索引）
+    ├── attachments/YYYY/MM/          # 店面收款附件
+    └── backups/ledger-1001_YYYYMMDD_HHmmss.db
+<data root>/packages/                 # 交接包 zip（库快照 + 原始文件 + manifest.tsv）
 ```
 
 - 前端绝不直连 SQLite，一律经 Wails Service 绑定调用
 - 后端 `database/sql` + 裸 SQL，无 ORM；`context.Context` 为阻塞/DB 方法首参，返回 `(T, error)`
 - 原始表 `bank_flows` / `order_flows` 只读，无 UPDATE 接口；错行走作废重导或调整行
+- 导入链路：sha256 → 归档到账套 `raw/archive/` → 登记 `raw_files` → 再解析入库（解析失败也留证）
+- 账套归属由目录表达，库内只存相对路径，**不加 `ledger_id` 列**；多账套时只是多几个目录
 
 ### 工作流
 

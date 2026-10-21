@@ -139,8 +139,9 @@ func TestLoadUpgradeStepsRejectsBadHeaders(t *testing.T) {
 	})
 }
 
-// TestUpgradePathMatchesFullSchema 验证「新库只执行全量脚本」与「老库按版本执行增量」殊途同归：
-// 分别从 v1、v4 状态升级到 SchemaVersion 后，结构必须与全新库一致。
+// TestUpgradePathMatchesBaseline 验证「新库只执行全量脚本」与「老库按版本执行增量」殊途同归：
+// 从 v4（只差 05）升级到 SchemaVersion 后，结构必须与全新库一致。
+// 说明：历史增量脚本已合并进全量文件，早于 v4 的库没有可达升级路径（见 TestOpenTooOldSchemaFails）。
 func TestUpgradePathMatchesBaseline(t *testing.T) {
 	fresh := filepath.Join(t.TempDir(), "fresh.db")
 	freshDB, err := Open(fresh)
@@ -160,16 +161,26 @@ func TestUpgradePathMatchesBaseline(t *testing.T) {
 	}
 	_ = freshDB.Close()
 
-	// 回退到历史版本：v1 表示 03、04 两个增量脚本都还没执行；v4 表示已是最新。
-	revert := map[string][]string{
-		"v1": {
-			`DROP TABLE collection_attachments`,
-			`DROP TABLE collections`,
-			`DROP TABLE app_settings`,
-		},
-		"v4": {},
+	// 回退到历史版本：v4 表示 05/06 未执行；v5 表示只差 06；v6 表示已是最新。
+	dropV5 := []string{
+		`DROP TABLE raw_files`,
+		`DROP TABLE ledger_profile`,
+		`ALTER TABLE import_batches DROP COLUMN raw_sha256`,
 	}
-	for _, v := range []string{"v1", "v4"} {
+	dropV6 := []string{
+		`DROP TABLE collection_attachments`,
+		`CREATE TABLE collection_attachments (
+			id TEXT NOT NULL PRIMARY KEY, collection_id TEXT NOT NULL, file_name TEXT NOT NULL,
+			ext TEXT NOT NULL, size_bytes INTEGER NOT NULL DEFAULT 0, content BLOB,
+			sort_no INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL)`,
+		`CREATE INDEX idx_collection_attachments_collection ON collection_attachments (collection_id)`,
+	}
+	revert := map[string][]string{
+		"v4": append(append([]string{}, dropV6...), dropV5...),
+		"v5": dropV6,
+		"v6": {},
+	}
+	for _, v := range []string{"v4", "v5", "v6"} {
 		path := filepath.Join(t.TempDir(), v+".db")
 		db, err := Open(path)
 		if err != nil {
@@ -339,4 +350,36 @@ func equalInts(a, b []int) bool {
 		}
 	}
 	return true
+}
+
+// TestOpenTooOldSchemaFails 历史增量脚本已合并进全量文件：早于最低脚本版本的库
+// 没有可达升级路径，必须报错（中文、可操作），不能只跑 05 留下半套表结构。
+func TestOpenTooOldSchemaFails(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "old.db")
+	db, err := Open(path)
+	if err != nil {
+		t.Fatalf("建库失败：%v", err)
+	}
+	for _, stmt := range []string{
+		`DROP TABLE raw_files`,
+		`DROP TABLE ledger_profile`,
+		`ALTER TABLE import_batches DROP COLUMN raw_sha256`,
+		`DROP TABLE collections`,
+		`DROP TABLE collection_attachments`,
+		`DROP TABLE app_settings`,
+	} {
+		if _, err := db.Pool().Exec(stmt); err != nil {
+			t.Fatalf("回退语句失败（%s）：%v", stmt, err)
+		}
+	}
+	if _, err := db.Pool().Exec(`PRAGMA user_version=1`); err != nil {
+		t.Fatalf("回写 user_version 失败：%v", err)
+	}
+	_ = db.Close()
+
+	if _, err := Open(path); err == nil {
+		t.Fatal("过旧库被静默升级，want 报错")
+	} else if !strings.Contains(err.Error(), "库版本过旧") {
+		t.Fatalf("错误文案不可操作：%v", err)
+	}
 }

@@ -5,6 +5,7 @@ package services
 
 // ---------- 导入 ----------
 
+// ImportResult 一次导入的结果；RawSHA256 指向 raw_files（空=历史批次缺原始文件）。
 type ImportResult struct {
 	BatchID        string `json:"batchId"`
 	SourceType     string `json:"sourceType"` // bank_flow / order_flow（见 import_batches.source_type）
@@ -14,6 +15,7 @@ type ImportResult struct {
 	SkipCount      int    `json:"skipCount"`
 	BalanceWarning string `json:"balanceWarning"`
 	ImportedAt     string `json:"importedAt"` // RFC3339，导入中心批次历史展示用
+	RawSHA256      string `json:"rawSha256"`  // 原始文件内容指纹；空=缺原始文件
 }
 
 type ImportError struct {
@@ -131,6 +133,86 @@ type ImportRawResult struct {
 	Result     ImportResult `json:"result"`
 	ArchivedTo string       `json:"archivedTo"`
 	Error      string       `json:"error"`
+}
+
+// ---------- 账套与原始数据证据（F8 设置页） ----------
+
+// LedgerInfo 当前账套：目录布局与原始文件统计（路径均在账套目录内）。
+type LedgerInfo struct {
+	Code         string `json:"code"`
+	DisplayName  string `json:"displayName"`
+	Root         string `json:"root"`
+	DBPath       string `json:"dbPath"`
+	RawInbox     string `json:"rawInbox"`
+	RawArchive   string `json:"rawArchive"`
+	Attachments  string `json:"attachments"`
+	Backups      string `json:"backups"`
+	Packages     string `json:"packages"`
+	RawFileCount int    `json:"rawFileCount"`
+	RawBytes     int64  `json:"rawBytes"`
+}
+
+// EvidenceFile 原始文件清单行；Status: ok / missing / modified。
+type EvidenceFile struct {
+	SHA256     string `json:"sha256"`
+	RelPath    string `json:"relPath"`
+	OrigName   string `json:"origName"`
+	SourceType string `json:"sourceType"`
+	SizeBytes  int64  `json:"sizeBytes"`
+	RowCount   int    `json:"rowCount"`
+	IngestedAt string `json:"ingestedAt"`
+	Operator   string `json:"operator"`
+	Note       string `json:"note"`
+	Status     string `json:"status"`
+}
+
+// EvidenceIssue 完整性校验发现的问题。Kind: missing / modified / unregistered。
+type EvidenceIssue struct {
+	SHA256   string `json:"sha256"`
+	RelPath  string `json:"relPath"`
+	OrigName string `json:"origName"`
+	Kind     string `json:"kind"`
+	Detail   string `json:"detail"`
+}
+
+// EvidenceVerify 完整性校验结果（只读，不改数据）。
+type EvidenceVerify struct {
+	LedgerCode   string          `json:"ledgerCode"`
+	LedgerRoot   string          `json:"ledgerRoot"`
+	CheckedAt    string          `json:"checkedAt"`
+	Checked      int             `json:"checked"`
+	OK           int             `json:"ok"`
+	Missing      int             `json:"missing"`
+	Modified     int             `json:"modified"`
+	Unregistered int             `json:"unregistered"`
+	Issues       []EvidenceIssue `json:"issues"`
+}
+
+// EvidenceBundle 交接包导出结果。
+type EvidenceBundle struct {
+	Path        string `json:"path"`
+	SHA256      string `json:"sha256"`
+	SizeBytes   int64  `json:"sizeBytes"`
+	RawFiles    int    `json:"rawFiles"`
+	Attachments int    `json:"attachments"`
+	LedgerCode  string `json:"ledgerCode"`
+}
+
+// EvidenceMigrate 存量原始文件迁移结果（幂等，可重复执行）。
+type EvidenceMigrate struct {
+	MovedInbox    int    `json:"movedInbox"`
+	MovedArchive  int    `json:"movedArchive"`
+	Registered    int    `json:"registered"`
+	LinkedBatches int    `json:"linkedBatches"`
+	Message       string `json:"message"`
+}
+
+// BackupFile 备份文件（设置页展示大小与时间）。
+type BackupFile struct {
+	Name      string `json:"name"`
+	Path      string `json:"path"`
+	SizeBytes int64  `json:"sizeBytes"`
+	ModTime   string `json:"modTime"`
 }
 
 // ---------- 订单流水 ----------

@@ -1,4 +1,4 @@
--- v0 -> v1 (compatible with v1+): Latest schema
+-- v0 -> v6 (compatible with v1+): Latest schema
 
 -- finlite SQLite 全量脚本（单账套 finlite.db）：新建库只执行本文件，老库按 user_version 执行增量脚本。
 -- 业务依据：docs/business/00-overview-health-finance-flow.md §8。
@@ -13,7 +13,8 @@ CREATE TABLE import_batches (
     success_count    INTEGER NOT NULL DEFAULT 0,
     skip_count       INTEGER NOT NULL DEFAULT 0,
     balance_warning  TEXT,
-    imported_at      TEXT NOT NULL
+    imported_at      TEXT NOT NULL,
+    raw_sha256       TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE import_errors (
@@ -178,16 +179,42 @@ CREATE UNIQUE INDEX uq_collections_receipt_no
 ON collections (receipt_no)
 WHERE receipt_no <> '';
 
--- 收款单据附件：内容存 BLOB，保证 finlite.db 单文件自洽。
+-- 收款单据附件：内容外置到 <账套目录>/attachments/YYYY/MM/<sha256>.<ext>，
+-- 库内只留指纹与相对路径（rel_path 相对账套目录）。
 CREATE TABLE collection_attachments (
     id            TEXT NOT NULL PRIMARY KEY,
     collection_id TEXT NOT NULL,
     file_name     TEXT NOT NULL,
     ext           TEXT NOT NULL,
     size_bytes    INTEGER NOT NULL DEFAULT 0,
-    content       BLOB,
+    sha256        TEXT NOT NULL DEFAULT '',
+    rel_path      TEXT NOT NULL DEFAULT '',
     sort_no       INTEGER NOT NULL DEFAULT 0,
     created_at    TEXT NOT NULL
 );
 CREATE INDEX idx_collection_attachments_collection
 ON collection_attachments (collection_id);
+CREATE INDEX idx_collection_attachments_sha256
+ON collection_attachments (sha256);
+
+-- 账套身份（单行）：code 必须等于所在账套目录名（见 upgrade/05-raw-files.sql）。
+CREATE TABLE ledger_profile (
+    id           INTEGER NOT NULL PRIMARY KEY CHECK (id = 1),
+    code         TEXT NOT NULL UNIQUE,
+    display_name TEXT NOT NULL,
+    created_at   TEXT NOT NULL
+);
+
+-- 原始文件清单（证据索引）：文件本体在 <账套目录>/raw/archive/YYYY/MM/。
+CREATE TABLE raw_files (
+    sha256      TEXT NOT NULL PRIMARY KEY,
+    rel_path    TEXT NOT NULL,
+    orig_name   TEXT NOT NULL,
+    source_type TEXT NOT NULL,
+    size_bytes  INTEGER NOT NULL DEFAULT 0,
+    row_count   INTEGER NOT NULL DEFAULT 0,
+    ingested_at TEXT NOT NULL,
+    operator    TEXT NOT NULL DEFAULT 'local',
+    note        TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX idx_raw_files_type ON raw_files (source_type, ingested_at);

@@ -170,13 +170,13 @@ func TestRawDirScanStates(t *testing.T) {
 	}
 }
 
-// TestRawDirDefaultAndValidation 未设置时回退到库同目录 /raw；目录不存在不报错；非法目录拒绝保存。
+// TestRawDirDefaultAndValidation 未设置时回退到账套 raw/inbox；目录不存在不报错；非法目录拒绝保存。
 func TestRawDirDefaultAndValidation(t *testing.T) {
 	ctx := context.Background()
 	db := newTestDB(t)
 	svc := NewImportService(db)
 
-	want := filepath.Join(filepath.Dir(db.Path()), "raw")
+	want := db.Ledger().RawInboxDir()
 	got, err := svc.GetRawDir(ctx)
 	if err != nil || got != want {
 		t.Fatalf("默认路径 = %q, %v, want %q", got, err, want)

@@ -34,7 +34,7 @@ description: finlite 单账套业务唯一依据：银行流水 + 订单流水 +
 
 | ForgeFin（参考） | finlite（本项目） |
 |---|---|
-| 多公司 `.db` 隔离、`source_records + raw_data JSON` 动态模型 | 单公司单库 `finlite.db`，`bank_flows / order_flows / data_summaries` 三张固定表 |
+| 多公司 `.db` 隔离、`source_records + raw_data JSON` 动态模型 | 单账套目录 `ledgers/ledger-1001/`（含 `finlite.db` + 原始文件归档），`bank_flows / order_flows / data_summaries` 三张固定表 |
 | Tauri command + `company_id` 路由 | Wails3 Service 直接调用，无 `company_id` |
 | 完整凭证/总账/报表/税务/AI 路线图 | MVP 只到“导入→对账→汇总→凭证→余额表” |
 | 余额校验 + 批量确认已实现 | 直接复用其规则（§6.3），Go 重写 |
@@ -255,7 +255,7 @@ description: finlite 单账套业务唯一依据：银行流水 + 订单流水 +
   - 非银通道（现金 + 个人码）：登记合计 vs 已生成汇总合计；差额与「已确认未生成汇总」进待处理队列。
   - 对公通道：登记合计 vs 银行流水转**入**合计；按「金额相等 + 收款日 ≤ 银行到账日 ≤ 收款日+7 天」贪心匹配，一笔银行流水只匹配一笔收款；未匹配收款进待处理队列。
   - 差异与未匹配项不阻止其他记录制单（与 §6.4 同原则）。
-- 附件：jpg/png/webp/pdf，单张 ≤ 10MB，单条 ≤ 10 张，内容存 SQLite BLOB，保证 `finlite.db` 单文件备份完整。
+- 附件：jpg/png/webp/pdf，单张 ≤ 10MB，单条 ≤ 10 张。上传前前端自动压缩（长边 ≤ 2000px、JPEG 质量 0.7），**内容外置**到 `<账套目录>/attachments/YYYY/MM/<sha256>.<ext>`，库内只存 `sha256` + `rel_path`（内容寻址：同一张图被多条记录引用只存一份；引用归零才删文件）。
 - 所有状态变更（创建/提交/修改/确认/驳回/作废/生成汇总）写 `audit_logs`，详情页展示操作记录。
 
 
@@ -273,17 +273,60 @@ description: finlite 单账套业务唯一依据：银行流水 + 订单流水 +
 | F8 | 基础设置 | 科目维护、费率维护、备份/恢复（sqlite `.backup` 级拷贝） | 备份文件可恢复打开 |
 | F9 | 店面收款 | 收款登记（门店/客户/项目/方式/账户/金额/收据号/经手人/开票）、单据照片附件、草稿→确认→生成汇总状态机、作废/驳回、通道对账视图与待处理队列 | 状态流转留审计日志；一收款一汇总；通道差异进队列不阻塞 |
 
-非目标（明确不做）：多账套、OCR、AI、税务申报、固定资产、应收账龄、微信自动同步。
+非目标（明确不做）：多账套切换/新建/删除 UI、OCR、AI、税务申报、固定资产、应收账龄、微信自动同步。
+MVP 固定单账套 `ledger-1001`；但「账套标识与数据归属」必须落地（见 §8.1），否则原始文件无处归属。
 
 ---
 
-## 8. 数据模型（SQLite 单库 `finlite.db`）
+## 8. 数据模型（单账套目录 `ledgers/ledger-1001/`）
 
 > Go 用 `modernc.org/sqlite`（纯 Go，免 CGO）+ `shopspring/decimal`；金额存 `TEXT`（decimal 字符串），时间存 `RFC3339` 文本。
 
+### 8.1 账套目录与原始数据/处理数据分离
+
+MVP 单账套，但**归属边界必须是目录**：一个账套 = 一个自包含目录，整目录可拷贝、可备份、可交接。
+
+```
+<data root>/                         # 默认可执行文件同目录；FINLITE_DATA 可覆盖
+└─ ledgers/
+   └─ ledger-1001/                   # MVP 唯一账套码
+      ├─ finlite.db                  # 处理层（派生数据 + 人工态），可重建部分见下
+      ├─ finlite.db-wal / -shm
+      ├─ ledger.json                 # 账套身份：code / displayName / createdAt
+      ├─ raw/
+      │  ├─ inbox/                   # 待导入投放区（默认扫描目录）
+      │  └─ archive/YYYY/MM/         # 原始文件，只增不改
+      │     YYYYMMDD-bank-flow-<sha8>.tsv
+      ├─ attachments/YYYY/MM/        # 店面收款附件，<sha256>.<ext>（内容寻址，同图只存一份）
+      └─ backups/                    # ledger-1001_YYYYMMDD_HHmmss.db
+<data root>/packages/                # 交接包 zip（账套之外，便于整包外发）
+```
+
+规则（改动需同步本节 + `upgrade/00-latest-schema.sql`）：
+
+1. **原始层（证据）**：银行/订单原始文件导入时**先归档再解析**；解析失败也留文件。归档名
+   `YYYYMMDD-{source_type}-{sha8}.{ext}`，原文件名存 `raw_files.orig_name`。只增不改，不提供删除/改写接口。
+2. **处理层（DB）**：`bank_flows / order_flows` 及其批次是派生数据，可由原始层重放重建；
+   `collections / data_summaries / vouchers / audit_logs / *_confirmed_at` 是人工态，重建会丢，必须先导出交接包。
+3. **路径**：库内只存相对账套目录的 `rel_path`，**永不存绝对路径**，账套目录可整体搬迁。
+   店面收款附件同样外置（`attachments/YYYY/MM/<sha256>.<ext>`），库内不再有 BLOB；旧库开库时自动外置。
+4. **账套身份三角互校**：目录名 ↔ `ledger.json` ↔ 库内 `ledger_profile.code`，任一不一致拒绝打开
+   （错误示例：`账套目录不匹配：当前目录 ledger-1001，库内账套 ledger-1002…`），防止把 A 账套的库拷进 B 目录。
+5. **不加 `ledger_id` 列**：账套归属由目录表达，避免两套真相；多账套时只是多几个 `ledgers/<code>/` 目录。
+6. **外部投放区**：允许把默认导入目录指向 U 盘/共享盘，但导入时必须复制进本账套 `raw/archive/`，绝不只记录外部路径。
+7. **去重按内容指纹**：同 sha256 只落一份；「已导入」判定也用指纹，不再看文件名 + mtime。
+
 ```sql
+-- 账套身份（单行）：code 必须等于所在账套目录名
+ledger_profile(id INT PK CHECK(id=1), code TEXT UNIQUE, display_name TEXT, created_at TEXT);
+
+-- 原始文件清单（证据索引）：文件本体在 raw/archive/YYYY/MM/，本表只存指纹与相对路径
+raw_files(sha256 TEXT PK, rel_path TEXT, orig_name TEXT, source_type TEXT,
+  size_bytes INT, row_count INT, ingested_at TEXT, operator TEXT, note TEXT);
+
 import_batches(id TEXT PK, source_type TEXT, file_name TEXT, row_count INT,
-  success_count INT, skip_count INT, balance_warning TEXT, imported_at TEXT);
+  success_count INT, skip_count INT, balance_warning TEXT, imported_at TEXT,
+  raw_sha256 TEXT DEFAULT ''); -- → raw_files.sha256；空=历史批次缺原始文件
 import_errors(id TEXT PK, batch_id TEXT, row_no INT, field_name TEXT, message TEXT);
 
 bank_flows(id TEXT PK, batch_id TEXT, file_name TEXT, row_no INT,
@@ -324,12 +367,12 @@ collections(id TEXT PK, collect_date TEXT, store TEXT, customer TEXT, phone TEXT
   status TEXT DEFAULT 'draft', -- draft/confirmed/summarized/voided
   void_reason TEXT, summary_id TEXT, note TEXT, created_at TEXT, updated_at TEXT);
 
--- 收款单据附件（内容存 BLOB，与主库同文件）
+-- 收款单据附件（内容外置到 attachments/YYYY/MM/<sha256>.<ext>，库内只存指纹与相对路径）
 collection_attachments(id TEXT PK, collection_id TEXT, file_name TEXT, ext TEXT,
-  size_bytes INT DEFAULT 0, content BLOB, sort_no INT DEFAULT 0, created_at TEXT);
+  size_bytes INT DEFAULT 0, sha256 TEXT, rel_path TEXT, sort_no INT DEFAULT 0, created_at TEXT);
 ```
 
-索引：`bank_flows(txn_time)`、`order_flows(settle_date, icbc_order_no)`、`data_summaries(date, status)`、`vouchers(voucher_date)`、`collections(collect_date, status)`、`collection_attachments(collection_id)`；`collections.receipt_no` 部分唯一（空串不占号）。
+索引：`bank_flows(txn_time)`、`order_flows(settle_date, icbc_order_no)`、`data_summaries(date, status)`、`vouchers(voucher_date)`、`collections(collect_date, status)`、`collection_attachments(collection_id, sha256)`；`collections.receipt_no` 部分唯一（空串不占号）。
 
 ---
 
@@ -364,7 +407,11 @@ Wails3 约定：Service 方法 `context.Context` 首参可选，返回 `(T, erro
 - 任何汇总修改/审核/凭证生成写 `audit_logs`（old/new JSON）。
 - 原始 `bank_flows/order_flows` 只读，不提供 Update 接口；错行用“作废+备注”或重新导入。
 - 凭证保留 `source_summary_id`，汇总保留 `voucher_id`，可一键反查：凭证→汇总→银行/订单行→文件+行号。
-- 备份：设置页一键备份 `finlite.db` 到 `backups/finlite_YYYYMMDD_HHmmss.db`；恢复需二次确认后重启应用。恢复前自动留一份当前库的 `pre-restore` 快照，防误恢复。
+- 原始文件可追溯链：`bank_flows/order_flows` 行 → `batch_id` → `import_batches.raw_sha256` → `raw_files.rel_path` → 归档文件；重算 sha256 必须一致。
+- 备份：设置页一键备份到账套内 `backups/ledger-1001_YYYYMMDD_HHmmss.db`（流式拷贝，不整库进内存）；恢复需二次确认后重启应用，且**拒绝恢复其他账套的备份**。恢复前自动留一份 `pre-restore` 快照。
+- 完整性校验：设置页「校验原始文件」重算归档文件指纹，报告缺失 / 被改动 / 未登记三类问题（只读，不改数据）。
+- 交接：设置页「导出交接包」= `VACUUM INTO` 库快照 + `ledger.json` + `raw/archive/` + `attachments/` + `manifest.tsv`（逐文件 sha256），落到 `packages/`，接收方按 manifest 校验后即可使用。
+- 存量迁移：启动时幂等迁移旧版 `raw/`、`raw/archived/` 到账套结构，补登记指纹并回填 `import_batches.raw_sha256`；匹配不上的历史批次保持空值并标「缺原始文件」，不假装补齐。
 
 ---
 

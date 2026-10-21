@@ -9,6 +9,7 @@ import * as CollectionService from "./collectionservice.js";
 import * as FeeRateService from "./feerateservice.js";
 import * as ImportService from "./importservice.js";
 import * as OrderFlowService from "./orderflowservice.js";
+import * as RawFileService from "./rawfileservice.js";
 import * as ReconService from "./reconservice.js";
 import * as ReportService from "./reportservice.js";
 import * as SummaryService from "./summaryservice.js";
@@ -22,6 +23,7 @@ export {
     FeeRateService,
     ImportService,
     OrderFlowService,
+    RawFileService,
     ReconService,
     ReportService,
     SummaryService,
@@ -31,6 +33,7 @@ export {
 export type {
     Account,
     AuditLog,
+    BackupFile,
     BalanceRow,
     BankFlow,
     BankFlowBatch,
@@ -51,11 +54,17 @@ export type {
     ColumnMapping,
     CreateVoucherReq,
     DailyRow,
+    EvidenceBundle,
+    EvidenceFile,
+    EvidenceIssue,
+    EvidenceMigrate,
+    EvidenceVerify,
     FeeRate,
     ImportError,
     ImportRawReq,
     ImportRawResult,
     ImportResult,
+    LedgerInfo,
     OrderFlow,
     OrderFlowFilter,
     OrderFlowGroup,

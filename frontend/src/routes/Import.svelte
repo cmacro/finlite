@@ -785,7 +785,16 @@
                   <span class="dot"></span>{TYPE_LABEL[b.sourceType] ?? b.sourceType}
                 </span>
               </td>
-              <td><span class="file-name">{b.fileName}</span></td>
+              <td>
+                <span class="file-name">{b.fileName}</span>
+                {#if b.rawSha256}
+                  <span class="text-muted" style="display:block;font-size:12px">
+                    原始文件指纹 {b.rawSha256.slice(0, 8)}
+                  </span>
+                {:else}
+                  <span class="text-danger" style="display:block;font-size:12px">缺原始文件</span>
+                {/if}
+              </td>
               <td class="num">{formatCount(b.rowCount)}</td>
               <td class="num">{formatCount(b.successCount)}</td>
               <td class="num {b.skipCount === 0 ? 'text-muted' : ''}">{formatCount(b.skipCount)}</td>
