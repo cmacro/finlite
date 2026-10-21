@@ -1,4 +1,4 @@
--- v4: Add store-collection register and attachment tables (F9 店面收款)
+-- v4: Add store-collection register and attachment tables (F9)
 
 -- 店面收款登记（F9）：店面线下收款台账，状态机 draft → confirmed → summarized，
 -- 以及作废 voided；金额 TEXT（decimal 字符串），日期 YYYY-MM-DD，时间戳 RFC3339。

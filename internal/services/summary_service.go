@@ -236,7 +236,6 @@ func (s *SummaryService) GenerateFromRecon(ctx context.Context, date string, ope
 }
 
 // checkReceiptNoUnique 收据号唯一（业务文档 §7 F5）：空号不占用，排除自身后不得重复。
-// 数据库侧另有部分唯一索引兜底（upgrade/01-receipt-no-unique.sql），此处提供中文报错。
 func checkReceiptNoUnique(tx *sql.Tx, receiptNo, selfID string) error {
 	no := strings.TrimSpace(receiptNo)
 	if no == "" {

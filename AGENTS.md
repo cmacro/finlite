@@ -47,8 +47,13 @@ main.go                      # thin entry, embed frontend/dist only
 internal/app/app.go          # Wails app + window + service registration
 internal/services/*.go       # one Service per domain, exposed to frontend
 internal/store/*.go          # SQLite open/migrate/query helpers only
+internal/store/upgrade/*.sql # SQL schema upgrade scripts + 00-latest-schema.sql full-schema script
 internal/decimal/*.go        # money parsing/formatting wrappers
-``` 
+```
+
+- All `.sql` schema files live in `internal/store/upgrade/` — no `.sql` anywhere else.
+  Naming, version headers, compatibility clauses, and full-schema sync follow the `db-schema` skill.
+  Never hand-edit an already applied script; add a new `{VER}-{kebab}.sql` instead.
 
 Frontend MUST follow:
 

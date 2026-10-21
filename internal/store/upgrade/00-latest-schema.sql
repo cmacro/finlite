@@ -1,6 +1,6 @@
--- v0 -> v5 (compatible with v1+): Latest schema
+-- v0 -> v4 (compatible with v1+): Latest schema
 
--- finlite SQLite 全量基线（单账套 finlite.db）：新建库只执行本文件，老库按 user_version 执行增量脚本。
+-- finlite SQLite 全量脚本（单账套 finlite.db）：新建库只执行本文件，老库按 user_version 执行增量脚本。
 -- 业务依据：docs/business/00-overview-health-finance-flow.md §8。
 -- 约定：金额 TEXT（decimal 字符串），日期 YYYY-MM-DD，时间戳 RFC3339。
 -- 移植参考：ForgeFin src-tauri/src/db/schema.rs（多账套/分INTEGER已简化为单库/TEXT）。

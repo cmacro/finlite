@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// TestOpenMigrateSeed 验证：建库 → 基线表 → 费率/科目种子幂等。
+// TestOpenMigrateSeed 验证：建库 → 全量脚本建表 → 费率/科目种子幂等。
 func TestOpenMigrateSeed(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "finlite_test.db")
 	db, err := Open(path)
