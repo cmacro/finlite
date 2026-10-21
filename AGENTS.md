@@ -168,7 +168,9 @@ go vet -tags=gtk3 ./...
 go build -tags=gtk3 .
 ```
 
-`-tags=gtk3` 是必需的（本机 GTK3 + webkit2gtk-4.1，无 GTK4 头文件，Wails `linux_cgo` 按 tag 选实现）。
+`-tags=gtk3` 是必需的（本机 GTK3 + webkit2gtk-4.1；Wails `linux_cgo` 按 tag 选实现）。
+Debian 12 的 GTK4 是 4.8，缺 wails `v3.0.0-beta.34` 默认 GTK4 路径需要的 `GtkFileDialog`（4.10+），
+所以 **`wails3 task build` 也必须带 `EXTRA_TAGS=gtk3`**（`wails3 task build EXTRA_TAGS=gtk3`），否则编译失败。
 编译门禁用根包 `go build .`，不要用 `go build ./...`（会误算 `build/{android,ios}` 的 `package main` 模板）。
 
 Frontend change also requires:
