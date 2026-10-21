@@ -1,9 +1,11 @@
--- finlite SQLite 基线 schema v1（单账套 finlite.db）。
+-- v0 -> v5 (compatible with v1+): Latest schema
+
+-- finlite SQLite 全量基线（单账套 finlite.db）：新建库只执行本文件，老库按 user_version 执行增量脚本。
 -- 业务依据：docs/business/00-overview-health-finance-flow.md §8。
 -- 约定：金额 TEXT（decimal 字符串），日期 YYYY-MM-DD，时间戳 RFC3339。
 -- 移植参考：ForgeFin src-tauri/src/db/schema.rs（多账套/分INTEGER已简化为单库/TEXT）。
 
-CREATE TABLE IF NOT EXISTS import_batches (
+CREATE TABLE import_batches (
     id               TEXT NOT NULL PRIMARY KEY,
     source_type      TEXT NOT NULL,
     file_name        TEXT NOT NULL,
@@ -14,7 +16,7 @@ CREATE TABLE IF NOT EXISTS import_batches (
     imported_at      TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS import_errors (
+CREATE TABLE import_errors (
     id          TEXT NOT NULL PRIMARY KEY,
     batch_id    TEXT NOT NULL,
     row_no      INTEGER,
@@ -22,7 +24,7 @@ CREATE TABLE IF NOT EXISTS import_errors (
     message     TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS bank_flows (
+CREATE TABLE bank_flows (
     id                   TEXT NOT NULL PRIMARY KEY,
     batch_id             TEXT NOT NULL,
     file_name            TEXT NOT NULL,
@@ -40,10 +42,11 @@ CREATE TABLE IF NOT EXISTS bank_flows (
     created_at           TEXT NOT NULL,
     raw_json             TEXT NOT NULL DEFAULT '{}'
 );
-CREATE INDEX IF NOT EXISTS idx_bank_flows_txn_time ON bank_flows (txn_time);
-CREATE INDEX IF NOT EXISTS idx_bank_flows_batch ON bank_flows (batch_id);
 
-CREATE TABLE IF NOT EXISTS order_flows (
+CREATE INDEX idx_bank_flows_txn_time ON bank_flows (txn_time);
+CREATE INDEX idx_bank_flows_batch ON bank_flows (batch_id);
+
+CREATE TABLE order_flows (
     id                TEXT NOT NULL PRIMARY KEY,
     batch_id          TEXT NOT NULL,
     icbc_order_no     TEXT NOT NULL,
@@ -59,11 +62,11 @@ CREATE TABLE IF NOT EXISTS order_flows (
     raw_json          TEXT NOT NULL DEFAULT '{}',
     created_at        TEXT NOT NULL
 );
-CREATE UNIQUE INDEX IF NOT EXISTS uq_order_flows_icbc_order_no ON order_flows (icbc_order_no);
-CREATE INDEX IF NOT EXISTS idx_order_flows_settle_date ON order_flows (settle_date);
-CREATE INDEX IF NOT EXISTS idx_order_flows_batch ON order_flows (batch_id);
+CREATE UNIQUE INDEX uq_order_flows_icbc_order_no ON order_flows (icbc_order_no);
+CREATE INDEX idx_order_flows_settle_date ON order_flows (settle_date);
+CREATE INDEX idx_order_flows_batch ON order_flows (batch_id);
 
-CREATE TABLE IF NOT EXISTS data_summaries (
+CREATE TABLE data_summaries (
     id                  TEXT NOT NULL PRIMARY KEY,
     date                TEXT NOT NULL,
     receipt_no          TEXT,
@@ -83,14 +86,14 @@ CREATE TABLE IF NOT EXISTS data_summaries (
     created_at          TEXT NOT NULL,
     updated_at          TEXT NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_data_summaries_date ON data_summaries (date);
-CREATE INDEX IF NOT EXISTS idx_data_summaries_status ON data_summaries (status);
+CREATE INDEX idx_data_summaries_date ON data_summaries (date);
+CREATE INDEX idx_data_summaries_status ON data_summaries (status);
 -- 收据号唯一（业务文档 §7 F5）：仅对已填号的行生效，空串/未编号允许重复。
-CREATE UNIQUE INDEX IF NOT EXISTS uq_data_summaries_receipt_no
+CREATE UNIQUE INDEX uq_data_summaries_receipt_no
 ON data_summaries (receipt_no)
 WHERE receipt_no IS NOT NULL AND receipt_no <> '';
 
-CREATE TABLE IF NOT EXISTS vouchers (
+CREATE TABLE vouchers (
     id                TEXT NOT NULL PRIMARY KEY,
     voucher_date      TEXT NOT NULL,
     voucher_no        TEXT NOT NULL,
@@ -99,10 +102,10 @@ CREATE TABLE IF NOT EXISTS vouchers (
     source_summary_id TEXT,
     created_at        TEXT NOT NULL
 );
-CREATE UNIQUE INDEX IF NOT EXISTS uq_vouchers_voucher_no ON vouchers (voucher_no);
-CREATE INDEX IF NOT EXISTS idx_vouchers_date ON vouchers (voucher_date);
+CREATE UNIQUE INDEX uq_vouchers_voucher_no ON vouchers (voucher_no);
+CREATE INDEX idx_vouchers_date ON vouchers (voucher_date);
 
-CREATE TABLE IF NOT EXISTS voucher_entries (
+CREATE TABLE voucher_entries (
     id           TEXT NOT NULL PRIMARY KEY,
     voucher_id   TEXT NOT NULL,
     account_code TEXT NOT NULL,
@@ -112,9 +115,9 @@ CREATE TABLE IF NOT EXISTS voucher_entries (
     remark       TEXT,
     sort_no      INTEGER NOT NULL DEFAULT 0
 );
-CREATE INDEX IF NOT EXISTS idx_voucher_entries_voucher ON voucher_entries (voucher_id);
+CREATE INDEX idx_voucher_entries_voucher ON voucher_entries (voucher_id);
 
-CREATE TABLE IF NOT EXISTS accounts (
+CREATE TABLE accounts (
     code         TEXT NOT NULL PRIMARY KEY,
     name         TEXT NOT NULL,
     parent_code  TEXT,
@@ -122,13 +125,13 @@ CREATE TABLE IF NOT EXISTS accounts (
     is_active    INTEGER NOT NULL DEFAULT 1
 );
 
-CREATE TABLE IF NOT EXISTS fee_rates (
+CREATE TABLE fee_rates (
     pay_method TEXT NOT NULL PRIMARY KEY,
     rate       TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS audit_logs (
+CREATE TABLE audit_logs (
     id          TEXT NOT NULL PRIMARY KEY,
     entity_type TEXT NOT NULL,
     entity_id   TEXT NOT NULL,
@@ -139,17 +142,17 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     operated_at TEXT NOT NULL,
     remark      TEXT
 );
-CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON audit_logs (entity_type, entity_id);
+CREATE INDEX idx_audit_logs_entity ON audit_logs (entity_type, entity_id);
 
 -- 本地界面偏好（导入中心默认原始数据目录等）；键值对，单账套单机使用。
-CREATE TABLE IF NOT EXISTS app_settings (
+CREATE TABLE app_settings (
     key        TEXT NOT NULL PRIMARY KEY,
     value      TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
 
 -- 店面收款登记（F9）：店面线下收款台账，状态 draft → confirmed → summarized / voided。
-CREATE TABLE IF NOT EXISTS collections (
+CREATE TABLE collections (
     id           TEXT NOT NULL PRIMARY KEY,
     collect_date TEXT NOT NULL,
     store        TEXT NOT NULL,
@@ -169,14 +172,14 @@ CREATE TABLE IF NOT EXISTS collections (
     created_at   TEXT NOT NULL,
     updated_at   TEXT NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_collections_date ON collections (collect_date);
-CREATE INDEX IF NOT EXISTS idx_collections_status ON collections (status);
-CREATE UNIQUE INDEX IF NOT EXISTS uq_collections_receipt_no
+CREATE INDEX idx_collections_date ON collections (collect_date);
+CREATE INDEX idx_collections_status ON collections (status);
+CREATE UNIQUE INDEX uq_collections_receipt_no
 ON collections (receipt_no)
 WHERE receipt_no <> '';
 
 -- 收款单据附件：内容存 BLOB，保证 finlite.db 单文件自洽。
-CREATE TABLE IF NOT EXISTS collection_attachments (
+CREATE TABLE collection_attachments (
     id            TEXT NOT NULL PRIMARY KEY,
     collection_id TEXT NOT NULL,
     file_name     TEXT NOT NULL,
@@ -186,5 +189,5 @@ CREATE TABLE IF NOT EXISTS collection_attachments (
     sort_no       INTEGER NOT NULL DEFAULT 0,
     created_at    TEXT NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_collection_attachments_collection
+CREATE INDEX idx_collection_attachments_collection
 ON collection_attachments (collection_id);
