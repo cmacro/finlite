@@ -259,7 +259,7 @@ input{font-family:inherit;font-size:inherit;color:inherit;}
   overflow:hidden;box-shadow:var(--shadow-sm);
 }
 .table-scroll{flex:1;min-height:0;overflow:auto;position:relative;}
-table.data{width:100%;min-width:1160px;border-collapse:separate;border-spacing:0;table-layout:fixed;}
+table.data{width:100%;min-width:1142px;border-collapse:separate;border-spacing:0;table-layout:fixed;}
 table.data thead th{
   position:sticky;top:0;z-index:3;background:var(--surface);
   border-bottom:1px solid var(--border);
@@ -289,17 +289,6 @@ tr.data-row td.first-err{box-shadow:inset 3px 0 0 var(--err);}
 tr.data-row.row-last td{border-bottom:none;}
 tr.data-row:focus-visible{outline:none;}
 tr.data-row:focus-visible td{background:var(--surface-2);box-shadow:inset 0 0 0 2px var(--accent);}
-
-/* expand button */
-.exp-btn{
-  width:22px;height:22px;border-radius:var(--radius-sm);border:1px solid transparent;
-  background:transparent;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;
-  transition:background var(--ease) .12s,transform var(--ease) .16s,color var(--ease) .12s;
-}
-.exp-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.exp-btn:hover{background:var(--surface-3);color:var(--fg-2);}
-.exp-btn:focus-visible{outline:none;box-shadow:var(--focus);}
-tr.expanded .exp-btn{transform:rotate(90deg);color:var(--accent);}
 
 .third-empty{color:var(--muted);}
 .pay{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--fg-2);white-space:nowrap;}
@@ -350,41 +339,6 @@ tr.group-row>td{
 .group-subs{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
 .group-sub{font-size:11.5px;color:var(--muted);display:flex;align-items:baseline;gap:5px;}
 .group-sub b{font-size:12px;color:var(--fg);font-weight:600;font-variant-numeric:tabular-nums;}
-
-/* recalc detail row */
-tr.detail-row>td{padding:0;background:var(--bg);border-bottom:1px solid var(--border-soft);}
-tr.detail-row.hidden{display:none;}
-.recalc{
-  padding:12px 16px 14px;background:linear-gradient(180deg,var(--surface) 0%,var(--bg) 100%);
-  border-left:3px solid var(--accent);
-}
-.recalc-head{font-size:11.5px;font-weight:700;color:var(--fg-2);letter-spacing:.03em;margin-bottom:9px;display:flex;align-items:center;gap:7px;}
-.recalc-head svg{width:13px;height:13px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.recalc-line{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:9px;}
-.rc-item{display:flex;flex-direction:column;gap:2px;min-width:104px;}
-.rc-item .rk{font-size:11px;color:var(--muted);}
-.rc-item .rv{font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--fg);}
-.rc-item .rv.ok{color:var(--ok-fg);}
-.rc-item .rv.warn{color:var(--warn-fg);}
-.rc-item .rv.err{color:var(--err-fg);}
-.rc-op{color:var(--muted);font-size:15px;padding-bottom:1px;}
-.identity{
-  display:flex;align-items:center;gap:9px;flex-wrap:wrap;
-  border-top:1px dashed var(--border);padding-top:9px;font-size:12.5px;color:var(--fg-2);
-}
-.identity .id-k{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.03em;}
-.identity .id-eq{font-variant-numeric:tabular-nums;font-family:var(--font-mono);font-size:12.5px;}
-.identity .id-res{font-weight:600;font-variant-numeric:tabular-nums;}
-.identity .id-diff{font-size:11.5px;font-weight:600;padding:1px 8px;border-radius:var(--radius-pill);}
-.identity .id-diff.ok{background:var(--ok-bg);color:var(--ok-fg);border:1px solid var(--ok-border);}
-.identity .id-diff.err{background:var(--err-bg-strong);color:var(--err-fg);border:1px solid var(--err-border);}
-.identity.is-err{color:var(--err-fg);}
-.parse-note{
-  display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--err-fg);
-  background:var(--err-bg);border:1px solid var(--err-border);border-radius:var(--radius-md);
-  padding:8px 11px;
-}
-.parse-note svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:0 0 14px;}
 
 /* summary bar */
 .summary{
@@ -690,13 +644,12 @@ tr.detail-row.hidden{display:none;}
         <div class="table-scroll" id="tableScroll">
           <table class="data" id="dataTable">
             <colgroup>
-              <col style="width:40px"><col style="width:100px"><col style="width:136px"><col style="width:146px">
-              <col style="width:102px"><col style="width:104px"><col style="width:90px"><col style="width:104px">
-              <col style="width:82px"><col style="width:74px"><col style="width:126px"><col style="width:78px">
+              <col style="width:100px"><col style="width:136px"><col style="width:146px"><col style="width:102px">
+              <col style="width:104px"><col style="width:90px"><col style="width:104px"><col style="width:82px">
+              <col style="width:74px"><col style="width:126px"><col style="width:78px">
             </colgroup>
             <thead>
               <tr>
-                <th aria-label="展开"></th>
                 <th>工行订单号</th>
                 <th>第三方订单号</th>
                 <th>交易时间</th>
@@ -784,7 +737,6 @@ tr.detail-row.hidden{display:none;}
   var STATUS_CLASS = { ok:"ok", fee_diff:"warn", net_diff:"err", fee_parse_err:"err" };
 
   var state = { date:"", keyword:"", feeOnly:false };
-  var expanded = {};
 
   var $ = function(id){ return document.getElementById(id); };
   var tbody = $("tbody");
@@ -858,10 +810,9 @@ tr.detail-row.hidden{display:none;}
     else if(r.status === "net_diff" || r.status === "fee_parse_err"){ rc = "row-err"; first = "first-err"; }
     var third = r.third ? esc(r.third) : '<span class="third-empty">—</span>';
     var thirdTitle = r.third ? ' title="'+esc(r.third)+'"' : "";
-    var trCls = "data-row " + rc + (isLast ? " row-last" : "") + (expanded[r.no] ? " expanded" : "");
+    var trCls = "data-row " + rc + (isLast ? " row-last" : "");
     return '<tr class="'+trCls+'" data-row="'+r.no+'" tabindex="0" data-od-id="row-'+r.no+'">' +
-      '<td class="'+(r.status!=="ok"?first:"")+'"><button class="exp-btn" data-toggle="'+r.no+'" aria-label="展开手续费复算" aria-expanded="'+(expanded[r.no]?"true":"false")+'">' +
-        '<svg viewBox="0 0 16 16"><path d="M6 3.5 10.5 8 6 12.5"/></svg></button></td>' +
+      '<td class="'+(r.status!=="ok"?first:"")+'">' +
       '<td class="mono" title="'+esc(r.no)+'">'+esc(r.no)+'</td>' +
       '<td class="mono"'+thirdTitle+'>'+third+'</td>' +
       '<td class="col-time">'+esc(r.trade)+'</td>' +
@@ -875,37 +826,6 @@ tr.detail-row.hidden{display:none;}
       '<td><button class="link-btn" data-drawer="'+r.no+'">查看详情</button></td>' +
     '</tr>';
   }
-  function detailHtml(r){
-    var hidden = expanded[r.no] ? "" : " hidden";
-    var body;
-    if(r.status === "fee_parse_err"){
-      body = '<div class="parse-note"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.6v4M8 10.8v.1"/></svg>' +
-        '手续费字段无法解析（源文件原始值缺失或格式异常），已跳过费率复算，标记为「金额解析失败」待人工复核。</div>';
-    } else {
-      var exp = expectedFee(r.order);
-      var feeDiff = round2(r.fee - exp);
-      var idDiff = round2((r.order - r.fee) - r.net);
-      var feeCls = Math.abs(feeDiff) < 0.005 ? "ok" : (r.status==="fee_diff" ? "warn" : "err");
-      var idCls = Math.abs(idDiff) < 0.005 ? "ok" : "err";
-      body =
-        '<div class="recalc-line">' +
-          '<div class="rc-item"><span class="rk">订单金额 × 费率</span><span class="rv">'+money(r.order)+' × 0.25%</span></div>' +
-          '<span class="rc-op">＝</span>' +
-          '<div class="rc-item"><span class="rk">预期手续费</span><span class="rv">'+money(exp)+'</span></div>' +
-          '<div class="rc-item"><span class="rk">实际手续费</span><span class="rv">'+money(r.fee)+'</span></div>' +
-          '<div class="rc-item"><span class="rk">差额</span><span class="rv '+feeCls+'">'+fmtDiff(feeDiff)+'</span></div>' +
-        '</div>' +
-        '<div class="identity'+(idCls==="err"?" is-err":"")+'">' +
-          '<span class="id-k">恒等式</span>' +
-          '<span class="id-eq">订单金额 − 手续费 = 实收 → '+money(r.order)+' − '+money(r.fee)+' = '+money(round2(r.order-r.fee))+'</span>' +
-          '<span class="id-diff '+idCls+'">实收差异 '+fmtDiff(idDiff)+'</span>' +
-        '</div>';
-    }
-    return '<tr class="detail-row'+hidden+'" data-detail="'+r.no+'"><td colspan="12"><div class="recalc">' +
-      '<div class="recalc-head"><svg viewBox="0 0 16 16"><path d="M2.6 8.4 6 11.6 13.4 4.6"/></svg>手续费复算 · '+esc(r.no)+'</div>' +
-      body + '</div></td></tr>';
-  }
-
   function groupHtml(g){
     var n = g.rows.length;
     var o = sum(g.rows,"order"), f = sum(g.rows,"fee"), nt = sum(g.rows,"net");
@@ -917,7 +837,7 @@ tr.detail-row.hidden{display:none;}
     var feeNote = parseErr
       ? ' <span style="color:var(--warn-fg);">· '+parseErr+' 笔解析失败未计入手续费小计</span>'
       : '';
-    var head = '<tr class="group-row" data-od-id="group-'+g.date+'"><td colspan="12"><div class="group-inner">' +
+    var head = '<tr class="group-row" data-od-id="group-'+g.date+'"><td colspan="11"><div class="group-inner">' +
       '<div class="group-date">' +
         '<span class="gd-k">结算日期</span><span class="gd-v">'+g.date+'</span>' +
         '<span class="gd-wd">· '+weekday(g.date)+'</span>' +
@@ -934,7 +854,6 @@ tr.detail-row.hidden{display:none;}
     var body = "";
     g.rows.forEach(function(r, i){
       body += rowHtml(r, i === n-1);
-      body += detailHtml(r);
     });
     return head + body;
   }
@@ -1115,18 +1034,6 @@ tr.detail-row.hidden{display:none;}
 
   /* ---- events ---- */
   tbody.addEventListener("click", function(e){
-    var toggle = e.target.closest("[data-toggle]");
-    if(toggle){
-      e.stopPropagation();
-      var no = toggle.getAttribute("data-toggle");
-      expanded[no] = !expanded[no];
-      var tr = toggle.closest("tr");
-      var det = tbody.querySelector('[data-detail="'+no+'"]');
-      if(tr){ tr.classList.toggle("expanded", expanded[no]); }
-      if(det){ det.classList.toggle("hidden", !expanded[no]); }
-      toggle.setAttribute("aria-expanded", expanded[no] ? "true" : "false");
-      return;
-    }
     var dbtn = e.target.closest("[data-drawer]");
     if(dbtn){ e.stopPropagation(); openDrawer(dbtn.getAttribute("data-drawer")); return; }
     var row = e.target.closest("tr[data-row]");

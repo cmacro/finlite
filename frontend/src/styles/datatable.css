@@ -1,0 +1,28 @@
+/* 通用数据表骨架（lib/DataTable.svelte）：粘性表头 / 固定布局 / 分组行 / 滚动区。
+ * 行详情一律走右侧抽屉，表内不再有展开行（避免插入行触发整表重排）。
+ * 只提供结构与中性视觉；页面样式（bankflow.css / orderflow.css 等）后导入，可覆盖颜色与间距。 */
+@layer components {
+  .dt-scroll {
+    @apply relative overflow-auto;
+    overscroll-behavior: contain;
+  }
+  /* 固定布局：列宽由 colgroup 决定，浏览器单趟布局，行数再多也不会因内容重新分配列宽。 */
+  .dt-table {
+    @apply w-full border-separate border-spacing-0 text-[13px];
+    table-layout: fixed;
+  }
+  .dt-table thead th {
+    @apply sticky top-0 z-[2] text-left;
+  }
+  .dt-table tbody td {
+    @apply align-middle;
+  }
+  .dt-table tbody tr:last-child > td {
+    @apply border-b-0;
+  }
+
+  /* 分组行：内容撑满整行，不留内边距 */
+  .dt-group > td {
+    @apply p-0;
+  }
+}

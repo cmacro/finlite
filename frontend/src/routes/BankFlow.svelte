@@ -1,5 +1,8 @@
 <!-- 银行流水（F2）：批次信息栏 + 统计卡 + 密集表格（三色余额状态）+ 行内余额衔接 + 右侧详情抽屉。
      数据经 BankFlowService.List / Batches / ConfirmBatch / UnconfirmBatch / ExportTSV（Wails 绑定）。
+     表格用 lib/DataTable.svelte（固定列宽 + 粘性表头 + 全量 DOM），点击行打开右侧详情抽屉看明细；
+     表内不再有展开行（展开行会让 2000+ 行表格重排）。全量行始终在 DOM 中，框选 / Ctrl+A 后可直接
+     粘到 Excel；另有「复制表格」按钮输出 TSV。
      原始表只读：本页无任何编辑入口；确认仅写 balance_confirmed_at，可撤销（二次确认）。
      视觉对齐 docs/uidesign/bank-flow.html；金额展示只格式化，不在此做算术。 -->
 <script lang="ts">
@@ -11,14 +14,17 @@
     BankFlowFilter,
     BankFlowPage,
   } from '../../bindings/finlite/internal/services/models';
+  import DataTable from '../lib/DataTable.svelte';
   import Icon from '../lib/Icon.svelte';
   import Confirm from '../lib/Confirm.svelte';
+  import { buildTSV, copyTSV, type TableColumn } from '../lib/table';
   import {
     bankRowState,
     formatDateTime,
     formatMoney,
     formatSignedMoney,
     prettyJson,
+    statusText,
   } from '../lib/format';
   import type { RouteKey } from '../lib/types';
 
@@ -30,7 +36,9 @@
   type AlertTone = 'info' | 'ok' | 'warn' | 'danger';
   type ToastTone = AlertTone;
 
-  let page = $state<BankFlowPage | null>(null);
+  // 列表数据整体替换、内部不再改写：用 $state.raw 避免把 2000+ 行包成深层响应式代理。
+  let page = $state.raw<BankFlowPage | null>(null);
+  // 批次信息栏/筛选用的元数据量小，保持普通 $state 即可。
   let batches = $state<BankFlowBatch[]>([]);
   let filter = $state<BankFlowFilter>({ batchId: '', dateFrom: '', dateTo: '', keyword: '' });
 
@@ -41,8 +49,6 @@
 
   let busy = $state(false);
   let alert = $state<{ tone: AlertTone; msg: string } | null>(null);
-  let expanded = $state<Record<string, boolean>>({});
-  let checked = $state<Record<string, boolean>>({});
   let drawerRow = $state<BankFlow | null>(null);
   let dialogMode = $state<'' | 'confirm' | 'unconfirm'>('');
 
@@ -65,6 +71,25 @@
     confirmed: page?.confirmedCount ?? 0,
     skip: page?.skipCount ?? 0,
   });
+
+  // ---------- 列定义（宽度固定，跨批次/筛选列宽恒定；导出取后端原始 decimal 字符串） ----------
+  const columns: TableColumn<BankFlow>[] = [
+    { key: 'txnTime', title: '交易时间', width: '130px', class: 'bf-time', hint: (f) => f.txnTime },
+    { key: 'counterpartyAccount', title: '对方账号', width: '140px', class: 'bf-acct', cell: acctCell, hint: (f) => f.counterpartyAccount },
+    { key: 'counterparty', title: '对方单位', width: '190px', cell: cpCell, hint: (f) => f.counterparty },
+    { key: 'summary', title: '摘要 / 用途', width: '150px', class: 'bf-ellip', hint: (f) => f.summary },
+    { key: 'remark', title: '附言', width: '160px', class: 'bf-ellip', cell: remarkCell, hint: (f) => f.remark },
+    { key: 'inAmount', title: '转入', width: '100px', align: 'right', class: 'bf-num', cell: inCell },
+    { key: 'outAmount', title: '转出', width: '100px', align: 'right', class: 'bf-num', cell: outCell },
+    { key: 'balance', title: '余额', width: '112px', align: 'right', class: 'bf-num bal', cell: balCell },
+    {
+      key: 'displayStatus',
+      title: '校验状态',
+      width: '96px',
+      cell: stateBadge,
+      copy: (f) => statusText(bankRowState(f)),
+    },
+  ];
 
   const dialogMessage = $derived(
     dialogMode === 'confirm'
@@ -139,7 +164,6 @@
 
   function applyBatch(id: string): void {
     filter = { ...filter, batchId: id };
-    expanded = {};
     void load();
   }
 
@@ -160,6 +184,20 @@
     kwInput = '';
     filter = { batchId: filter.batchId, dateFrom: '', dateTo: '', keyword: '' };
     void load();
+  }
+
+  // ---------- 复制到 Excel ----------
+  async function copyTable(): Promise<void> {
+    if (items.length === 0) {
+      toast('info', '当前没有可复制的数据。');
+      return;
+    }
+    try {
+      await copyTSV(buildTSV(columns, items));
+      toast('ok', `已复制 ${items.length} 行到剪贴板，可直接粘贴到 Excel。`);
+    } catch (e) {
+      toast('danger', `复制失败：${e instanceof Error ? e.message : String(e)}`);
+    }
   }
 
   // ---------- 确认 / 撤销 ----------
@@ -228,14 +266,8 @@
   }
 
   // ---------- 行交互 ----------
-  function toggleExpand(id: string): void {
-    expanded = { ...expanded, [id]: !expanded[id] };
-  }
-
-  function toggleChecked(id: string): void {
-    checked = { ...checked, [id]: !checked[id] };
-    toast('ok', checked[id] ? '已标记该行为「已核对」（本地标注）。' : '已取消「已核对」标记。');
-  }
+  const rowKeyOf = (f: BankFlow): string => f.id;
+  const rowClassOf = (f: BankFlow): string => `bf-row bf-row-${bankRowState(f)}`;
 
   function openDrawer(row: BankFlow): void {
     drawerRow = row;
@@ -244,45 +276,17 @@
     drawerRow = null;
   }
 
-  function batchRowsOf(row: BankFlow): BankFlow[] {
-    return items.filter((x) => x.batchId === row.batchId);
-  }
   function neighborsOf(row: BankFlow): { prev: BankFlow | null; next: BankFlow | null } {
-    const rows = batchRowsOf(row);
-    const i = rows.findIndex((x) => x.id === row.id);
+    const i = items.findIndex((x) => x.id === row.id);
     return {
-      prev: i > 0 ? rows[i - 1] : null,
-      next: i >= 0 && i < rows.length - 1 ? rows[i + 1] : null,
+      prev: i > 0 ? items[i - 1] : null,
+      next: i >= 0 && i < items.length - 1 ? items[i + 1] : null,
     };
-  }
-
-  function locateNeighbor(row: BankFlow): void {
-    const { prev, next } = neighborsOf(row);
-    const target = prev ?? next;
-    if (!target) {
-      toast('info', '该行没有相邻行可定位。');
-      return;
-    }
-    const el = document.querySelector<HTMLElement>(`[data-row-id="${target.id}"]`);
-    if (el) {
-      el.scrollIntoView({ block: 'center' });
-      el.classList.remove('bf-flash');
-      void el.offsetWidth;
-      el.classList.add('bf-flash');
-    }
-    toast('info', `已定位到相邻行：${target.txnTime} · 余额 ${formatMoney(target.balance)}`);
   }
 
   /** 金额是否非零（只做字符串判断，不做算术）。 */
   function nonzero(v: string): boolean {
     return !/^[+-]?0(?:\.0+)?$/.test(v.trim());
-  }
-
-  function isExpanded(id: string): boolean {
-    return !!expanded[id];
-  }
-  function isChecked(id: string): boolean {
-    return !!checked[id];
   }
 
   function onKeydown(e: KeyboardEvent): void {
@@ -311,16 +315,75 @@
 
 <svelte:window onkeydown={onKeydown} />
 
-{#snippet stateBadge(state: string)}
-  {#if state === 'confirmed'}
-    <span class="bf-badge bf-badge-conf"><Icon name="check" size={11} />已确认</span>
-  {:else if state === 'mismatch'}
-    <span class="bf-badge bf-badge-err"><Icon name="alert-triangle" size={11} />不平</span>
-  {:else if state === 'skip'}
+<!-- 行徽标图标：行级图标用内联 snippet（不实例化 Icon 组件），2000+ 行才不会有组件开销。 -->
+{#snippet icoCheck()}
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  ><path d="M20 6 9 17l-5-5" /></svg>
+{/snippet}
+
+{#snippet icoWarn()}
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  ><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path
+      d="M12 17h.01"
+    /></svg>
+{/snippet}
+
+{#snippet stateBadge(f: BankFlow)}
+  {@const st = bankRowState(f)}
+  {#if st === 'confirmed'}
+    <span class="bf-badge bf-badge-conf">{@render icoCheck()}已确认</span>
+  {:else if st === 'mismatch'}
+    <span class="bf-badge bf-badge-err">{@render icoWarn()}不平</span>
+  {:else if st === 'skip'}
     <span class="bf-badge bf-badge-skip">跳过</span>
   {:else}
-    <span class="bf-badge bf-badge-ok"><Icon name="check" size={11} />正常</span>
+    <span class="bf-badge bf-badge-ok">{@render icoCheck()}正常</span>
   {/if}
+{/snippet}
+
+{#snippet acctCell(f: BankFlow)}
+  {f.counterpartyAccount || '—'}
+{/snippet}
+
+{#snippet cpCell(f: BankFlow)}
+  <div class="bf-cell-cp">
+    <span class="bf-cp-name">{f.counterparty}</span>
+    {#if f.isPos}<span class="bf-tag-pos">POS 清算</span>{/if}
+  </div>
+{/snippet}
+
+{#snippet remarkCell(f: BankFlow)}
+  {#if f.remark}
+    {#if f.isPos}<span class="bf-memo-pos">{f.remark}</span>{:else}<span class="bf-memo">{f.remark}</span>{/if}
+  {:else}
+    <span class="bf-memo-empty">—</span>
+  {/if}
+{/snippet}
+
+{#snippet inCell(f: BankFlow)}
+  {nonzero(f.inAmount) ? formatMoney(f.inAmount) : ''}
+{/snippet}
+
+{#snippet outCell(f: BankFlow)}
+  {nonzero(f.outAmount) ? formatMoney(f.outAmount) : ''}
+{/snippet}
+
+{#snippet balCell(f: BankFlow)}
+  {formatMoney(f.balance)}
 {/snippet}
 
 <section>
@@ -494,17 +557,6 @@
 
   <!-- ============ 表格 ============ -->
   <section class="bf-table-card">
-    <div class="bf-table-toolbar">
-      <span class="bf-table-title">流水明细</span>
-      <span class="bf-chip">{selectedBatch ? selectedBatch.fileName : '全部批次'}</span>
-      <div class="bf-legend">
-        <span class="bf-legend-item"><span class="bf-legend-key bf-legend-ok"></span>正常</span>
-        <span class="bf-legend-item"><span class="bf-legend-key bf-legend-err"></span>不平</span>
-        <span class="bf-legend-item"><span class="bf-legend-key bf-legend-skip"></span>跳过</span>
-        <span class="bf-legend-item"><span class="bf-legend-key bf-legend-conf"></span>已确认</span>
-      </div>
-    </div>
-
     {#if items.length === 0}
       <div class="bf-empty">
         <div class="bf-empty-ico"><Icon name="file" size={26} /></div>
@@ -516,136 +568,44 @@
         </button>
       </div>
     {:else}
-      <div class="bf-scroll">
-        <table class="bf-table">
-          <thead>
-            <tr>
-              <th class="w-9"></th>
-              <th>交易时间</th>
-              <th>对方账号</th>
-              <th>对方单位</th>
-              <th>摘要 / 用途</th>
-              <th>附言</th>
-              <th class="num">转入</th>
-              <th class="num">转出</th>
-              <th class="num">余额</th>
-              <th>校验状态</th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each items as f (f.id)}
-              {@const st = bankRowState(f)}
-              <tr
-                data-row-id={f.id}
-                class="bf-row bf-row-{st}"
-                onclick={() => openDrawer(f)}
-              >
-                <td class="pr-0">
-                  <button
-                    class="bf-expand-btn {isExpanded(f.id) ? 'open' : ''}"
-                    aria-label="展开余额衔接"
-                    onclick={(e) => {
-                      e.stopPropagation();
-                      toggleExpand(f.id);
-                    }}
-                  >
-                    <Icon name="chevron-right" size={14} />
-                  </button>
-                </td>
-                <td class="bf-time">{f.txnTime}</td>
-                <td class="bf-acct">{f.counterpartyAccount || '—'}</td>
-                <td>
-                  <div class="bf-cell-cp">
-                    <span class="bf-cp-name">{f.counterparty}</span>
-                    {#if f.isPos}<span class="bf-tag-pos">POS 清算</span>{/if}
-                    {#if isChecked(f.id)}<span class="bf-checked-tag">已核对</span>{/if}
-                  </div>
-                </td>
-                <td>{f.summary}</td>
-                <td>
-                  {#if f.remark}
-                    {#if f.isPos}
-                      <span class="bf-memo-pos">{f.remark}</span>
-                    {:else}
-                      {f.remark}
-                    {/if}
-                  {:else}
-                    <span class="bf-memo-empty">—</span>
-                  {/if}
-                </td>
-                <td class="bf-num">{nonzero(f.inAmount) ? formatMoney(f.inAmount) : ''}</td>
-                <td class="bf-num">{nonzero(f.outAmount) ? formatMoney(f.outAmount) : ''}</td>
-                <td class="bf-num bal">{formatMoney(f.balance)}</td>
-                <td>{@render stateBadge(st)}</td>
-              </tr>
-              {#if isExpanded(f.id)}
-                <tr class="bf-detail-row">
-                  <td colspan="10">
-                    <div class="bf-eq-wrap">
-                      <div class="bf-eq-title"><Icon name="list" size={13} />余额衔接校验</div>
-                      {#if !f.prevBalance}
-                        <div class="bf-eq-line">
-                          <span class="bf-eq-verdict skip">本行为批次首行，无上行余额可校验。</span>
-                        </div>
-                      {:else}
-                        <div class="bf-eq-line">
-                          <span class="bf-eq-term"><span class="lbl">上行余额</span>{formatMoney(f.prevBalance)}</span>
-                          <span class="bf-eq-op">+</span>
-                          <span class="bf-eq-term"><span class="lbl">转入</span>{formatMoney(f.inAmount)}</span>
-                          <span class="bf-eq-op">−</span>
-                          <span class="bf-eq-term"><span class="lbl">转出</span>{formatMoney(f.outAmount)}</span>
-                          <span class="bf-eq-eq">=</span>
-                          <span class="bf-eq-term"><span class="lbl">应到余额</span>{formatMoney(f.expectedBalance)}</span>
-                        </div>
-                        {#if st === 'mismatch'}
-                          <div class="bf-eq-verdict err">
-                            余额衔接断开：本行余额 {formatMoney(f.balance)}，差额 {formatSignedMoney(f.balanceDiff)}
-                          </div>
-                        {:else if st === 'confirmed'}
-                          <div class="bf-eq-verdict ok">
-                            人工确认前余额衔接断开：差额 {formatSignedMoney(f.balanceDiff)}，本批次已确认。
-                          </div>
-                        {:else}
-                          <div class="bf-eq-verdict ok">
-                            衔接正常：本行余额 {formatMoney(f.balance)} = 应到余额。
-                          </div>
-                        {/if}
-                      {/if}
-                      <div class="bf-eq-actions">
-                        <button
-                          class="btn btn-sm"
-                          onclick={(e) => {
-                            e.stopPropagation();
-                            locateNeighbor(f);
-                          }}>定位相邻行</button
-                        >
-                        <button
-                          class="btn btn-sm {isChecked(f.id) ? 'btn-primary' : ''}"
-                          onclick={(e) => {
-                            e.stopPropagation();
-                            toggleChecked(f.id);
-                          }}>{isChecked(f.id) ? '已标记核对' : '标记已核对'}</button
-                        >
-                        <span class="divider"></span>
-                        <button
-                          class="link-btn"
-                          onclick={(e) => {
-                            e.stopPropagation();
-                            openDrawer(f);
-                          }}>查看完整详情 →</button
-                        >
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              {/if}
-            {/each}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        rows={items}
+        {columns}
+        rowClass={rowClassOf}
+        rowKey={rowKeyOf}
+        label="银行流水明细"
+        tableClass="bf-table"
+        minWidth="1178px"
+        maxHeight="calc(100vh - 424px)"
+        onRowClick={openDrawer}
+        toolbar={tableToolbar}
+      />
     {/if}
   </section>
 </section>
+
+<!-- ============ 表格工具条 ============ -->
+{#snippet tableToolbar()}
+  <div class="bf-table-toolbar">
+    <span class="bf-table-title">流水明细</span>
+    <span class="bf-chip">{selectedBatch ? selectedBatch.fileName : '全部批次'}</span>
+    <div class="bf-legend">
+      <span class="bf-legend-item"><span class="bf-legend-key bf-legend-ok"></span>正常</span>
+      <span class="bf-legend-item"><span class="bf-legend-key bf-legend-err"></span>不平</span>
+      <span class="bf-legend-item"><span class="bf-legend-key bf-legend-skip"></span>跳过</span>
+      <span class="bf-legend-item"><span class="bf-legend-key bf-legend-conf"></span>已确认</span>
+    </div>
+    <button
+      class="btn btn-sm"
+      onclick={() => void copyTable()}
+      disabled={busy || items.length === 0}
+      title="复制当前筛选的全部行（TSV，可直接粘贴到 Excel，金额为数值）"
+    >
+      <Icon name="file" size={14} />
+      复制表格
+    </button>
+  </div>
+{/snippet}
 
 <!-- ============ 行详情抽屉 ============ -->
 {#if drawerRow}
@@ -704,7 +664,7 @@
             <span class="bf-dk">余额（交易后）</span>
             <span class="bf-dv mono-num font-semibold">{formatMoney(f.balance)}</span>
           </div>
-          <div class="bf-drow"><span class="bf-dk">校验状态</span><span class="bf-dv">{@render stateBadge(st)}</span></div>
+          <div class="bf-drow"><span class="bf-dk">校验状态</span><span class="bf-dv">{@render stateBadge(f)}</span></div>
         </div>
       </div>
 

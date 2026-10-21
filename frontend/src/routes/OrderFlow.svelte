@@ -1,5 +1,5 @@
 <!-- 订单流水（F3）：只读提示条 + 统计卡 + 筛选条 + 按结算日期（T+1）归集的密集表格
-     （行内展开手续费复算、行详情抽屉）；原始表只读，页面无编辑/删除入口。
+     （点击行打开右侧详情抽屉看明细与手续费复算）；原始表只读，页面无编辑/删除入口。
      数据经 OrderFlowService.List（Wails 绑定）：一次性返回全部明细，费率复算与合计均由 Go decimal 完成。
      视觉对齐 docs/uidesign/order-flow.html；金额只格式化，不做业务计算。 -->
 <script lang="ts">
@@ -10,7 +10,9 @@
     OrderFlowGroup,
     OrderFlowPage,
   } from '../../bindings/finlite/internal/services/models';
+  import DataTable from '../lib/DataTable.svelte';
   import Icon from '../lib/Icon.svelte';
+  import { buildTSV, copyTSV, type TableColumn } from '../lib/table';
   import {
     feeFlagText,
     formatDateTime,
@@ -28,7 +30,8 @@
 
   type ToastTone = 'info' | 'ok' | 'warn' | 'danger';
 
-  let page = $state<OrderFlowPage | null>(null);
+  // 列表数据整体替换、内部不再改写：用 $state.raw 避免把 2000+ 行包成深层响应式代理。
+  let page = $state.raw<OrderFlowPage | null>(null);
 
   // 输入框与「已生效筛选」分离：日期变更/回车/查询按钮才应用（对齐原型交互）。
   let settleInput = $state('');
@@ -38,10 +41,22 @@
 
   let busy = $state(false);
   let loadError = $state('');
-  let expanded = $state<Record<string, boolean>>({});
   let drawerRow = $state<OrderFlow | null>(null);
 
   const groups = $derived<OrderFlowGroup[]>(page?.groups ?? []);
+
+  // 表格按「结算日期」分组渲染：摊平成行列表 + 分组聚合查表（分组行标题用）。
+  const flat = $derived.by(() => {
+    const items: OrderFlow[] = [];
+    const byDate = new Map<string, OrderFlowGroup>();
+    for (const g of page?.groups ?? []) {
+      byDate.set(g.settleDate, g);
+      for (const o of g.items ?? []) items.push(o);
+    }
+    return { items, byDate };
+  });
+  const rows = $derived(flat.items);
+  const groupByDate = $derived(flat.byDate);
 
   const stats = $derived({
     total: page?.total ?? 0,
@@ -54,6 +69,34 @@
     parseErr: page?.parseErrCount ?? 0,
     anomaly: page?.anomalyCount ?? 0,
   });
+
+  // ---------- 列定义（宽度固定，与分组表头 colgroup 一致；导出取后端原始 decimal 字符串） ----------
+  const columns: TableColumn<OrderFlow>[] = [
+    { key: 'icbcOrderNo', title: '工行订单号', width: '100px', class: 'mono', hint: (o) => o.icbcOrderNo },
+    { key: 'thirdOrderNo', title: '第三方订单号', width: '136px', class: 'mono', cell: thirdCell, hint: (o) => o.thirdOrderNo },
+    { key: 'txnTime', title: '交易时间', width: '146px', class: 'tnum' },
+    { key: 'settleDate', title: '结算日期', width: '102px', class: 'tnum' },
+    { key: 'orderAmount', title: '订单金额', width: '104px', align: 'right', class: 'num', cell: orderCell },
+    { key: 'feeAmount', title: '手续费', width: '90px', align: 'right', class: 'num', cell: feeCell },
+    { key: 'netAmount', title: '实收', width: '104px', align: 'right', class: 'num', cell: netCell },
+    { key: 'payMethod', title: '支付方式', width: '82px', cell: payCell },
+    { key: 'debitCreditFlag', title: '借贷记', width: '74px', cell: cardCell },
+    {
+      key: 'feeFlag',
+      title: '费率检查',
+      width: '126px',
+      cell: feeBadge,
+      copy: (o) => feeFlagText(o.feeFlag) || '费率正确',
+    },
+    { key: 'ops', title: '操作', width: '78px', cell: opsCell, copy: false },
+  ];
+
+  const rowKeyOf = (o: OrderFlow): string => o.id;
+  const rowClassOf = (o: OrderFlow): string => {
+    const tone = rowTone(o.feeFlag);
+    return `of-row ${tone === 'warn' ? 'row-warn' : tone === 'err' ? 'row-err' : ''}`;
+  };
+  const settleDateOf = (o: OrderFlow): string => o.settleDate;
 
   // ---------- Toast ----------
   let toastSeq = 0;
@@ -88,7 +131,6 @@
       keyword: kwInput.trim(),
       onlyFeeAdj: onlyFeeAdj ? '1' : '',
     };
-    expanded = {};
     await load();
     if (!loadError) toast('info', `查询完成，命中 ${stats.total} 条订单明细。`);
   }
@@ -98,7 +140,6 @@
     kwInput = '';
     onlyFeeAdj = false;
     filter = { settleDate: '', keyword: '', onlyFeeAdj: '' };
-    expanded = {};
     void load();
     toast('info', '筛选条件已重置，展示全部订单流水。');
   }
@@ -111,17 +152,29 @@
   });
 
   // ---------- 行交互 ----------
-  function toggleExpand(id: string): void {
-    expanded = { ...expanded, [id]: !expanded[id] };
-  }
-  function isExpanded(id: string): boolean {
-    return !!expanded[id];
+
+  // ---------- 复制到 Excel ----------
+  async function copyTable(): Promise<void> {
+    if (rows.length === 0) {
+      toast('info', '当前没有可复制的数据。');
+      return;
+    }
+    try {
+      await copyTSV(buildTSV(columns, rows));
+      toast('ok', `已复制 ${rows.length} 行到剪贴板，可直接粘贴到 Excel。`);
+    } catch (e) {
+      toast('danger', `复制失败：${e instanceof Error ? e.message : String(e)}`);
+    }
   }
   function openDrawer(row: OrderFlow): void {
     drawerRow = row;
   }
   function closeDrawer(): void {
     drawerRow = null;
+  }
+  /** 行内按钮（data-act）：打开行详情。 */
+  function onRowAct(act: string, o: OrderFlow): void {
+    if (act === 'drawer') openDrawer(o);
   }
   function onKeydown(e: KeyboardEvent): void {
     if (e.key === 'Escape' && drawerRow) closeDrawer();
@@ -178,6 +231,40 @@
   {:else}
     <span class="of-rate-ok">费率正确</span>
   {/if}
+{/snippet}
+
+{#snippet thirdCell(o: OrderFlow)}
+  {#if o.thirdOrderNo}
+    {o.thirdOrderNo}
+  {:else}
+    <span class="of-none">—</span>
+  {/if}
+{/snippet}
+
+{#snippet orderCell(o: OrderFlow)}¥{formatMoney(o.orderAmount)}{/snippet}
+
+{#snippet feeCell(o: OrderFlow)}
+  {#if o.feeFlag === 'fee_parse_err'}
+    <span class="of-fee-fail">解析失败</span>
+  {:else}
+    ¥{formatMoney(o.feeAmount)}
+  {/if}
+{/snippet}
+
+{#snippet netCell(o: OrderFlow)}¥{formatMoney(o.netAmount)}{/snippet}
+
+{#snippet payCell(o: OrderFlow)}
+  <span class="of-pay {payTone(o.payMethod)}">
+    <span class="dot"></span>{o.payMethod || '—'}
+  </span>
+{/snippet}
+
+{#snippet cardCell(o: OrderFlow)}
+  <span class="of-card">{o.debitCreditFlag || '—'}</span>
+{/snippet}
+
+{#snippet opsCell()}
+  <button class="link-btn" data-act="drawer">查看详情</button>
 {/snippet}
 
 <section>
@@ -274,6 +361,15 @@
     </button>
     <button class="btn" onclick={doReset} disabled={busy}>重置</button>
     <div class="of-spacer"></div>
+    <button
+      class="btn btn-sm"
+      onclick={() => void copyTable()}
+      disabled={busy || rows.length === 0}
+      title="复制当前筛选的全部行（TSV，可直接粘贴到 Excel，金额为数值）"
+    >
+      <Icon name="file" size={14} />
+      复制表格
+    </button>
     <div class="of-count">共 <b>{stats.total}</b> 条 · 全部展示</div>
   </section>
 
@@ -292,182 +388,51 @@
         </button>
       </div>
     {:else}
-      <div class="of-scroll">
-        <table class="of-table">
-          <colgroup>
-            <col style="width:40px" /><col style="width:100px" /><col style="width:136px" />
-            <col style="width:146px" /><col style="width:102px" /><col style="width:104px" />
-            <col style="width:90px" /><col style="width:104px" /><col style="width:82px" />
-            <col style="width:74px" /><col style="width:126px" /><col style="width:78px" />
-          </colgroup>
-          <thead>
-            <tr>
-              <th aria-label="展开"></th>
-              <th>工行订单号</th>
-              <th>第三方订单号</th>
-              <th>交易时间</th>
-              <th>结算日期</th>
-              <th class="num">订单金额</th>
-              <th class="num">手续费</th>
-              <th class="num">实收</th>
-              <th>支付方式</th>
-              <th>借贷记</th>
-              <th>费率检查</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each groups as g (g.settleDate)}
-              <tr class="of-group-row">
-                <td colspan="12">
-                  <div class="of-group-inner">
-                    <div class="of-group-date">
-                      <span class="gd-k">结算日期</span>
-                      <span class="gd-v">{g.settleDate}</span>
-                      <span class="gd-wd">· {weekdayCN(g.settleDate)}</span>
-                      <span class="gd-n">· {g.count} 笔</span>
-                    </div>
-                    <div class="of-group-pos">
-                      银行 POS 到账（次日凌晨）
-                      {#if g.anomalyCount > 0}
-                        <span class="of-badge of-badge-warn">待勾稽</span>
-                      {:else}
-                        <span class="of-badge of-badge-ok">已匹配</span>
-                      {/if}
-                    </div>
-                    <div class="of-group-spacer"></div>
-                    <div class="of-group-subs">
-                      <span class="of-group-sub">订单金额 <b>¥{formatMoney(g.orderTotal)}</b></span>
-                      <span class="of-group-sub">手续费 <b>¥{formatMoney(g.feeTotal)}</b></span>
-                      <span class="of-group-sub">实收 <b>¥{formatMoney(g.netTotal)}</b></span>
-                      {#if g.parseErrCount > 0}
-                        <span class="of-group-note">· {g.parseErrCount} 笔解析失败未计入手续费小计</span>
-                      {/if}
-                    </div>
-                  </div>
-                </td>
-              </tr>
-              {#each g.items ?? [] as o (o.id)}
-                {@const tone = rowTone(o.feeFlag)}
-                <tr
-                  class="of-row {tone === 'warn' ? 'row-warn' : tone === 'err' ? 'row-err' : ''}"
-                  tabindex="0"
-                  onclick={() => openDrawer(o)}
-                  onkeydown={(e) => {
-                    if (e.key === 'Enter') openDrawer(o);
-                  }}
-                >
-                  <td>
-                    <button
-                      class="of-expand {isExpanded(o.id) ? 'open' : ''}"
-                      aria-label="展开手续费复算"
-                      aria-expanded={isExpanded(o.id) ? 'true' : 'false'}
-                      onclick={(e) => {
-                        e.stopPropagation();
-                        toggleExpand(o.id);
-                      }}
-                    >
-                      <Icon name="chevron-right" size={13} />
-                    </button>
-                  </td>
-                  <td class="mono" title={o.icbcOrderNo}>{o.icbcOrderNo}</td>
-                  <td class="mono" title={o.thirdOrderNo}>
-                    {#if o.thirdOrderNo}
-                      {o.thirdOrderNo}
-                    {:else}
-                      <span class="of-none">—</span>
-                    {/if}
-                  </td>
-                  <td class="tnum">{o.txnTime}</td>
-                  <td class="tnum">{o.settleDate}</td>
-                  <td class="num">¥{formatMoney(o.orderAmount)}</td>
-                  <td class="num">
-                    {#if o.feeFlag === 'fee_parse_err'}
-                      <span class="of-fee-fail">解析失败</span>
-                    {:else}
-                      ¥{formatMoney(o.feeAmount)}
-                    {/if}
-                  </td>
-                  <td class="num">¥{formatMoney(o.netAmount)}</td>
-                  <td>
-                    <span class="of-pay {payTone(o.payMethod)}">
-                      <span class="dot"></span>{o.payMethod || '—'}
-                    </span>
-                  </td>
-                  <td><span class="of-card">{o.debitCreditFlag || '—'}</span></td>
-                  <td>{@render feeBadge(o)}</td>
-                  <td>
-                    <button
-                      class="link-btn"
-                      onclick={(e) => {
-                        e.stopPropagation();
-                        openDrawer(o);
-                      }}>查看详情</button
-                    >
-                  </td>
-                </tr>
-                {#if isExpanded(o.id)}
-                  <tr class="of-detail-row">
-                    <td colspan="12">
-                      <div class="of-recalc">
-                        <div class="of-recalc-head">
-                          <span class="ico"><Icon name="list" size={13} /></span>
-                          手续费复算 · {o.icbcOrderNo}
-                        </div>
-                        {#if o.feeFlag === 'fee_parse_err'}
-                          <div class="of-parse-note">
-                            <Icon name="alert-triangle" size={14} />
-                            手续费字段无法解析（源文件原始值缺失或格式异常），已跳过费率复算，标记为「金额解析失败」待人工复核。
-                          </div>
-                        {:else}
-                          <div class="of-recalc-line">
-                            <div class="of-rc">
-                              <span class="rk">订单金额 × 费率</span>
-                              <span class="rv">¥{formatMoney(o.orderAmount)} × {o.feeRate}</span>
-                            </div>
-                            <span class="of-rc-op">＝</span>
-                            <div class="of-rc">
-                              <span class="rk">预期手续费</span>
-                              <span class="rv">¥{formatMoney(o.expectedFee)}</span>
-                            </div>
-                            <div class="of-rc">
-                              <span class="rk">实际手续费</span>
-                              <span class="rv">¥{formatMoney(o.feeAmount)}</span>
-                            </div>
-                            <div class="of-rc">
-                              <span class="rk">差额</span>
-                              <span
-                                class="rv {isZeroAmount(o.feeDiff)
-                                  ? 'ok'
-                                  : o.feeFlag === 'fee_diff'
-                                    ? 'warn'
-                                    : 'err'}"
-                              >
-                                {formatSignedMoney(o.feeDiff)}
-                              </span>
-                            </div>
-                          </div>
-                          <div class="of-identity">
-                            <span class="id-k">恒等式</span>
-                            <span class="id-eq">
-                              订单金额 − 手续费 = 应到实收 → ¥{formatMoney(o.orderAmount)} − ¥{formatMoney(
-                                o.feeAmount
-                              )} = ¥{formatMoney(o.expectedNet)}
-                            </span>
-                            <span class="id-diff {isZeroAmount(o.netDiff) ? 'ok' : 'err'}">
-                              实收差异 {formatSignedMoney(o.netDiff)}
-                            </span>
-                          </div>
-                        {/if}
-                      </div>
-                    </td>
-                  </tr>
+      <DataTable
+        rows={rows}
+        {columns}
+        rowKey={rowKeyOf}
+        rowClass={rowClassOf}
+        label="订单流水明细"
+        tableClass="of-table"
+        minWidth="1142px"
+        maxHeight="calc(100vh - 430px)"
+        groupBy={settleDateOf}
+        groupClass="of-group-row"
+        onRowClick={openDrawer}
+        onAct={onRowAct}
+      >
+        {#snippet groupHead(settleDate: string)}
+          {@const g = groupByDate.get(settleDate)}
+          {#if g}
+            <div class="of-group-inner">
+              <div class="of-group-date">
+                <span class="gd-k">结算日期</span>
+                <span class="gd-v">{g.settleDate}</span>
+                <span class="gd-wd">· {weekdayCN(g.settleDate)}</span>
+                <span class="gd-n">· {g.count} 笔</span>
+              </div>
+              <div class="of-group-pos">
+                银行 POS 到账（次日凌晨）
+                {#if g.anomalyCount > 0}
+                  <span class="of-badge of-badge-warn">待勾稽</span>
+                {:else}
+                  <span class="of-badge of-badge-ok">已匹配</span>
                 {/if}
-              {/each}
-            {/each}
-          </tbody>
-        </table>
-      </div>
+              </div>
+              <div class="of-group-spacer"></div>
+              <div class="of-group-subs">
+                <span class="of-group-sub">订单金额 <b>¥{formatMoney(g.orderTotal)}</b></span>
+                <span class="of-group-sub">手续费 <b>¥{formatMoney(g.feeTotal)}</b></span>
+                <span class="of-group-sub">实收 <b>¥{formatMoney(g.netTotal)}</b></span>
+                {#if g.parseErrCount > 0}
+                  <span class="of-group-note">· {g.parseErrCount} 笔解析失败未计入手续费小计</span>
+                {/if}
+              </div>
+            </div>
+          {/if}
+        {/snippet}
+      </DataTable>
 
       <!-- ============ 表尾合计 ============ -->
       <div class="of-summary">

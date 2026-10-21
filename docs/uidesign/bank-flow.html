@@ -249,7 +249,8 @@ svg{display:block;flex:0 0 auto;}
 .legend-conf{background:var(--ok-bg);border-color:var(--ok);}
 
 .table-scroll{overflow:auto;max-height:calc(100vh - 408px);min-height:200px;}
-table{width:100%;min-width:1120px;border-collapse:separate;border-spacing:0;font-size:13px;}
+table{width:100%;min-width:1178px;border-collapse:separate;border-spacing:0;font-size:13px;table-layout:fixed;}
+tbody tr[data-row]>td{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 thead th{
   position:sticky;top:0;z-index:2;background:var(--surface);
   font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:.03em;text-align:left;
@@ -295,40 +296,12 @@ td.num.bal{color:var(--fg);font-weight:600;}
 .badge-err{background:var(--err-bg);border-color:var(--err-border);color:var(--err-text);}
 .badge-skip{background:var(--skip-bg);border-color:var(--skip-border);color:var(--skip-text);}
 .badge-conf{background:var(--ok-text);border-color:var(--ok-text);color:#fff;}
-.row-checked-tag{font-size:11px;color:var(--accent-text);background:var(--accent-soft);border:1px solid var(--accent-border);border-radius:9999px;padding:0 7px;line-height:16px;margin-left:6px;font-weight:500;}
 
-.expand-btn{
-  width:22px;height:22px;border-radius:5px;border:1px solid transparent;background:none;color:var(--muted);
-  display:grid;place-items:center;cursor:pointer;transition:background var(--motion-fast),color var(--motion-fast),transform var(--motion-fast);
-}
-.expand-btn:hover{background:color-mix(in oklab,var(--surface),var(--fg) 4%);color:var(--fg);}
-.expand-btn:focus-visible{outline:none;box-shadow:var(--focus-ring);}
-.expand-btn.open{transform:rotate(90deg);color:var(--accent);}
-td.td-expand{padding-right:0;width:36px;}
-
-/* detail row */
-tr.detail-row{background:color-mix(in oklab,var(--surface) 70%, var(--bg));cursor:default;}
-tr.detail-row:hover{--row-bg:color-mix(in oklab,var(--surface) 70%, var(--bg));}
-tr.detail-row td{padding:0;border-bottom:1px solid var(--border-soft,#edf0f5);}
-.eq-wrap{padding:14px 20px 16px 52px;display:flex;flex-direction:column;gap:12px;}
-.eq-title{font-size:12px;font-weight:600;color:var(--fg-2,#374151);display:flex;align-items:center;gap:7px;}
-.eq-title svg{color:var(--accent);}
-.eq-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;font-variant-numeric:tabular-nums;}
-.eq-term{padding:3px 10px;border-radius:var(--radius-sm);background:var(--bg);border:1px solid var(--border);color:var(--fg);}
-.eq-term .lbl{font-size:11px;color:var(--muted);margin-right:6px;font-variant-numeric:normal;}
-.eq-op{color:var(--muted);font-weight:600;font-size:15px;}
-.eq-eq{color:var(--fg-2,#374151);font-weight:700;}
-.eq-term.is-err{background:var(--err-bg);border-color:var(--err-border);color:var(--err-text);}
-.eq-term.is-ok{background:var(--ok-bg);border-color:var(--ok-border);color:var(--ok-text);}
 .eq-verdict{font-size:12.5px;}
 .eq-verdict.err{color:var(--err-text);font-weight:500;}
 .eq-verdict.ok{color:var(--ok-text);font-weight:500;}
 .eq-verdict.skip{color:var(--muted);}
-.eq-actions{display:flex;align-items:center;gap:10px;margin-top:2px;}
-.eq-actions .divider{width:1px;height:16px;background:var(--border);}
 
-.flash{animation:flash 1.4s var(--ease-standard);}
-@keyframes flash{0%{background:var(--accent-soft);}100%{background:var(--row-bg);}}
 
 /* empty state */
 .empty{display:none;flex-direction:column;align-items:center;justify-content:center;padding:64px 20px;text-align:center;}
@@ -605,9 +578,14 @@ tr.detail-row td{padding:0;border-bottom:1px solid var(--border-soft,#edf0f5);}
         </div>
         <div class="table-scroll" id="tableScroll">
           <table data-od-id="flow-table-el">
+            <colgroup>
+              <col style="width:130px"><col style="width:140px"><col style="width:190px">
+              <col style="width:150px"><col style="width:160px">
+              <col style="width:100px"><col style="width:100px"><col style="width:112px">
+              <col style="width:96px">
+            </colgroup>
             <thead>
               <tr>
-                <th class="td-expand"></th>
                 <th>交易时间</th>
                 <th>对方账号</th>
                 <th>对方单位</th>
@@ -754,8 +732,7 @@ var state = {
   from: '2026-07-12',
   to: '2026-07-13',
   kw: '',
-  expanded: {}
-};
+  };
 
 function persist(){
   try{ localStorage.setItem('finlite.bankflow', JSON.stringify({batchFilter:state.batchFilter, from:state.from, to:state.to})); }catch(e){}
@@ -897,18 +874,15 @@ function renderTable(){
     var r = rows[i];
     var st = displayState(r);
     var meta = stateMeta(st);
-    var isOpen = !!state.expanded[r.id];
     var cpTag = r.pos ? '<span class="tag-pos">POS 清算</span>' : '';
-    var checkedTag = r.checked ? '<span class="row-checked-tag">已核对</span>' : '';
     var memoCell = r.memo
       ? (r.pos ? '<span class="memo-pos">'+esc(r.memo)+'</span>' : esc(r.memo))
       : '<span class="memo-empty">—</span>';
 
     html += '<tr class="'+meta.rowClass+'" data-row="'+r.id+'" data-od-id="flow-row-'+r.id+'">'
-      + '<td class="td-expand"><button class="expand-btn'+(isOpen?' open':'')+'" data-expand="'+r.id+'" aria-label="展开余额衔接">'+ICO.chev+'</button></td>'
       + '<td class="td-time mono">'+esc(r.time)+'</td>'
       + '<td class="td-acct">'+esc(r.account)+'</td>'
-      + '<td><div class="cell-cp"><span class="cp-name">'+esc(r.counterparty)+'</span>'+cpTag+checkedTag+'</div></td>'
+      + '<td><div class="cell-cp"><span class="cp-name">'+esc(r.counterparty)+'</span>'+cpTag+'</div></td>'
       + '<td>'+esc(r.summary)+'</td>'
       + '<td>'+memoCell+'</td>'
       + '<td class="num in mono">'+moneyInOut(r.influx)+'</td>'
@@ -916,50 +890,11 @@ function renderTable(){
       + '<td class="num bal mono">'+fmt(r.balance)+'</td>'
       + '<td>'+meta.badge+'</td>'
       + '</tr>';
-
-    if (isOpen) html += detailRow(r);
   }
   tbody.innerHTML = html;
   renderStats();
   document.getElementById('countLine').innerHTML =
     '共 <b>' + rows.length + '</b> 条 · 全部展示';
-}
-
-function detailRow(r){
-  var st = displayState(r);
-  var prev = r.prevBalance;
-  var eq;
-  if (r.skip){
-    eq = '<div class="eq-line"><span class="eq-verdict skip">本行为批次首行，无上行余额可校验。</span></div>';
-  } else {
-    var terms = ''
-      + '<span class="eq-term"><span class="lbl">上行余额</span>'+fmt(prev)+'</span>'
-      + '<span class="eq-op">+</span>'
-      + '<span class="eq-term"><span class="lbl">转入</span>'+fmt(r.influx)+'</span>'
-      + '<span class="eq-op">−</span>'
-      + '<span class="eq-term"><span class="lbl">转出</span>'+fmt(r.outflux)+'</span>'
-      + '<span class="eq-eq">=</span>'
-      + '<span class="eq-term"><span class="lbl">应到余额</span>'+fmt(r.expected)+'</span>';
-    var verdict;
-    if (r.mismatch && st==='mismatch'){
-      verdict = '<span class="eq-verdict err">余额衔接断开：本行余额 ' + fmt(r.balance) + '，差额 ' + fmtSigned(r.diff) + '</span>';
-    } else if (r.mismatch && st==='confirmed'){
-      verdict = '<span class="eq-verdict ok">人工确认前余额衔接断开：差额 ' + fmtSigned(r.diff) + '，本批次已确认。</span>';
-    } else {
-      verdict = '<span class="eq-verdict ok">衔接正常：本行余额 ' + fmt(r.balance) + ' = 应到余额。</span>';
-    }
-    eq = '<div class="eq-line">'+terms+'</div>' + verdict;
-  }
-  return '<tr class="detail-row" data-od-id="balance-detail-'+r.id+'"><td colspan="10"><div class="eq-wrap">'
-    + '<div class="eq-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4"/><path d="M15 21h4a2 2 0 0 0 2-2v-4"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>余额衔接校验</div>'
-    + eq
-    + '<div class="eq-actions">'
-      + '<button class="btn btn-sm" data-locate="'+r.id+'">定位相邻行</button>'
-      + '<button class="btn btn-sm'+(r.checked?' btn-primary':'')+'" data-check="'+r.id+'">'+(r.checked?'已标记核对':'标记已核对')+'</button>'
-      + '<span class="divider"></span>'
-      + '<button class="btn btn-link" data-detail="'+r.id+'">查看完整详情 →</button>'
-    + '</div>'
-  + '</div></td></tr>';
 }
 
 /* ---------------- Drawer ---------------- */
@@ -1170,7 +1105,7 @@ function buildBatchOptions(){
 /* ---------------- Wire events ---------------- */
 function bind(){
   document.getElementById('fBatch').addEventListener('change', function(e){
-    state.batchFilter = e.target.value; state.expanded = {};
+    state.batchFilter = e.target.value;
     persist(); renderBatchBar(); renderTable(); renderStats();
   });
   document.getElementById('btnQuery').addEventListener('click', function(){
@@ -1197,14 +1132,6 @@ function bind(){
 
   /* table interactions (delegated) */
   document.getElementById('tbody').addEventListener('click', function(e){
-    var expBtn = e.target.closest('[data-expand]');
-    if (expBtn){ e.stopPropagation(); var id=expBtn.getAttribute('data-expand'); state.expanded[id]=!state.expanded[id]; renderTable(); return; }
-    var locBtn = e.target.closest('[data-locate]');
-    if (locBtn){ e.stopPropagation(); locateNeighbor(locBtn.getAttribute('data-locate')); return; }
-    var chkBtn = e.target.closest('[data-check]');
-    if (chkBtn){ e.stopPropagation(); var cid=chkBtn.getAttribute('data-check'); var rr=findRow(cid); rr.checked=!rr.checked; renderTable(); toast('ok', rr.checked?'已标记该行为「已核对」（本地标注）。':'已取消「已核对」标记。'); return; }
-    var detBtn = e.target.closest('[data-detail]');
-    if (detBtn){ e.stopPropagation(); openDrawer(detBtn.getAttribute('data-detail')); return; }
     var tr = e.target.closest('tr[data-row]');
     if (tr){ openDrawer(tr.getAttribute('data-row')); }
   });
@@ -1220,22 +1147,6 @@ function bind(){
     if (e.key==='Escape'){ if(document.getElementById('overlay').classList.contains('open')) closeModal(); else closeDrawer(); }
   });
 }
-function findRow(id){ for(var i=0;i<ROWS.length;i++){ if(ROWS[i].id===id) return ROWS[i]; } return null; }
-function locateNeighbor(id){
-  var r = findRow(id);
-  var batchRows = ROWS.filter(function(x){ return x.batchId===r.batchId; });
-  var bi = batchRows.indexOf(r);
-  var target = bi>0 ? batchRows[bi-1] : batchRows[bi+1];
-  if (!target) return;
-  var tr = document.querySelector('tr[data-row="'+target.id+'"]');
-  if (tr){
-    tr.classList.remove('flash'); void tr.offsetWidth; tr.classList.add('flash');
-    var sc = document.getElementById('tableScroll');
-    sc.scrollTop = Math.max(0, tr.offsetTop - sc.clientHeight/2);
-  }
-  toast('info','已定位到相邻行：'+target.time+' · 余额 '+fmt(target.balance));
-}
-
 /* ---------------- Init ---------------- */
 restore();
 document.getElementById('fFrom').value = state.from || '';

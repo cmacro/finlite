@@ -125,17 +125,9 @@
   }
 
   /* ---------- 表格卡片 ---------- */
+  /* 滚动区/列宽/粘性表头由 lib/DataTable.svelte + datatable.css 统一接管，此处只管订单流水自有视觉。 */
   .of-table-card {
     @apply mt-3 overflow-hidden rounded-xl border border-border bg-surface;
-  }
-  .of-scroll {
-    @apply relative min-h-[220px] overflow-auto;
-    max-height: calc(100vh - 430px);
-  }
-  .of-table {
-    @apply w-full border-separate border-spacing-0 text-[13px];
-    min-width: 1182px;
-    table-layout: fixed;
   }
   .of-table thead th {
     @apply sticky top-0 z-[3] border-b border-border bg-canvas px-2.5 py-2 text-left text-xs font-semibold whitespace-nowrap text-fg-2;
@@ -194,14 +186,6 @@
   }
   .of-row:focus-visible {
     @apply outline-2 -outline-offset-2 outline-accent;
-  }
-
-  /* 展开按钮 */
-  .of-expand {
-    @apply grid h-[22px] w-[22px] cursor-pointer place-items-center rounded-[5px] border border-transparent text-muted transition-all hover:bg-canvas hover:text-fg-2 focus-visible:shadow-[0_0_0_3px_var(--color-focusring)] focus-visible:outline-none;
-  }
-  .of-expand.open {
-    @apply rotate-90 text-accent;
   }
 
   /* 支付方式 / 借贷记 / 第三方订单号 */
@@ -285,69 +269,6 @@
   }
   .of-group-note {
     @apply text-[11.5px] text-warn-fg;
-  }
-
-  /* 行内手续费复算 */
-  .of-table tbody tr.of-detail-row > td {
-    @apply border-b border-border-soft bg-surface p-0;
-  }
-  .of-recalc {
-    @apply flex flex-col gap-2.5 bg-canvas px-4 py-3 pl-8;
-    border-left: 3px solid var(--color-accent);
-  }
-  .of-recalc-head {
-    @apply flex items-center gap-1.5 text-[11.5px] font-bold tracking-[0.03em] text-fg-2;
-  }
-  .of-recalc-head .ico {
-    @apply text-accent;
-  }
-  .of-recalc-line {
-    @apply flex flex-wrap items-end gap-3.5;
-  }
-  .of-rc {
-    @apply flex min-w-[104px] flex-col gap-0.5;
-  }
-  .of-rc .rk {
-    @apply text-[11px] text-muted;
-  }
-  .of-rc .rv {
-    @apply text-[13.5px] font-semibold text-fg;
-    font-variant-numeric: tabular-nums;
-  }
-  .of-rc .rv.ok {
-    @apply text-ok-fg;
-  }
-  .of-rc .rv.warn {
-    @apply text-warn-fg;
-  }
-  .of-rc .rv.err {
-    @apply text-err-fg;
-  }
-  .of-rc-op {
-    @apply pb-px text-[15px] text-muted;
-  }
-  .of-identity {
-    @apply flex flex-wrap items-center gap-2.5 border-t border-dashed border-border pt-2.5 text-[12.5px] text-fg-2;
-  }
-  .of-identity .id-k {
-    @apply text-[11px] font-bold tracking-[0.03em] text-muted;
-  }
-  .of-identity .id-eq {
-    @apply font-mono text-[12.5px];
-    font-variant-numeric: tabular-nums;
-  }
-  .of-identity .id-diff {
-    @apply inline-flex items-center rounded-full border px-2 py-px text-[11.5px] font-semibold;
-    font-variant-numeric: tabular-nums;
-  }
-  .of-identity .id-diff.ok {
-    @apply border-ok-border bg-ok-bg text-ok-fg;
-  }
-  .of-identity .id-diff.err {
-    @apply border-err-border bg-err-bg text-err-fg;
-  }
-  .of-parse-note {
-    @apply flex items-center gap-2 rounded-md border border-err-border bg-err-bg px-2.5 py-2 text-[12.5px] text-err-fg;
   }
 
   /* ---------- 表尾合计 ---------- */

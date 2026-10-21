@@ -23,8 +23,8 @@ http://127.0.0.1:7456/api/projects/finlite-uidesign/raw/{文件名}
 |---|---|
 | `index.html` | 原型总览（卡片导航） |
 | `import-center.html` | F1 导入中心 |
-| `bank-flow.html` | F2 银行流水（三色余额校验） |
-| `order-flow.html` | F3 订单流水（费率复算，不分页） |
+| `bank-flow.html` | F2 银行流水（三色余额校验；行详情走抽屉，表内不展开） |
+| `order-flow.html` | F3 订单流水（费率复算在行详情抽屉，不分页） |
 | `collection.html` | F9 店面收款（附件/审核/生成汇总） |
 | `recon-center-prototype.html` | F4 对账中心原型 |
 | `reconciliation.html` | 对账中心早期版本 |

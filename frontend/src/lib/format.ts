@@ -4,9 +4,45 @@
 /** 金额展示：保留 2 位小数，千分位分隔。输入为后端 decimal 字符串。 */
 export function formatMoney(v: string | number | null | undefined): string {
   if (v === null || v === undefined || v === '') return '0.00';
-  const n = typeof v === 'number' ? v : Number(v);
-  if (Number.isNaN(n)) return '0.00';
-  return n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const s = typeof v === 'number' ? (Number.isFinite(v) ? v.toFixed(2) : '') : v.trim();
+  if (!s) return '0.00';
+
+  let i = 0;
+  let neg = false;
+  const first = s.charCodeAt(0);
+  if (first === 45) {
+    // '-'
+    neg = true;
+    i = 1;
+  } else if (first === 43) {
+    // '+'
+    i = 1;
+  }
+  const dot = s.indexOf('.', i);
+  const intRaw = dot < 0 ? s.slice(i) : s.slice(i, dot);
+  const fracRaw = dot < 0 ? '' : s.slice(dot + 1);
+  if (intRaw === '' || !/^\d+$/.test(intRaw) || (fracRaw !== '' && !/^\d+$/.test(fracRaw))) {
+    return '0.00';
+  }
+
+  // 字符串进位取 2 位小数，避免经过 float64（金额只做展示，但绝不落到浮点）。
+  let digits = intRaw + (fracRaw + '00').slice(0, 2);
+  if (fracRaw.length > 2 && fracRaw.charCodeAt(2) >= 53) {
+    let k = digits.length - 1;
+    while (k >= 0 && digits.charCodeAt(k) === 57) {
+      digits = `${digits.slice(0, k)}0${digits.slice(k + 1)}`;
+      k -= 1;
+    }
+    digits =
+      k >= 0
+        ? `${digits.slice(0, k)}${String.fromCharCode(digits.charCodeAt(k) + 1)}${digits.slice(k + 1)}`
+        : `1${digits}`;
+  }
+
+  const intPart = digits.slice(0, -2).replace(/^0+(?=\d)/, '');
+  const fracPart = digits.slice(-2);
+  const grouped = intPart.length > 3 ? intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : intPart;
+  return `${neg ? '-' : ''}${grouped}.${fracPart}`;
 }
 
 /** 带符号金额展示：保留后端差额的 +/- 号，其余同 formatMoney。 */
