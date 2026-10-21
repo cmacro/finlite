@@ -1,4 +1,4 @@
--- v0 -> v4 (compatible with v1+): Latest schema
+-- v0 -> v1 (compatible with v1+): Latest schema
 
 -- finlite SQLite 全量脚本（单账套 finlite.db）：新建库只执行本文件，老库按 user_version 执行增量脚本。
 -- 业务依据：docs/business/00-overview-health-finance-flow.md §8。
